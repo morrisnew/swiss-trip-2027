@@ -1,7 +1,7 @@
 
 const TRIP_META = {
   title: "瑞士家族大冒險 2027",
-  subtitle: "4 大 1 小・11 天親子自由行",
+  subtitle: "4 大 1 小・12 天親子自由行",
   departure: "2027-09-13",  // 台灣起飛
   arrival: "2027-09-14",    // 蘇黎世抵達
   returnDate: "2027-09-25", // 返回台灣
@@ -10,7 +10,7 @@ const TRIP_META = {
     { name:"Emily",  role:"媽媽", note:"妞妞主要照護 · 妞妞包管理" },
     { name:"皮皮",   role:"成人", note:"與 Emily 熟識" },
     { name:"Milo",   role:"成人", note:"與 Morris、Emily 熟識" },
-    { name:"妞妞",   role:"2 歲寶寶", note:"使用嬰兒推車" }
+    { name:"妞妞",   role:"2 歲 3 個月幼童", note:"使用嬰兒推車 · 妞妞用品合併 Emily 過夜包" }
   ],
   logistics: "5 件大行李（23kg）＋ 4 個過夜包（20-30L）＋ 1 台推車"
 };
@@ -34,7 +34,7 @@ const HOTELS = {
     phone:"+41 33 854 11 40",
     website:"griwarent.ch",
     checkIn:"2027-09-18 (六)", checkOut:"2027-09-24 (五)",
-    nights:6, status:"2026/9 才能預訂",
+    nights:6, status:"訂房政策：出發前 12 個月開放；官網 griwarent.ch 直訂享 10-15% 折扣，可比較 booking.com",
     priceCHF:3274.80,
     mapQuery:"Grundstrasse 19 Grindelwald",
     notes:"4.5 房 / 3 臥 / 2 衛 / 96㎡ / 6 人 / WiFi、車庫、洗衣機。官網直訂享 10-15% 折扣"
@@ -90,7 +90,7 @@ const DAYS = [
     hotelKey:"luzern",
     tl:[
       {
-        time:"13:20–14:30", title:"抵達蘇黎世機場 ZRH",
+        time:"13:20–15:00", title:"抵達蘇黎世機場 ZRH + 從容通關領行李",
         tr:{ label:"入境", icon:"plane" },
         stp:"none",
         steps:[
@@ -109,7 +109,7 @@ const DAYS = [
         critical:[]
       },
       {
-        time:"14:30–16:00", title:"IR 70 城際直達車 → 琉森",
+        time:"15:00–16:10", title:"IR 70 15:04 城際直達車 → 琉森",
         tr:{ label:"IR 70 直達", icon:"train" },
         stp:"free",
         steps:[
@@ -242,7 +242,7 @@ const DAYS = [
         steps:[
           "回琉森後前往獅子紀念碑",
           "漫步舊城區石板路與濕壁畫",
-          "前往預定的 Rathaus Brauerei 吃晚餐慶祝"
+          "前往預定的餐廳（Rathaus Brauerei 或 Restaurant Pfistern）吃晚餐慶祝"
         ],
         defense:[
           "獅子紀念碑公園步道平緩好推推車",
@@ -800,8 +800,10 @@ const DAYS = [
         ],
         defense:["WAB 是 O 型環線完美收尾，車程平緩"],
         critical:[
-          "WAB 火車 STP 只享 25% 折扣，不是免費！",
-          "需到售票處或自動售票機補差價（約 CHF 15-20/成人）"
+          "⚠️ WAB Grindelwald ↔ Kleine Scheidegg 段 STP 折扣待確認",
+          "舊資料常寫「25% 折扣需補差價」，但實際 STP 涵蓋範圍可能為 100% 免費",
+          "出發前 1 個月透過 sbb.ch 或 SBB App 查詢當年度 STP 涵蓋規則",
+          "若需補票約 CHF 15-20/成人"
         ]
       },
       {
@@ -1320,7 +1322,7 @@ const DAYS = [
         tr:{ label:"機場內步行", icon:"luggage" }, stp:"none",
         steps:[
           "🥇 第一動作 · SBB 領行李：直奔 SBB 行李櫃台（機場火車站 Level -2 或 -1，跟 Gepäck 指標）",
-          "出示 Day 8 寄送收據 + 護照，領取 5 件大行李（預估 15-30 分鐘）",
+          "出示 Day 8 寄送收據 + 護照，領取 4 或 5 件大行李（主策略全寄 5 件；若採「留妞妞包」彈性則為 4 件，預估領取 15-30 分鐘）",
           "第二動作 · 退稅（若有）：Global Blue 退稅櫃檯（Level 2 出境大廳），必須在托運前蓋章",
           "第三動作 · Emirates Check-in：5 件大行李 + 推車（登機口交還）全部托運",
           "兵分兩路：Emily 帶妞妞+推車在 SBB 櫃台旁等；3 大人領行李後推去 Emirates 集合"
@@ -1402,7 +1404,7 @@ const RAIN_PLANS = [
   { base:"琉森", place:"羅森加特美術館", pros:"畢卡索、克利、塞尚", ticket:"STP 100% 免費", note:"1-1.5 小時，適合大人" },
   { base:"琉森", place:"KKL 文化會議中心", pros:"諾曼·福斯特設計，湖畔現代建築", ticket:"大廳免費/美術館 CHF 15", note:"大廳寬敞可避雨" },
   { base:"琉森", place:"舊城拱廊購物 + 咖啡", pros:"下雨也能購物喝咖啡", ticket:"無", note:"巧克力店、紀念品店" },
-  { base:"格林德瓦", place:"🥇 冰河峽谷 (雨天首選)", pros:"木棧道嵌岩壁下雨也能玩", ticket:"CHF 19", note:"已在 Day 10 行程中" },
+  { base:"格林德瓦", place:"🥇 冰河峽谷 (雨天首選)", pros:"木棧道嵌岩壁下雨也能玩", ticket:"CHF 19", note:"獨立雨天備案；Day 10 主行程已改為 Brienz Rothorn 蒸汽火車" },
   { base:"格林德瓦", place:"Sportzentrum 室內泳池", pros:"適合幼兒戲水", ticket:"CHF 8-12", note:"整下午消磨" },
   { base:"格林德瓦", place:"Pfingstegg 山頂木屋", pros:"陰天看艾格北壁神秘氛圍", ticket:"STP 50% (CHF 18)", note:"風雨大不建議" },
   { base:"格林德瓦", place:"Interlaken 購物商場", pros:"Höhematte 商業區品牌店", ticket:"BOB 35 分鐘 STP 免費", note:"半天行程" },
@@ -1479,7 +1481,7 @@ const SHOPPING = [
 const BOOKINGS = [
   { when:"🚨 T-15 個月 (2026/6-7)", task:"訂 KoBi Hirschenplatz 琉森住宿", how:"booking.com 免費取消版立即下訂，9 月旺季稀缺", priority:"🔴 必做" },
   { when:"🚨 T-15 個月 (2026/6-7)", task:"開始研究格林德瓦住宿", how:"6 晚連住 9/18-9/24，鎖 2 間獨立房 + 自炊廚房", priority:"🟡 重要" },
-  { when:"🟠 T-11~13 個月 (2026/8-10)", task:"申請 ETIAS 歐盟入境授權", how:"travel-europe.europa.eu/etias_en，成人 EUR 7，妞妞免費", priority:"🔴 必做" },
+  { when:"🟠 T-11~13 個月 (2026/8-10)", task:"ETIAS 動向追蹤（若 2027 正式上路才需申請）", how:"追蹤 travel-europe.europa.eu/etias_en 公告；瑞士非申根國、ETIAS 非必備", priority:"🟡 追蹤" },
   { when:"🔴 雙11/黑五 (2026/11)", task:"🥇 EK 機票搶優惠第一波", how:"目標 NT$ 33,000-38,000/人來回，5 件行李+推車+4 過夜包", priority:"🔴 必做" },
   { when:"🔴 雙11/黑五 (2026/11)", task:"🥇 STP 15 天版鎖 2026 價", how:"CHF 499 鎖 2027 起用日，避開 2027 漲價 +5%", priority:"🔴 必做" },
   { when:"🟠 早春 (2027/2-3)", task:"EK 嬰兒搖籃預約", how:"線上 manage booking，A380 機型前排隔板", priority:"🟡 重要" },
@@ -1498,7 +1500,7 @@ const BOOKINGS = [
 const PACKING = [
   { cat:"📄 文件", items:[
     "護照（效期至少 2027/3 後 6 個月）",
-    "ETIAS 授權證明",
+    "ETIAS 授權證明（若 2027 前正式上路才需辦理）",
     "訂房憑證（KoBi + Apartment Atlanta）紙本+電子",
     "機票電子檔（EK87 去 + EK88 回）",
     "旅遊保險證明",
@@ -1506,7 +1508,7 @@ const PACKING = [
     "緊急聯絡資訊（駐瑞士代表處 +41 31 382 21 36）",
     "信用卡 × 2（含 PIN）",
     "現金：瑞郎 CHF 300 + 台幣轉機備用",
-    "妞妞護照 + ETIAS 證明 + 出生證明備份"
+    "妞妞護照 + 妞妞 ETIAS 證明（若 2027 前正式上路才需辦理）+ 出生證明備份"
   ], where:"🛂 隨身行李護照夾"},
   { cat:"📱 電子設備", items:[
     "手機（漫遊或 eSim）",
