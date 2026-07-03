@@ -67,16 +67,19 @@ const EMERGENCY = [
     { label:"高山救援 REGA", tel:"1414", note:"直升機山難救援" }
   ]},
   { cat:"台灣官方", items:[
-    { label:"駐瑞士台北文化經濟代表團", tel:"+41 31 382 21 36", note:"護照遺失、急難" },
-    { label:"外交部旅外急難救助（台灣撥出）", tel:"+886 800 085 095", note:"境外免付費" }
+    { label:"駐瑞士代表處 · 一般聯絡", tel:"+41 31 382 29 27", note:"護照遺失、簽證、文件驗證（辦公時間）" },
+    { label:"駐瑞士代表處 · 另一線", tel:"+41 31 350 80 50", note:"備用聯絡電話" },
+    { label:"🆘 駐瑞士代表處 · 急難救助手機", tel:"+41 76 336 6979", note:"限車禍、搶劫、生命安危等重大急難" },
+    { label:"外交部旅外急難救助 · 全球免付費", tel:"+800 0885 0885", note:"境外免付費專線（原號碼已更正）" },
+    { label:"地址", tel:"", note:"Kirchenfeldstrasse 14, 3005 Bern" }
   ]},
   { cat:"住宿聯絡", items:[
     { label:"KoBi Hirschenplatz (琉森)", tel:"", note:"booking.com 預訂，詳見訂房確認信" },
-    { label:"GRIWA RENT (格林德瓦)", tel:"+41 33 854 11 40", note:"Apartment Atlanta 管理處" }
+    { label:"GRIWA RENT (格林德瓦)", tel:"+41 33 854 11 40", note:"⚠️ Apartment Atlanta 管理處，出發前務必至 griwarent.ch 核對" }
   ]},
   { cat:"航空與保險", items:[
-    { label:"Emirates 台灣客服", tel:"+886 2 7745 0420", note:"改班、行李" },
-    { label:"旅遊保險 24h 急難", tel:"", note:"出發前將保險公司急難專線填入此處" }
+    { label:"Emirates 台灣客服", tel:"+886 2 7745 0420", note:"改班、行李（已驗證）" },
+    { label:"旅遊保險 24h 急難", tel:"", note:"⚠️ 出發前將保險公司急難專線填入此處" }
   ]},
   { cat:"交通查詢", items:[
     { label:"SBB 瑞士國鐵 App", tel:"", note:"班次、月台、行李寄送" },
@@ -558,7 +561,7 @@ const DAYS = [
         critical:[]
       },
       {
-        time:"12:00–13:00", title:"🚨 BOB 致命拆解雷區",
+        time:"12:00–13:00", title:"🚨 BOB 拆解雷區 · 全程最關鍵一段",
         tr:{ label:"BOB 黃綠山地列車", icon:"train" }, stp:"free",
         steps:[
           "12:00 zb 抵 Interlaken Ost，跟 Grindelwald 指標換月台",
@@ -1593,7 +1596,7 @@ const PACKING = [
     "妞妞安撫玩具 × 1（最愛那隻）",
     "妞妞兒童睡眠音樂（手機 App 預存）"
   ], where:"👶 妞妞指定行李，安撫巾隨身"},
-  { cat:"🧴 洗衣球（致命警告）", items:[
+  { cat:"🧴 洗衣球（關鍵警告）", items:[
     "🚨 絕對不可放隨身登機包（會被安檢沒收，液體+凝膠超標）",
     "🚨 必須裝入「硬殼保鮮盒」再放託運行李",
     "🚨 高空失壓會擠壓爆裂，將洗劑滲入毀損整箱衣物",

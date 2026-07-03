@@ -303,6 +303,7 @@ function renderDay() {
   }
 
   const timeline = State.showBackup && d.backup ? d.backup.tl : d.tl;
+  const isBackupView = State.showBackup && d.backup;
 
   return `
     <div class="day-hero">
@@ -318,7 +319,16 @@ function renderDay() {
 
     ${backupHTML}
 
-    ${timeline.map(t => renderTimeblock(t, idx)).join("")}
+    ${isBackupView ? `
+      <div style="margin: 8px 0 12px; padding: 10px 14px; background: var(--warn-orange-bg); border-left: 4px solid var(--warn-orange); border-radius: 8px; font-size: 12px; color: var(--warn-orange); font-weight: 600;">
+        🔀 目前顯示：備案時間軸（${timeline.length} 個時段）· 主行程已隱藏
+      </div>
+      <div style="border: 2px dashed var(--warn-orange-border); border-radius: 14px; padding: 12px; background: rgba(234,88,12,0.03);">
+        ${timeline.map(t => renderTimeblock(t, idx)).join("")}
+      </div>
+    ` : `
+      ${timeline.map(t => renderTimeblock(t, idx)).join("")}
+    `}
 
     <div style="display:flex; justify-content:space-between; margin-top:20px; padding: 12px 0;">
       <div>${prevBtn}</div>
@@ -330,8 +340,11 @@ function renderDay() {
 function renderBackupPanel(backup) {
   return `
     <div class="backup-panel">
-      <div class="trigger">⚠️ ${backup.trigger}</div>
-      <div style="font-weight:700; margin-bottom:10px; color: var(--warn-orange);">${backup.title}</div>
+      <div class="trigger">⚠️ ${escapeHTML(backup.trigger)}</div>
+      <div style="font-weight:700; margin-bottom:6px; color: var(--warn-orange); font-size:15px;">📖 ${escapeHTML(backup.title)}</div>
+      <div style="font-size:12px; color:var(--text-muted); line-height:1.55;">
+        以下時間軸將替換原本的主行程。若之後恢復晴天，可點上方按鈕切回主行程。
+      </div>
     </div>
   `;
 }
@@ -376,7 +389,7 @@ function renderTimeblock(t, dayIdx) {
       ${t.critical && t.critical.length ? `
         <div class="critical-alert">
           <button class="critical-toggle" data-toggle-check="${critKey}">
-            <span>🚨 致命警告 · ${t.critical.length} 條${critOpen ? '' : '（點擊展開）'}</span>
+            <span>🚨 重要警告 · ${t.critical.length} 條${critOpen ? '' : '（點擊展開）'}</span>
             <span>${critOpen ? '▲' : '▼'}</span>
           </button>
           ${critOpen ? `
@@ -492,7 +505,7 @@ function renderPacking() {
 
   const laundryWarn = `
     <div class="card" style="background:var(--alert-red-bg); border-color:var(--alert-red-border); border-left:4px solid var(--alert-red);">
-      <div style="font-weight:800; font-size:15px; color:var(--alert-red); margin-bottom:8px;">🚨 洗衣球致命安全規則</div>
+      <div style="font-weight:800; font-size:15px; color:var(--alert-red); margin-bottom:8px;">🚨 洗衣球關鍵安全規則</div>
       <ul style="padding-left:18px; font-size:13px; color:var(--alert-red); line-height:1.7;">
         <li>絕對不可放隨身登機包！會被安檢沒收（液體+凝膠超標）</li>
         <li>必須裝入「硬殼保鮮盒」中再放入託運行李</li>
