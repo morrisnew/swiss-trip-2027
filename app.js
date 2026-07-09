@@ -108,11 +108,15 @@ function render() {
 
 function renderAppBar() {
   const showBack = State.currentPage !== "home" || State.currentDay != null;
+  const versionBadge = TRIP_META.version
+    ? `<div style="font-size:10px; opacity:0.7; margin-top:2px; font-weight:400;">${escapeHTML(TRIP_META.version)}</div>`
+    : "";
   if (showBack) {
     return `
       <button class="back-btn" data-back>‹</button>
       <div style="flex:1; text-align:center;">
         <h1 style="justify-content:center; font-size:16px;">🇨🇭 瑞士家族大冒險</h1>
+        ${versionBadge}
       </div>
       <div style="width:38px;"></div>
     `;
@@ -120,8 +124,8 @@ function renderAppBar() {
   return `
     <h1><span class="icon">🇨🇭</span> 瑞士家族大冒險</h1>
     <div style="text-align:right; font-size:11px; opacity:0.85;">
-      <div>2027/9/13 出發</div>
-      <div>4 大 1 小</div>
+      <div>2027/9/13 出發 · 4 大 1 小</div>
+      ${TRIP_META.version ? `<div style="font-size:10px; opacity:0.85; margin-top:2px;">${escapeHTML(TRIP_META.version)}</div>` : ''}
     </div>
   `;
 }
@@ -224,9 +228,36 @@ function renderHome() {
     `;
   }).join("");
 
+  // 建議 D：重要數字速查卡片
+  const quickNumbersHTML = (typeof QUICK_NUMBERS !== "undefined") ? `
+    <div class="card" style="background: linear-gradient(135deg, #1E3A5F, #0F172A); color: #F1F5F9; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
+      <div style="font-size:13px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+        <span style="font-size:16px;">⚡</span> 重要數字速查
+        <span style="font-size:10px; opacity:0.6; margin-left:auto; font-weight:400;">現場最常查</span>
+      </div>
+      ${QUICK_NUMBERS.map(n => {
+        const isPhone = /^[+\d\s\-()]+$/.test(n.value.trim()) && n.value.includes("+");
+        const telHref = isPhone ? `tel:${n.value.replace(/[^+\d]/g, '')}` : null;
+        const rightPart = telHref
+          ? `<a href="${telHref}" style="color:#93E0FF; text-decoration:none; font-weight:600; font-family:ui-monospace,monospace; font-size:13px;">${escapeHTML(n.value)}</a>`
+          : `<span style="color:rgba(255,255,255,0.85); font-size:12px;">${escapeHTML(n.value)}</span>`;
+        return `
+          <div style="display:flex; align-items:flex-start; gap:8px; padding:7px 0; border-top:1px solid rgba(255,255,255,0.08); font-size:12px;">
+            <span style="flex-shrink:0; margin-top:1px;">${n.icon}</span>
+            <div style="flex:1; min-width:0;">
+              <div style="opacity:0.75; font-size:11px; margin-bottom:2px;">${escapeHTML(n.label)}</div>
+              ${rightPart}
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  ` : "";
+
   return `
     ${countdownHTML}
     ${todayBtn}
+    ${quickNumbersHTML}
 
     <div class="quick-grid">
       <div class="quick-tile" data-nav="hotels">
@@ -255,7 +286,7 @@ function renderHome() {
       💡 <strong>可加到主畫面離線使用</strong>：iPhone Safari 分享 → 加入主畫面；Android Chrome 選單 → 加到主畫面。加入後即使山區無網也可查閱。
     </div>
 
-    <div class="section-title">🗓️ 完整行程（11 天）</div>
+    <div class="section-title">🗓️ 完整行程（${DAYS.length} 天）</div>
     ${dayCards}
   `;
 }
@@ -305,6 +336,21 @@ function renderDay() {
   const timeline = State.showBackup && d.backup ? d.backup.tl : d.tl;
   const isBackupView = State.showBackup && d.backup;
 
+  // 建議 B：Day 10 專屬：Brienz Rothorn 營運查詢外部連結
+  const day10Extra = (idx === 9 && typeof EXT_LINKS !== "undefined" && EXT_LINKS.brienzRothornOps) ? `
+    <a href="${EXT_LINKS.brienzRothornOps}" target="_blank" rel="noopener noreferrer"
+       style="display:flex; align-items:center; justify-content:space-between; gap:10px;
+              width:100%; padding:14px 16px; margin-bottom:12px;
+              background: linear-gradient(135deg, #EA580C, #DC2626);
+              color:white; border-radius:14px; text-decoration:none;
+              font-weight:700; font-size:14px;
+              box-shadow: 0 4px 14px rgba(234,88,12,0.35);">
+      <span style="font-size:20px;">🔍</span>
+      <span style="flex:1;">今日蒸汽火車是否正常營運？</span>
+      <span style="font-size:12px; opacity:0.85;">brienz-rothorn-bahn.ch ↗</span>
+    </a>
+  ` : "";
+
   return `
     <div class="day-hero">
       <div class="day-hero-tag">Day ${d.day} · ${d.date}</div>
@@ -317,6 +363,7 @@ function renderDay() {
         </div>` : ""}
     </div>
 
+    ${day10Extra}
     ${backupHTML}
 
     ${isBackupView ? `
@@ -434,12 +481,20 @@ function renderBookings() {
       ${items.map(b => {
         const key = `book_${b.task}`;
         const chk = isChecked(key);
+        // 建議 C：偵測 how 欄位中的網址，自動轉為連結
+        const urlPattern = /(https?:\/\/[^\s，。]+|(?:www\.)[a-z0-9.-]+\.[a-z]{2,}|[a-z0-9-]+\.(?:com|ch|org|net|app)[a-z0-9\/.-]*)/gi;
+        const linkifyHow = (str) => {
+          return escapeHTML(str).replace(urlPattern, (match) => {
+            const url = match.startsWith("http") ? match : `https://${match}`;
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--jungfrau-blue); text-decoration:underline; font-weight:600;" data-ext-link>${match} ↗</a>`;
+          });
+        };
         return `
           <div class="checklist-item ${chk ? 'checked' : ''}" data-toggle-check="${key}">
             <div class="cb">${chk ? '✓' : ''}</div>
             <div class="text">
               <div><strong>${escapeHTML(b.task)}</strong> ${b.priority ? `<span style="font-size:11px; color:var(--text-muted);">${b.priority}</span>` : ""}</div>
-              <div class="meta">${escapeHTML(b.how)}</div>
+              <div class="meta">${linkifyHow(b.how)}</div>
             </div>
           </div>
         `;
@@ -619,7 +674,51 @@ function renderHotels() {
   return `
     <div class="page-title">🏨 住宿資訊</div>
     <div class="page-sub">兩大基地 · 琉森 4 晚 + 格林德瓦 6 晚</div>
-    ${arr.map(h => `
+    ${arr.map(h => {
+      // 收集睡眠方案（可能有 A/B/C 任一數量）
+      const sleepPlans = [
+        h.sleepPlanA ? { key:"A", text:h.sleepPlanA } : null,
+        h.sleepPlanB ? { key:"B", text:h.sleepPlanB } : null,
+        h.sleepPlanC ? { key:"C", text:h.sleepPlanC } : null,
+      ].filter(Boolean);
+
+      const featuresHTML = h.features && h.features.length ? `
+        <div style="margin-top:12px; display:flex; flex-wrap:wrap; gap:6px;">
+          ${h.features.map(f => `
+            <span style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; background:var(--glacier); color:var(--alpine-green-dark); font-size:12px; font-weight:600;">
+              ✓ ${escapeHTML(f)}
+            </span>
+          `).join("")}
+        </div>
+      ` : "";
+
+      const roomHTML = (h.roomType || h.size || h.beds) ? `
+        <div style="margin-top:12px; padding:12px; background:var(--slate-50); border-radius:10px; font-size:13px; line-height:1.75; border:1px solid var(--border);">
+          ${h.roomType ? `<div style="font-weight:700; color:var(--text); margin-bottom:6px;">🏘️ ${escapeHTML(h.roomType)}</div>` : ""}
+          ${h.size ? `<div style="color:var(--text-muted);">📐 ${escapeHTML(h.size)}</div>` : ""}
+          ${h.beds ? `<div style="color:var(--text-muted); font-size:12px; margin-top:4px;">🛏️ ${escapeHTML(h.beds)}</div>` : ""}
+        </div>
+      ` : "";
+
+      const sleepHTML = sleepPlans.length ? `
+        <div style="margin-top:12px; padding:14px; background: linear-gradient(135deg, #FEF3C7, #FFFBEB); border:1px solid var(--gold-border); border-radius:12px;">
+          <div style="font-weight:700; color:var(--gold); margin-bottom:8px; font-size:13px; display:flex; align-items:center; gap:6px;">
+            🛌 睡眠配置方案
+          </div>
+          ${sleepPlans.map(p => `
+            <div style="margin-bottom:8px; font-size:13px; line-height:1.65; color:var(--text);">
+              <strong style="color:var(--gold); display:inline-block; min-width:22px;">${p.key}．</strong>${escapeHTML(p.text)}
+            </div>
+          `).join("")}
+          ${h.sleepNote ? `
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--gold-border); font-size:12px; color:var(--alert-red); font-weight:600; line-height:1.6;">
+              ⚠️ ${escapeHTML(h.sleepNote)}
+            </div>
+          ` : ""}
+        </div>
+      ` : "";
+
+      return `
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
           <div style="flex:1;">
@@ -636,6 +735,9 @@ function renderHotels() {
           ${h.priceTWD ? `<div>💰 約 NT$ ${h.priceTWD.toLocaleString()}</div>` : ''}
           ${h.priceCHF ? `<div>💰 約 CHF ${h.priceCHF.toLocaleString()}</div>` : ''}
         </div>
+        ${roomHTML}
+        ${featuresHTML}
+        ${sleepHTML}
         <div style="margin-top:10px; padding:10px; background:var(--slate-100); border-radius:8px; font-size:12px; color:var(--text-muted);">
           ${escapeHTML(h.notes)}
         </div>
@@ -643,7 +745,8 @@ function renderHotels() {
           <button class="map-btn" data-map="${encodeURIComponent(h.mapQuery)}" style="padding:10px 16px; font-size:13px;">📍 Google Maps 導航</button>
         </div>
       </div>
-    `).join("")}
+    `;
+    }).join("")}
   `;
 }
 
@@ -711,11 +814,17 @@ function attachHandlers() {
   });
   document.querySelectorAll("[data-toggle-check]").forEach(el => {
     el.addEventListener("click", (e) => {
+      // 若點擊的是外部連結，不觸發勾選
+      if (e.target.closest("a[data-ext-link]")) return;
       e.stopPropagation();
       const key = el.dataset.toggleCheck;
       toggleCheck(key);
       render();
     });
+  });
+  // 外部連結明確阻止冒泡
+  document.querySelectorAll("a[data-ext-link]").forEach(el => {
+    el.addEventListener("click", (e) => { e.stopPropagation(); });
   });
   document.querySelectorAll("[data-map]").forEach(el => {
     el.addEventListener("click", (e) => {

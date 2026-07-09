@@ -2,6 +2,7 @@
 const TRIP_META = {
   title: "瑞士家族大冒險 2027",
   subtitle: "4 大 1 小・12 天親子自由行",
+  version: "V17 · 2026/7 校對",
   departure: "2027-09-13",  // 台灣起飛
   arrival: "2027-09-14",    // 蘇黎世抵達
   returnDate: "2027-09-25", // 返回台灣
@@ -15,16 +16,42 @@ const TRIP_META = {
   logistics: "5 件大行李（23kg）＋ 4 個過夜包（20-30L）＋ 1 台推車"
 };
 
+// 建議 D：首頁重要數字速查（現場最常查的號碼與代碼）
+const QUICK_NUMBERS = [
+  { icon:"🚨", label:"瑞士急難", value:"144 醫療 · 117 警察 · 118 火警 · 112 歐盟" },
+  { icon:"🚁", label:"高山救援 REGA", value:"1414" },
+  { icon:"🆘", label:"駐瑞士代表處急難手機", value:"+41 76 336 6979" },
+  { icon:"✈️", label:"Emirates 航班", value:"EK87（去）/ EK88（回）" },
+  { icon:"📞", label:"Emirates 台灣客服", value:"+886 2 7745 0420" },
+  { icon:"🏨", label:"GRIWA RENT（Atlanta 管理處）", value:"+41 33 854 11 40" },
+  { icon:"🏨", label:"KoBi Hirschenplatz（琉森）", value:"⚠️ 出發前從 booking 確認信填入" },
+  { icon:"🚂", label:"SBB 瑞士國鐵客服", value:"+41 848 44 66 88" }
+];
+
+// 建議 B/C：外部連結（Day 頁與 BOOKINGS 用）
+const EXT_LINKS = {
+  brienzRothornOps: "https://brienz-rothorn-bahn.ch/en/",
+  stpBuy: "https://www.swissrailways.com/en"
+};
+
 const HOTELS = {
   luzern: {
     name:"KoBi Apartments Hirschenplatz",
     city:"琉森 Luzern",
     address:"Hirschenplatz 12, 6004 Luzern",
+    roomType:"Two-Bedroom Apartment with Balcony",
+    size:"130 m² · 2 房 2 衛",
+    beds:"Bedroom 1: 1 twin + 1 queen · Bedroom 2: 1 queen · Living: 2 sofa beds",
+    features:["電梯","陽台","城市景","洗衣機+烘乾機","完整廚房"],
+    sleepPlanA:"推薦：Emily+皮皮+妞妞睡 Bedroom 1；Morris+Milo 睡 Bedroom 2",
+    sleepPlanB:"備選：Emily+Morris+妞妞睡 Bedroom 1；皮皮獨佔 Bedroom 2；Milo 沙發床",
+    sleepPlanC:"備選：Emily+Morris+妞妞睡 Bedroom 1；皮皮獨佔 Bedroom 2；Milo 沙發床",
+    sleepNote:"關鍵原則：皮皮怕生只跟 Emily 熟 → 皮皮與 Emily 同房或獨房，絕不跟 Milo 同房",
     checkIn:"2027-09-14 (二)", checkOut:"2027-09-18 (六)",
     nights:4, status:"已預訂",
     priceTWD:125000,
     mapQuery:"KoBi Apartments Hirschenplatz Luzern",
-    notes:"3 房 2 衛含陽台公寓，booking.com 免費取消方案"
+    notes:"130 m² 兩房兩衛含陽台公寓，含電梯／洗衣機＋烘乾機，booking.com 免費取消方案"
   },
   grindelwald: {
     name:"Apartment Atlanta by GRIWA RENT",
@@ -137,12 +164,19 @@ const DAYS = [
         steps:[
           "Google Maps 導航至 KoBi Hirschenplatz（步行 5 分鐘）",
           "辦理正式 Check-in，卸下 5 件大行李 + 推車",
+          "KoBi 是 130 m² 2 房 2 衛，建物有電梯，5 件大行李 + 推車可搭電梯上樓",
+          "熟悉家電：洗衣機、烘乾機、烤箱、洗碗機、咖啡機（按鈕通常德文）",
           "全員洗熱水澡放鬆",
           "前往琉森車站 B1 Coop 採買（鮮奶、麵包、火腿起司、水果）"
         ],
         defense:[
           "琉森 Coop 週二正常營業 08:00-19:00",
-          "第一天採買重點：簡單晚餐 + 隔日早餐"
+          "第一天採買重點：簡單晚餐 + 隔日早餐",
+          "🏠 4 晚睡眠配置・關鍵原則：皮皮怕生只跟 Emily 熟",
+          "方案 A（推薦）：Emily+皮皮+妞妞睡 Bedroom 1（1 queen + 1 twin），Morris+Milo 睡 Bedroom 2",
+          "方案 B：Emily+Morris+妞妞睡 Bedroom 1，皮皮獨佔 Bedroom 2，Milo 沙發床",
+          "方案 C：Emily+Morris+妞妞睡 Bedroom 1，皮皮獨佔 Bedroom 2，Milo 沙發床",
+          "💡 三方案共通點：皮皮絕不跟 Milo 同房或獨睡陌生沙發床"
         ],
         critical:[]
       },
@@ -279,7 +313,10 @@ const DAYS = [
           "貴重物品絕對不寄送：護照、機票、STP、現金、信用卡",
           "妞妞 48h 必需品全在 Emily 過夜包：尿布、奶粉、副食品、藥品",
           "全家 1 套保暖衣分散各過夜包",
-          "電池、鋰電池類產品全部抽出放隨身"
+          "電池、鋰電池類產品全部抽出放隨身",
+          "🚨【SBB 禁寄易腐食品・已查證】 SBB 明文禁止運送乳製品、肉類等易腐食品",
+          "妞妞奶粉、副食品、優格絕對不可放進寄送的大行李，必須全放隨身過夜包",
+          "✅ 過夜包戰術剛好符合：奶粉本就在 Emily 隨身包，但務必確認執行時不誤放"
         ]
       },
       {
@@ -803,10 +840,10 @@ const DAYS = [
         ],
         defense:["WAB 是 O 型環線完美收尾，車程平緩"],
         critical:[
-          "⚠️ WAB Grindelwald ↔ Kleine Scheidegg 段 STP 折扣待確認",
-          "舊資料常寫「25% 折扣需補差價」，但實際 STP 涵蓋範圍可能為 100% 免費",
-          "出發前 1 個月透過 sbb.ch 或 SBB App 查詢當年度 STP 涵蓋規則",
-          "若需補票約 CHF 15-20/成人"
+          "🚨【已查證】 WAB Grindelwald ↔ Kleine Scheidegg 段 STP 僅 25% 折扣，不是免費",
+          "原因：Kleine Scheidegg 非住人村莊，私營鐵路自定折扣，STP 持有者僅 25%（半價卡反而是 50%）",
+          "需在售票處補差價，預算約 CHF 15-20/成人（2027 推估 CHF 18），已列入預算",
+          "從 Kleine Scheidegg 下到 Grindelwald 全程約 35 分鐘，車程平緩，是 O 型環線完美收尾"
         ]
       },
       {
@@ -845,7 +882,9 @@ const DAYS = [
         ],
         critical:[
           "寄送前檢查：貴重物品、電池、鋰電池類產品全部抽出放隨身",
-          "Day 11 領取收據務必分開放，避免遺失同時發生"
+          "Day 11 領取收據務必分開放，避免遺失同時發生",
+          "🚨 寄送機場的大行李內，絕不可放乳製品、副食品（SBB 規定 + 長途運送風險）",
+          "妞妞所有食品全在隨身過夜包，不放寄送行李"
         ]
       },
       {
@@ -1388,8 +1427,8 @@ const SIGHTS = [
   { region:"伯恩高地", city:"少女峰山區", name:"施尼格普拉特 Schynige Platte", stp:"50% 折扣", family:"⭐⭐⭐⭐ 高：植物園步道平緩", note:"1893 古董齒軌火車，私房秘境" },
   { region:"伯恩高地", city:"少女峰山區", name:"First 纜車 + Cliff Walk", stp:"50% 折扣", family:"⭐⭐⭐⭐ 高：Bort 遊樂場妞妞主場", note:"Bachalpsee 倒影湖，全行程最美照片" },
   { region:"伯恩高地", city:"少女峰山區", name:"格林德瓦冰河峽谷 Gletscherschlucht", stp:"CHF 19 自費", family:"⭐⭐⭐⭐ 高：木棧道嵌岩壁", note:"雨天備案首選（含天然遮蔽）" },
-  { region:"伯恩高地", city:"少女峰山區", name:"Pfingstegg 森林溜滑梯", stp:"50% 折扣", family:"⚠️ 4 歲以下嚴禁滑道與 Fly-Line", note:"妞妞無滑道可玩，僅大人看景" },
-  { region:"伯恩高地", city:"布里恩茨", name:"Brienz Rothorn 1892 蒸汽齒軌", stp:"50% 折扣 + 預約 CHF 8", family:"⭐⭐⭐⭐ 高：山頂步道平緩", note:"瑞士最古老蒸汽齒軌之一，2,244m 看 693 座山峰" },
+  { region:"伯恩高地", city:"少女峰山區", name:"Pfingstegg 森林溜滑梯（非正式行程）", stp:"50% 折扣", family:"⚠️ 4 歲以下嚴禁滑道與 Fly-Line", note:"非正式行程，僅供參考。妞妞無滑道可玩，大人看景用。Day 9 的幼童放電主場已改為 Bort 遊樂場" },
+  { region:"伯恩高地", city:"布里恩茨", name:"Brienz Rothorn 1892 蒸汽齒軌", stp:"50% 折扣（2026 實查 CHF 49，2027 推估 CHF 50）+ 預約 CHF 8", family:"⭐⭐⭐⭐ 高：山頂步道平緩，推車 80% 路段可用", note:"瑞士最古老蒸汽齒軌之一，2,244m 看 693 座山峰。旺季可能改柴油機車，出發當日查官網" },
   { region:"伯恩高地", city:"因特拉肯", name:"Höheweg 大道 + Höhematte 草坪", stp:"100% 免費", family:"⭐⭐⭐⭐⭐ 極高：平地大道", note:"三峰最後合照黃金地點" }
 ];
 
@@ -1486,11 +1525,11 @@ const BOOKINGS = [
   { when:"🚨 T-15 個月 (2026/6-7)", task:"開始研究格林德瓦住宿", how:"6 晚連住 9/18-9/24，鎖 2 間獨立房 + 自炊廚房", priority:"🟡 重要" },
   { when:"🟠 T-11~13 個月 (2026/8-10)", task:"ETIAS 動向追蹤（若 2027 正式上路才需申請）", how:"追蹤 travel-europe.europa.eu/etias_en 公告；瑞士非申根國、ETIAS 非必備", priority:"🟡 追蹤" },
   { when:"🔴 雙11/黑五 (2026/11)", task:"🥇 EK 機票搶優惠第一波", how:"目標 NT$ 33,000-38,000/人來回，5 件行李+推車+4 過夜包", priority:"🔴 必做" },
-  { when:"🔴 雙11/黑五 (2026/11)", task:"🥇 STP 15 天版鎖 2026 價", how:"CHF 499 鎖 2027 起用日，避開 2027 漲價 +5%", priority:"🔴 必做" },
+  { when:"🔴 雙11/黑五 (2026/11)", task:"🥇 STP 15 天版搶購鎖 2026 年價格", how:"2026 實價 CHF 499（二等），可提前購買並指定 2027/9/14 起用日鎖價。歷史：2023-25 凍漲，2026 首漲 5%，2027 推估再漲 3-5%（CHF 515-524），越早買越划算。購買網址：swissrailways.com", priority:"🔴 必做" },
   { when:"🟠 早春 (2027/2-3)", task:"EK 嬰兒搖籃預約", how:"線上 manage booking，A380 機型前排隔板", priority:"🟡 重要" },
   { when:"🔵 T-3~4 個月 (2027/5-6)", task:"申根旅遊保險", how:"醫療 EUR 30,000+高山救援，妞妞另計", priority:"🔴 必做" },
   { when:"🔵 T-3 個月 (2027/6)", task:"皮拉圖斯齒軌線上預約", how:"pilatus.ch，CHF 5/人保證座位", priority:"🟡 重要" },
-  { when:"🔵 T-3 個月 (2027/6-7)", task:"🥇 Brienz Rothorn 蒸汽火車預約", how:"brienz-rothorn-bahn.ch，選 11:30 上山，CHF 8/人預約費，妞妞免費", priority:"🔴 必做" },
+  { when:"🔵 T-3 個月 (2027/6-7)", task:"🥇 Brienz Rothorn 蒸汽火車預約", how:"brienz-rothorn-bahn.ch Webshop，選 9/23(四) 10:36 或 11:30 上山班次，成人 4 位。費用：STP 半價 CHF 49-50（2026 實查 CHF 49，2027 推估 CHF 50）+ 預約座位 CHF 8/人，妞妞 6 歲以下免費不佔位。全票 CHF 98，座位保證費自動加入。天氣或蒸汽機車故障時可能改柴油機車或僅行駛至中站 Planalp，出發當日查官網首頁告示", priority:"🔴 必做" },
   { when:"🟡 T-1.5~2 個月 (2027/7 底)", task:"🥇 Barry's Restaurant 訂位", how:"2027/9/23 (四) 18:30 4 大 1 小，備註 kein Alkohol", priority:"🔴 必做" },
   { when:"🟡 T-1 個月 (2027/8)", task:"zb 景觀線 Day 5 座位預約", how:"SBB App 4 相連座位，CHF 10-14/人", priority:"🔴 必做" },
   { when:"🟡 T-1 個月 (2027/8)", task:"採購裝備與耗材", how:"妞妞健行鞋、防曬乳、瑞士轉接頭、行動電源", priority:"🟡 重要" },
@@ -1524,6 +1563,7 @@ const PACKING = [
     "妞妞專屬平板 + 兒童耳機（下載 5-10 集卡通）"
   ], where:"🎒 隨身行李（絕不寄送）"},
   { cat:"👕 服裝", items:[
+    "💡 KoBi + Atlanta 都有洗衣機（KoBi 還有烘乾機），衣物按 4-5 天備即可",
     "防風防水外套 × 1（必）",
     "薄羽絨 × 1、長袖上衣 × 5、長褲 × 3-4",
     "健行褲 × 1、內衣褲 × 7、厚襪 × 5",
