@@ -346,9 +346,45 @@ function renderDay() {
               font-weight:700; font-size:14px;
               box-shadow: 0 4px 14px rgba(234,88,12,0.35);">
       <span style="font-size:20px;">🔍</span>
-      <span style="flex:1;">今日蒸汽火車是否正常營運？</span>
+      <span style="flex:1;">今日 BRB 是否正常營運？</span>
       <span style="font-size:12px; opacity:0.85;">brienz-rothorn-bahn.ch ↗</span>
     </a>
+  ` : "";
+
+  // V21.3b：Day 10 BRB 班次列表 card
+  const brbScheduleCard = (idx === 9 && typeof BRB_SCHEDULE !== "undefined") ? `
+    <div class="card" style="background: linear-gradient(135deg, #FEF3C7, #FFFBEB); border: 1px solid var(--gold-border); border-left: 4px solid var(--gold);">
+      <div style="font-weight:800; font-size:14px; color:var(--gold); margin-bottom:8px;">🚂 BRB 班次表</div>
+      <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">${escapeHTML(BRB_SCHEDULE.season)}</div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+        ${BRB_SCHEDULE.departures.map(t => `
+          <span style="padding:6px 10px; background:white; border:1px solid var(--gold-border); border-radius:8px; font-family:ui-monospace,monospace; font-weight:700; color:var(--text); font-size:13px;">${escapeHTML(t)}</span>
+        `).join("")}
+      </div>
+      <div style="font-size:12px; color:var(--text); line-height:1.6; padding:10px; background:white; border-radius:8px;">
+        <div style="margin-bottom:4px;">⏰ ${escapeHTML(BRB_SCHEDULE.buffer)}</div>
+        <div style="margin-bottom:4px;">🎫 ${escapeHTML(BRB_SCHEDULE.note)}</div>
+        <div style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--gold-border); color:var(--text-muted); font-size:11px;">${escapeHTML(BRB_SCHEDULE.simulation2026)}</div>
+      </div>
+    </div>
+  ` : "";
+
+  // V21.3b：Day 11 Emirates 時間規則 card
+  const day11EmiratesTime = (idx === 10 && typeof EMIRATES_RULES !== "undefined" && EMIRATES_RULES.timeRules) ? `
+    <div class="card" style="background: linear-gradient(135deg, #FFF7ED, #FEF2F2); border: 1px solid var(--warn-orange-border); border-left: 4px solid var(--warn-orange);">
+      <div style="font-weight:800; font-size:14px; color:var(--warn-orange); margin-bottom:8px;">⏰ Emirates 時間規則（現行參考）</div>
+      <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px; line-height:1.5;">${escapeHTML(EMIRATES_RULES.timeRules.baseFlight)}</div>
+      ${EMIRATES_RULES.timeRules.points.map(p => `
+        <div style="display:flex; gap:10px; padding:8px 0; border-top:1px solid rgba(0,0,0,0.06); font-size:12px;">
+          <div style="flex:1;">
+            <div style="font-weight:600; color:var(--text);">${escapeHTML(p.label)}</div>
+            ${p.note ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px; line-height:1.5;">${escapeHTML(p.note)}</div>` : ''}
+          </div>
+          <div style="font-family:ui-monospace,monospace; font-weight:800; color:var(--warn-orange); white-space:nowrap;">${escapeHTML(p.value)}</div>
+        </div>
+      `).join("")}
+      <div style="font-size:11px; color:var(--text-muted); margin-top:10px; padding-top:10px; border-top:1px dashed var(--warn-orange-border); line-height:1.5;">${escapeHTML(EMIRATES_RULES.timeRules.note)}</div>
+    </div>
   ` : "";
 
   return `
@@ -364,6 +400,8 @@ function renderDay() {
     </div>
 
     ${day10Extra}
+    ${brbScheduleCard}
+    ${day11EmiratesTime}
     ${backupHTML}
 
     ${isBackupView ? `
@@ -720,6 +758,11 @@ function renderHotels() {
 
       return `
       <div class="card">
+        ${h.changelog ? `
+          <div style="display:inline-block; padding:4px 10px; background:linear-gradient(135deg, #EA580C, #DC2626); color:white; border-radius:999px; font-size:11px; font-weight:700; margin-bottom:8px;">
+            🔀 ${escapeHTML(h.changelog)}
+          </div>
+        ` : ''}
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
           <div style="flex:1;">
             <div style="font-size:11px; color:var(--jungfrau-blue); font-weight:600;">${escapeHTML(h.city)}</div>
@@ -764,20 +807,63 @@ function renderFlights() {
       </div>
     </div>
   `;
+
+  // Emirates 完整規則 card
+  const rulesHTML = (typeof EMIRATES_RULES !== "undefined") ? `
+    <div class="card" style="background: linear-gradient(135deg, #E9F2FF, #F1F5F9); border: 1px solid var(--jungfrau-blue); border-left: 4px solid var(--jungfrau-blue);">
+      <div style="font-weight:800; font-size:15px; color:var(--jungfrau-blue); margin-bottom:10px;">📋 Emirates 完整規則（V21.3b）</div>
+
+      <div style="margin-top:12px; padding:10px; background:white; border-radius:8px;">
+        <div style="font-weight:700; font-size:13px; margin-bottom:6px;">🧳 托運額度：Weight Concept 總重量制</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">${escapeHTML(EMIRATES_RULES.baggage.concept)}</div>
+        <ul style="padding-left:18px; font-size:12px; line-height:1.7;">
+          ${EMIRATES_RULES.baggage.tiers.map(t => `<li><strong>${escapeHTML(t.fare)}</strong>：${escapeHTML(t.weight)}</li>`).join("")}
+        </ul>
+        <div style="font-size:11px; color:var(--alert-red); margin-top:6px;">${escapeHTML(EMIRATES_RULES.baggage.warning)}</div>
+      </div>
+
+      <div style="margin-top:10px; padding:10px; background:white; border-radius:8px;">
+        <div style="font-weight:700; font-size:13px; margin-bottom:6px;">🍽️ 兒童餐代碼：${escapeHTML(EMIRATES_RULES.childMeal.code)}</div>
+        <div style="font-size:12px; color:var(--text-muted);">${escapeHTML(EMIRATES_RULES.childMeal.note)}</div>
+        <div style="font-size:11px; color:var(--alert-red); margin-top:4px;">${escapeHTML(EMIRATES_RULES.childMeal.warning)}</div>
+      </div>
+
+      <div style="margin-top:10px; padding:10px; background:white; border-radius:8px;">
+        <div style="font-weight:700; font-size:13px; margin-bottom:6px;">💺 座位配置</div>
+        <div style="font-size:12px; color:var(--text-muted);">${escapeHTML(EMIRATES_RULES.seatingPolicy.note)}</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${escapeHTML(EMIRATES_RULES.seatingPolicy.request)}</div>
+      </div>
+
+      <div style="margin-top:10px; padding:10px; background:white; border-radius:8px;">
+        <div style="font-weight:700; font-size:13px; margin-bottom:6px;">🏨 Dubai Connect</div>
+        <div style="font-size:12px; color:var(--text-muted);">${escapeHTML(EMIRATES_RULES.dubaiConnect.hours)}</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${escapeHTML(EMIRATES_RULES.dubaiConnect.perks)}</div>
+        <div style="font-size:11px; color:var(--alert-red); margin-top:4px;">${escapeHTML(EMIRATES_RULES.dubaiConnect.warning)}</div>
+      </div>
+
+      <div style="margin-top:10px; padding:10px; background: linear-gradient(135deg, #FFF7ED, #FEF2F2); border-radius:8px; border: 1px solid var(--warn-orange-border);">
+        <div style="font-weight:800; font-size:13px; color:var(--warn-orange); margin-bottom:6px;">⏰ Emirates 時間規則（現行參考）</div>
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.5;">${escapeHTML(EMIRATES_RULES.timeRules.baseFlight)}</div>
+        ${EMIRATES_RULES.timeRules.points.map(p => `
+          <div style="display:flex; gap:8px; padding:6px 0; border-top:1px solid rgba(0,0,0,0.06); font-size:12px;">
+            <div style="flex:1;">
+              <div style="font-weight:600; color:var(--text);">${escapeHTML(p.label)}</div>
+              ${p.note ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${escapeHTML(p.note)}</div>` : ''}
+            </div>
+            <div style="font-family:ui-monospace,monospace; font-weight:700; color:var(--warn-orange);">${escapeHTML(p.value)}</div>
+          </div>
+        `).join("")}
+        <div style="font-size:11px; color:var(--text-muted); margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.06); line-height:1.5;">${escapeHTML(EMIRATES_RULES.timeRules.note)}</div>
+      </div>
+    </div>
+  ` : "";
+
   return `
     <div class="page-title">✈️ 機票資訊</div>
     <div class="page-sub">Emirates 阿聯酋 · A380 · 經杜拜轉機</div>
     ${render1(FLIGHTS.outbound, "去程")}
     ${render1(FLIGHTS.return, "回程")}
-    <div class="card" style="background:var(--gold-bg); border-color:var(--gold-border);">
-      <div style="font-weight:700; margin-bottom:6px;">💡 EK 親子提醒</div>
-      <ul style="padding-left:18px; font-size:13px; line-height:1.7;">
-        <li>嬰兒搖籃：A380 前排隔板，需線上 Manage Booking 預約</li>
-        <li>推車：免費 Gate-check，推到登機口才收</li>
-        <li>行李：經濟艙每人 2 × 23kg 托運</li>
-        <li>兒童餐：線上 Manage Booking 預訂</li>
-      </ul>
-    </div>
+    ${rulesHTML}
   `;
 }
 
