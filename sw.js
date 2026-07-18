@@ -1,7 +1,14 @@
 
 /* Swiss Trip PWA Service Worker */
-const CACHE_NAME = "swiss-trip-v21-2027";
-const ASSETS = ["./", "./index.html"];
+const CACHE_NAME = "swiss-trip-v21-3c-2027";
+const ASSETS = [
+  "./",
+  "./index.html",
+  "./app.js",
+  "./data.js",
+  "./style.css",
+  "./manifest.json"
+];
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();

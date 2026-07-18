@@ -33,26 +33,84 @@ function isChecked(key) {
 }
 
 // ──────────── 日期計算 ────────────
-function today() {
+// 台灣時區的「今日 00:00」— 用於出發前倒數
+function todayTaipei() {
   const now = new Date();
-  // 台灣時區
   const tw = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
   tw.setHours(0,0,0,0);
   return tw;
 }
 
+// 瑞士時區的「當前日期字串 YYYY-MM-DD」— 用於 Day 1-11 判定
+function todayZurichDateStr() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Zurich",
+    year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(now);
+  const y = parts.find(p => p.type === "year").value;
+  const m = parts.find(p => p.type === "month").value;
+  const d = parts.find(p => p.type === "day").value;
+  return `${y}-${m}-${d}`;
+}
+
+// 瑞士時區的當前 HH:MM
+function nowZurichHM() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Zurich", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  }).formatToParts(now);
+  const h = parts.find(p => p.type === "hour").value;
+  const m = parts.find(p => p.type === "minute").value;
+  return `${h}:${m}`;
+}
+
 function daysUntilDeparture() {
   const dep = new Date("2027-09-13T00:00:00+08:00");
-  const t = today();
+  const t = todayTaipei();
   return Math.ceil((dep - t) / (1000 * 60 * 60 * 24));
 }
 
+// 用 Europe/Zurich 時區精確判定 Day 1-11
 function findTodayDayIndex() {
-  const t = today();
-  const start = new Date("2027-09-14T00:00:00+08:00"); // Day 1
-  const diff = Math.floor((t - start) / (1000 * 60 * 60 * 24));
+  const zurichStr = todayZurichDateStr();
+  // Day 1 = 2027-09-14 (Europe/Zurich)
+  const startYMD = new Date("2027-09-14T00:00:00Z");
+  const currentYMD = new Date(zurichStr + "T00:00:00Z");
+  const diff = Math.floor((currentYMD - startYMD) / (1000 * 60 * 60 * 24));
   if (diff >= 0 && diff < DAYS.length) return diff;
   return -1;
+}
+
+// 解析 HH:MM–HH:MM 字串為 [開始分鐘, 結束分鐘]；失敗回 null
+function parseTimeblockRange(str) {
+  if (!str) return null;
+  const m = str.match(/^(\d{1,2}):(\d{2})[–\-~](\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const s = parseInt(m[1],10)*60 + parseInt(m[2],10);
+  const e = parseInt(m[3],10)*60 + parseInt(m[4],10);
+  return [s, e];
+}
+
+// 目前/下一個 timeblock（依 Europe/Zurich 當前時間）
+function findCurrentAndNext(tl) {
+  const hm = nowZurichHM();
+  const nowMin = parseInt(hm.slice(0,2),10)*60 + parseInt(hm.slice(3,5),10);
+  let current = null, next = null;
+  for (let i = 0; i < tl.length; i++) {
+    const range = parseTimeblockRange(tl[i].time);
+    if (!range) continue;
+    if (nowMin >= range[0] && nowMin < range[1]) {
+      current = tl[i];
+      // 找下一個可解析
+      for (let j = i+1; j < tl.length; j++) {
+        if (parseTimeblockRange(tl[j].time)) { next = tl[j]; break; }
+      }
+      return { current, next };
+    }
+    if (nowMin < range[0] && !next) next = tl[i];
+  }
+  return { current, next };
 }
 
 // ──────────── 導航 ────────────
@@ -115,14 +173,14 @@ function renderAppBar() {
     return `
       <button class="back-btn" data-back>‹</button>
       <div style="flex:1; text-align:center;">
-        <h1 style="justify-content:center; font-size:16px;">🇨🇭 瑞士家族大冒險</h1>
+        <h1 style="justify-content:center; font-size:16px;">🇨🇭 瑞士旅行 2027</h1>
         ${versionBadge}
       </div>
       <div style="width:38px;"></div>
     `;
   }
   return `
-    <h1><span class="icon">🇨🇭</span> 瑞士家族大冒險</h1>
+    <h1><span class="icon">🇨🇭</span> 瑞士旅行 2027</h1>
     <div style="text-align:right; font-size:11px; opacity:0.85;">
       <div>2027/9/13 出發 · 4 大 1 小</div>
       ${TRIP_META.version ? `<div style="font-size:10px; opacity:0.85; margin-top:2px;">${escapeHTML(TRIP_META.version)}</div>` : ''}
@@ -134,9 +192,8 @@ function renderBottomNav() {
   const items = [
     { key:"home", em:"🏠", label:"首頁" },
     { key:"days", em:"📅", label:"行程" },
-    { key:"bookings", em:"📞", label:"訂位" },
-    { key:"shopping", em:"🛒", label:"採買" },
-    { key:"packing", em:"🧳", label:"打包" },
+    { key:"bookings", em:"✅", label:"待辦" },
+    { key:"tools", em:"🧰", label:"工具" },
     { key:"emergency", em:"🆘", label:"緊急" }
   ];
   return items.map(it => `
@@ -159,6 +216,10 @@ function renderPage() {
   if (p === "emergency") return renderEmergency();
   if (p === "hotels")    return renderHotels();
   if (p === "flights")   return renderFlights();
+  if (p === "tools")     return renderTools();
+  if (p === "pending")   return renderPending();
+  if (p === "weather")   return renderWeather();
+  if (p === "luggage")   return renderLuggage();
   return renderHome();
 }
 
@@ -198,15 +259,57 @@ function renderHome() {
 
   let todayBtn = "";
   if (todayIdx >= 0) {
+    const d = DAYS[todayIdx];
+    const hotel = HOTELS[d.hotelKey];
+    const cn = findCurrentAndNext(d.tl);
+    // 今日 critical 匯總（前 3 條）
+    const critList = [];
+    d.tl.forEach(t => {
+      if (t.critical && t.critical.length) critList.push(...t.critical);
+    });
+    const critTop3 = critList.slice(0, 3);
+    const timeNow = nowZurichHM();
+
     todayBtn = `
-      <button class="today-btn" data-nav-day="${todayIdx}">
-        <span class="em">📍</span>
-        <div style="flex:1; text-align:left;">
-          <div style="font-size:12px; opacity:0.85; font-weight:500;">今日行程</div>
-          <div>Day ${todayIdx + 1} · ${DAYS[todayIdx].theme}</div>
+      <div class="today-dashboard" style="background: linear-gradient(135deg, var(--swiss-red), #b30014); color:#fff; padding:16px; border-radius:16px; margin-bottom:14px; box-shadow: 0 4px 16px rgba(220,0,24,0.28);">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:10px;">
+          <div>
+            <div style="font-size:11px; opacity:0.9; letter-spacing:0.06em;">📍 現場模式 · Europe/Zurich ${escapeHTML(timeNow)}</div>
+            <div style="font-size:22px; font-weight:800; margin-top:2px;">Day ${d.day} · ${escapeHTML(d.theme)}</div>
+            <div style="font-size:12px; opacity:0.9; margin-top:2px;">${escapeHTML(d.date)} · ${escapeHTML(d.loc)}</div>
+          </div>
         </div>
-        <span class="arrow">›</span>
-      </button>
+
+        ${cn.current ? `
+          <div style="background:rgba(255,255,255,0.15); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
+            <div style="font-size:10px; opacity:0.85; letter-spacing:0.08em; margin-bottom:2px;">🟢 目前正在</div>
+            <div style="font-size:14px; font-weight:700;">${escapeHTML(cn.current.time)} · ${escapeHTML(cn.current.title)}</div>
+          </div>
+        ` : ""}
+
+        ${cn.next ? `
+          <div style="background:rgba(0,0,0,0.15); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
+            <div style="font-size:10px; opacity:0.85; letter-spacing:0.08em; margin-bottom:2px;">🔵 下一步</div>
+            <div style="font-size:14px; font-weight:700;">${escapeHTML(cn.next.time)} · ${escapeHTML(cn.next.title)}</div>
+          </div>
+        ` : ""}
+
+        ${hotel ? `
+          <div style="font-size:12px; opacity:0.9; margin-bottom:8px;">🏨 ${escapeHTML(hotel.name)}</div>
+        ` : ""}
+
+        ${critTop3.length ? `
+          <div style="background:rgba(0,0,0,0.2); border-radius:10px; padding:10px 12px; margin-bottom:10px;">
+            <div style="font-size:10px; opacity:0.9; letter-spacing:0.08em; margin-bottom:6px;">⚠️ 今日重要提醒</div>
+            ${critTop3.map(c => `<div style="font-size:12px; line-height:1.55; padding:3px 0;">• ${escapeHTML(c)}</div>`).join("")}
+          </div>
+        ` : ""}
+
+        <button class="today-btn" data-nav-day="${todayIdx}" style="background: rgba(255,255,255,0.95); color: var(--swiss-red); padding:12px 16px; border-radius:10px; border:none; width:100%; font-family:inherit; font-size:14px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:space-between;">
+          <span>展開完整 Day ${d.day} 行程</span>
+          <span style="font-size:18px;">›</span>
+        </button>
+      </div>
     `;
   }
 
@@ -260,25 +363,25 @@ function renderHome() {
     ${quickNumbersHTML}
 
     <div class="quick-grid">
-      <div class="quick-tile" data-nav="hotels">
-        <span class="em">🏨</span>
-        <div class="label">住宿資訊</div>
-        <div class="sub">KoBi · Atlanta</div>
+      <div class="quick-tile" data-nav="luggage">
+        <span class="em">🛅</span>
+        <div class="label">行李追蹤</div>
+        <div class="sub">SBB 5 件 × 4 節點</div>
       </div>
-      <div class="quick-tile" data-nav="flights">
-        <span class="em">✈️</span>
-        <div class="label">機票資訊</div>
-        <div class="sub">Emirates EK</div>
+      <div class="quick-tile" data-nav="pending">
+        <span class="em">🟡</span>
+        <div class="label">2027 待確認</div>
+        <div class="sub">10 項待鎖定</div>
       </div>
-      <div class="quick-tile" data-nav="sights">
-        <span class="em">📍</span>
-        <div class="label">景點導覽</div>
-        <div class="sub">${SIGHTS.length} 個景點</div>
+      <div class="quick-tile" data-nav="weather">
+        <span class="em">🌦️</span>
+        <div class="label">天氣決策</div>
+        <div class="sub">互換與撤退規則</div>
       </div>
-      <div class="quick-tile" data-nav="emergency">
-        <span class="em">🆘</span>
-        <div class="label">緊急聯絡</div>
-        <div class="sub">保險 · 官方 · 醫療</div>
+      <div class="quick-tile" data-nav="tools">
+        <span class="em">🧰</span>
+        <div class="label">全部工具</div>
+        <div class="sub">住宿·航班·打包·景點</div>
       </div>
     </div>
 
@@ -498,11 +601,11 @@ function renderStpBadge(stp) {
   return "";
 }
 
-// ──────────── 訂位清單 ────────────
+// ──────────── 訂位清單 / 待辦 ────────────
 function renderBookings() {
   const groups = {};
   BOOKINGS.forEach(b => {
-    const key = b.when.split(" ")[0]; // 依前綴分組
+    const key = b.when.split(" ")[0];
     if (!groups[b.when]) groups[b.when] = [];
     groups[b.when].push(b);
   });
@@ -511,43 +614,75 @@ function renderBookings() {
   const total = BOOKINGS.length;
   const percent = Math.round(completed / total * 100);
 
-  const html = Object.entries(groups).map(([when, items]) => `
+  // 篩選狀態（localStorage）
+  const filterKey = "bookings_filter";
+  const currentFilter = localStorage.getItem(filterKey) || "all";
+  const filters = [
+    { key:"all", label:`全部 (${total})` },
+    { key:"open", label:`未完成 (${total - completed})` },
+    { key:"must", label:"必做" },
+    { key:"important", label:"重要" },
+    { key:"suggest", label:"建議" },
+    { key:"track", label:"追蹤" }
+  ];
+
+  const matches = (b) => {
+    const chk = isChecked(`book_${b.task}`);
+    if (currentFilter === "all") return true;
+    if (currentFilter === "open") return !chk;
+    if (currentFilter === "must") return b.priority && b.priority.includes("必做");
+    if (currentFilter === "important") return b.priority && b.priority.includes("重要");
+    if (currentFilter === "suggest") return b.priority && b.priority.includes("建議");
+    if (currentFilter === "track") return b.priority && b.priority.includes("追蹤");
+    return true;
+  };
+
+  const urlPattern = /(https?:\/\/[^\s，。]+|(?:www\.)[a-z0-9.-]+\.[a-z]{2,}|[a-z0-9-]+\.(?:com|ch|org|net|app)[a-z0-9\/.-]*)/gi;
+  const linkifyHow = (str) => {
+    return escapeHTML(str).replace(urlPattern, (match) => {
+      const url = match.startsWith("http") ? match : `https://${match}`;
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--jungfrau-blue); text-decoration:underline; font-weight:600;" data-ext-link>${match} ↗</a>`;
+    });
+  };
+
+  const html = Object.entries(groups).map(([when, items]) => {
+    const visible = items.filter(matches);
+    if (!visible.length) return "";
+    return `
     <div class="checklist-group">
-      <div class="checklist-header">
-        <span>${when}</span>
-      </div>
-      ${items.map(b => {
+      <div class="checklist-header"><span>${escapeHTML(when)}</span></div>
+      ${visible.map(b => {
         const key = `book_${b.task}`;
         const chk = isChecked(key);
-        // 建議 C：偵測 how 欄位中的網址，自動轉為連結
-        const urlPattern = /(https?:\/\/[^\s，。]+|(?:www\.)[a-z0-9.-]+\.[a-z]{2,}|[a-z0-9-]+\.(?:com|ch|org|net|app)[a-z0-9\/.-]*)/gi;
-        const linkifyHow = (str) => {
-          return escapeHTML(str).replace(urlPattern, (match) => {
-            const url = match.startsWith("http") ? match : `https://${match}`;
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--jungfrau-blue); text-decoration:underline; font-weight:600;" data-ext-link>${match} ↗</a>`;
-          });
-        };
         return `
           <div class="checklist-item ${chk ? 'checked' : ''}" data-toggle-check="${key}">
             <div class="cb">${chk ? '✓' : ''}</div>
             <div class="text">
-              <div><strong>${escapeHTML(b.task)}</strong> ${b.priority ? `<span style="font-size:11px; color:var(--text-muted);">${b.priority}</span>` : ""}</div>
+              <div><strong>${escapeHTML(b.task)}</strong> ${b.priority ? `<span style="font-size:11px; color:var(--text-muted);">${escapeHTML(b.priority)}</span>` : ""}</div>
               <div class="meta">${linkifyHow(b.how)}</div>
             </div>
           </div>
         `;
       }).join("")}
     </div>
-  `).join("");
+  `;
+  }).join("");
 
   return `
-    <div class="page-title">📞 訂位清單</div>
-    <div class="page-sub">依時機分階段，勾選已完成</div>
+    <div class="page-title">✅ 待辦 / 訂位</div>
+    <div class="page-sub">依時機分階段，勾選已完成；點連結直接開官方頁</div>
     <div style="background:var(--surface); padding:14px; border-radius:14px; margin-bottom:14px; border:1px solid var(--border);">
-      <div style="font-size:13px; margin-bottom:6px;">✅ 完成度 <strong>${completed} / ${total}</strong> · ${percent}%</div>
+      <div style="font-size:13px; margin-bottom:6px;">完成度 <strong>${completed} / ${total}</strong> · ${percent}%</div>
       <div class="progress-strip"><div style="width:${percent}%;"></div></div>
     </div>
-    ${html}
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+      ${filters.map(f => `
+        <button data-set-filter="${f.key}" style="padding:6px 12px; font-family:inherit; font-size:12px; font-weight:600; border-radius:999px; cursor:pointer; border: 1px solid ${currentFilter === f.key ? 'var(--alpine-green)' : 'var(--border)'}; background: ${currentFilter === f.key ? 'var(--alpine-green)' : 'var(--surface)'}; color: ${currentFilter === f.key ? '#fff' : 'var(--text)'};">
+          ${escapeHTML(f.label)}
+        </button>
+      `).join("")}
+    </div>
+    ${html || '<div style="padding:24px; text-align:center; color:var(--text-muted); font-size:13px;">沒有符合此篩選條件的項目</div>'}
   `;
 }
 
@@ -867,6 +1002,206 @@ function renderFlights() {
   `;
 }
 
+// ──────────── 工具集頁 ────────────
+function renderTools() {
+  const tiles = [
+    { nav:"luggage",   em:"🛅", label:"行李追蹤",   sub:"SBB 5 件 × 4 節點" },
+    { nav:"pending",   em:"🟡", label:"2027 待確認", sub:"10 項待鎖定" },
+    { nav:"weather",   em:"🌦️", label:"天氣決策",   sub:"互換與撤退規則" },
+    { nav:"hotels",    em:"🏨", label:"住宿",       sub:"Luzern · Grindelwald" },
+    { nav:"flights",   em:"✈️", label:"航班 + Emirates 規則", sub:"EK87 / EK88" },
+    { nav:"packing",   em:"🧳", label:"打包清單",   sub:`${PACKING.length} 分類` },
+    { nav:"shopping",  em:"🛒", label:"採買清單",   sub:`${SHOPPING.length} 階段` },
+    { nav:"sights",    em:"📍", label:"景點導覽",   sub:`${SIGHTS.length} 個景點` }
+  ];
+  return `
+    <div class="page-title">🧰 工具</div>
+    <div class="page-sub">住宿、航班、行李、天氣、待確認、打包、採買、景點</div>
+    <div class="quick-grid">
+      ${tiles.map(t => `
+        <div class="quick-tile" data-nav="${t.nav}">
+          <span class="em">${t.em}</span>
+          <div class="label">${escapeHTML(t.label)}</div>
+          <div class="sub">${escapeHTML(t.sub)}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+// ──────────── 2027 待確認 ────────────
+function renderPending() {
+  if (typeof PENDING_2027 === "undefined") return `<div class="page-title">🟡 2027 待確認</div><div>資料未載入</div>`;
+
+  // 狀態統計
+  const stateOf = (id) => localStorage.getItem(`pending_${id}`) || "unconfirmed";
+  const stats = { unconfirmed:0, confirmed:0, done:0 };
+  PENDING_2027.forEach(p => { stats[stateOf(p.id)]++; });
+
+  const groups = {};
+  PENDING_2027.forEach(p => {
+    if (!groups[p.cat]) groups[p.cat] = [];
+    groups[p.cat].push(p);
+  });
+
+  const stateChip = (s) => {
+    if (s === "done") return '<span class="badge" style="background:#DCFCE7; color:#166534; border:1px solid #86EFAC;">🟢 已完成</span>';
+    if (s === "confirmed") return '<span class="badge" style="background:#DBEAFE; color:#1E40AF; border:1px solid #93C5FD;">🔵 已確認</span>';
+    return '<span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A;">🟡 未確認</span>';
+  };
+
+  return `
+    <div class="page-title">🟡 2027 待確認</div>
+    <div class="page-sub">尚未鎖定的 ${PENDING_2027.length} 項資料，按建議時間追蹤</div>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;">
+      <div style="background:#FEF3C7; padding:10px; border-radius:10px; text-align:center; border:1px solid #FDE68A;">
+        <div style="font-size:20px; font-weight:800; color:#92400E;">${stats.unconfirmed}</div>
+        <div style="font-size:11px; color:#92400E;">🟡 未確認</div>
+      </div>
+      <div style="background:#DBEAFE; padding:10px; border-radius:10px; text-align:center; border:1px solid #93C5FD;">
+        <div style="font-size:20px; font-weight:800; color:#1E40AF;">${stats.confirmed}</div>
+        <div style="font-size:11px; color:#1E40AF;">🔵 已確認</div>
+      </div>
+      <div style="background:#DCFCE7; padding:10px; border-radius:10px; text-align:center; border:1px solid #86EFAC;">
+        <div style="font-size:20px; font-weight:800; color:#166534;">${stats.done}</div>
+        <div style="font-size:11px; color:#166534;">🟢 已完成</div>
+      </div>
+    </div>
+
+    ${Object.entries(groups).map(([cat, items]) => `
+      <div class="section-title">${escapeHTML(cat)}</div>
+      ${items.map(p => {
+        const s = stateOf(p.id);
+        const linkURL = p.link && EXT_LINKS[p.link] ? EXT_LINKS[p.link] : "";
+        return `
+          <div class="card" style="margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px;">
+              <div style="flex:1; font-weight:700; font-size:14px;">${escapeHTML(p.item)}</div>
+              ${stateChip(s)}
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">🕒 建議確認：${escapeHTML(p.suggestBy)}</div>
+            <div style="font-size:12px; color:var(--text); line-height:1.6; padding:8px 10px; background:var(--slate-50); border-radius:8px; margin-bottom:10px;">${escapeHTML(p.note)}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <button data-pending-state="${p.id}|unconfirmed" style="padding:6px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; border:1px solid ${s === 'unconfirmed' ? '#92400E' : 'var(--border)'}; background:${s === 'unconfirmed' ? '#FEF3C7' : 'var(--surface)'}; color:${s === 'unconfirmed' ? '#92400E' : 'var(--text-muted)'}; font-family:inherit;">🟡 未確認</button>
+              <button data-pending-state="${p.id}|confirmed" style="padding:6px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; border:1px solid ${s === 'confirmed' ? '#1E40AF' : 'var(--border)'}; background:${s === 'confirmed' ? '#DBEAFE' : 'var(--surface)'}; color:${s === 'confirmed' ? '#1E40AF' : 'var(--text-muted)'}; font-family:inherit;">🔵 已確認</button>
+              <button data-pending-state="${p.id}|done" style="padding:6px 10px; font-size:11px; font-weight:600; border-radius:6px; cursor:pointer; border:1px solid ${s === 'done' ? '#166534' : 'var(--border)'}; background:${s === 'done' ? '#DCFCE7' : 'var(--surface)'}; color:${s === 'done' ? '#166534' : 'var(--text-muted)'}; font-family:inherit;">🟢 已完成</button>
+              ${linkURL ? `<a href="${linkURL}" target="_blank" rel="noopener noreferrer" data-ext-link style="padding:6px 10px; font-size:11px; font-weight:600; border-radius:6px; background:var(--jungfrau-blue); color:#fff; text-decoration:none; margin-left:auto;">🔗 官方連結 ↗</a>` : ""}
+            </div>
+          </div>
+        `;
+      }).join("")}
+    `).join("")}
+  `;
+}
+
+// ──────────── 天氣決策中心 ────────────
+function renderWeather() {
+  if (typeof WEATHER_DECISION === "undefined") return `<div class="page-title">🌦️ 天氣決策</div><div>資料未載入</div>`;
+
+  return `
+    <div class="page-title">🌦️ 天氣 / 行程調整</div>
+    <div class="page-sub">4 項核心原則 + 官方 Webcam / 氣象</div>
+
+    <div class="card" style="background:linear-gradient(135deg,#F0F9FF,#F1F5F9); border:1px solid var(--jungfrau-blue);">
+      <div style="font-weight:800; color:var(--jungfrau-blue); margin-bottom:10px;">📖 4 項核心原則</div>
+      ${WEATHER_DECISION.principles.map(p => `
+        <div style="padding:12px; background:white; border-radius:10px; margin-bottom:8px;">
+          <div style="font-size:14px; font-weight:700; margin-bottom:6px;">${p.icon} ${escapeHTML(p.label)}</div>
+          <div style="font-size:12px; color:var(--text-muted); line-height:1.65;">${escapeHTML(p.detail)}</div>
+        </div>
+      `).join("")}
+    </div>
+
+    <div class="section-title">🔗 官方連結（不即時抓 API）</div>
+    ${WEATHER_DECISION.externalLinks.map(l => {
+      const url = EXT_LINKS[l.url];
+      if (!url) return "";
+      return `
+        <a href="${url}" target="_blank" rel="noopener noreferrer" data-ext-link class="card" style="display:block; text-decoration:none; color:inherit; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:24px;">🌐</span>
+            <div style="flex:1;">
+              <div style="font-weight:700; font-size:14px;">${escapeHTML(l.label)}</div>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${escapeHTML(l.note)}</div>
+            </div>
+            <span style="color:var(--jungfrau-blue); font-size:14px; font-weight:600;">開啟 ↗</span>
+          </div>
+        </a>
+      `;
+    }).join("")}
+  `;
+}
+
+// ──────────── SBB 行李追蹤 ────────────
+function renderLuggage() {
+  if (typeof LUGGAGE_MILESTONES === "undefined") return `<div class="page-title">🛅 行李追蹤</div><div>資料未載入</div>`;
+
+  const BAGS = [1,2,3,4,5];
+  const total = LUGGAGE_MILESTONES.length * BAGS.length;
+  const doneCount = LUGGAGE_MILESTONES.reduce((n, m) => n + BAGS.filter(b => isChecked(`luggage_${m.id}_bag${b}`)).length, 0);
+  const percent = Math.round(doneCount / total * 100);
+
+  return `
+    <div class="page-title">🛅 SBB 行李追蹤</div>
+    <div class="page-sub">5 件大行李 × 4 節點 · 純本機 localStorage</div>
+
+    <div style="background:var(--surface); padding:14px; border-radius:14px; margin-bottom:14px; border:1px solid var(--border);">
+      <div style="font-size:13px; margin-bottom:6px;">總進度 <strong>${doneCount} / ${total}</strong> · ${percent}%</div>
+      <div class="progress-strip"><div style="width:${percent}%;"></div></div>
+    </div>
+
+    <div class="card" style="background:var(--gold-bg); border-color:var(--gold-border);">
+      <div style="font-size:12px; color:var(--gold); font-weight:700; margin-bottom:6px;">💡 使用說明</div>
+      <ul style="padding-left:18px; font-size:12px; line-height:1.7; color:var(--text);">
+        <li>每一節點勾選「5 件已寄出／領取」</li>
+        <li>可填入寄物編號或收據編號，僅存本機</li>
+        <li>下方會顯示「5/5 全部到齊」狀態</li>
+      </ul>
+    </div>
+
+    ${LUGGAGE_MILESTONES.map(m => {
+      const bagsDone = BAGS.filter(b => isChecked(`luggage_${m.id}_bag${b}`)).length;
+      const allDone = bagsDone === BAGS.length;
+      const receiptKey = `luggage_receipt_${m.id}`;
+      const receipt = localStorage.getItem(receiptKey) || "";
+
+      return `
+        <div class="card" style="border-left:4px solid ${allDone ? 'var(--safe-green)' : 'var(--slate-300)'};">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:10px;">
+            <div>
+              <div style="font-weight:800; font-size:15px;">${escapeHTML(m.day)} · ${escapeHTML(m.action)}</div>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">📅 ${escapeHTML(m.date)}</div>
+              <div style="font-size:12px; color:var(--text-muted);">📍 ${escapeHTML(m.loc)} → ${escapeHTML(m.target)}</div>
+            </div>
+            <span class="badge" style="background:${allDone ? 'var(--safe-green)' : 'var(--slate-100)'}; color:${allDone ? '#fff' : 'var(--text-muted)'};">
+              ${bagsDone}/5 ${allDone ? '✓ 到齊' : ''}
+            </span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:10px;">
+            ${BAGS.map(b => {
+              const key = `luggage_${m.id}_bag${b}`;
+              const chk = isChecked(key);
+              return `
+                <button data-toggle-check="${key}" style="padding:12px 6px; border-radius:10px; border:2px solid ${chk ? 'var(--safe-green)' : 'var(--slate-300)'}; background:${chk ? 'var(--safe-green)' : 'var(--surface)'}; color:${chk ? '#fff' : 'var(--text-muted)'}; font-family:inherit; font-weight:800; font-size:12px; cursor:pointer;">
+                  <div style="font-size:16px;">${chk ? '✓' : '☐'}</div>
+                  <div>Bag ${b}</div>
+                </button>
+              `;
+            }).join("")}
+          </div>
+
+          <div style="margin-top:8px;">
+            <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">寄物 / 收據編號（純本機儲存）</label>
+            <input type="text" data-luggage-receipt="${m.id}" value="${escapeHTML(receipt)}" placeholder="輸入編號..." style="width:100%; padding:8px 10px; font-family:ui-monospace,monospace; font-size:13px; border:1px solid var(--border); border-radius:8px; background:var(--slate-50);" />
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+}
+
 // ──────────── HTML 跳脫 ────────────
 function escapeHTML(str) {
   if (str == null) return "";
@@ -918,6 +1253,34 @@ function attachHandlers() {
       const q = el.dataset.map;
       window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, "_blank");
     });
+  });
+
+  // V21.3b：篩選按鈕
+  document.querySelectorAll("[data-set-filter]").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      localStorage.setItem("bookings_filter", el.dataset.setFilter);
+      render();
+    });
+  });
+
+  // V21.3b：2027 待確認狀態切換
+  document.querySelectorAll("[data-pending-state]").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const [id, state] = el.dataset.pendingState.split("|");
+      localStorage.setItem(`pending_${id}`, state);
+      render();
+    });
+  });
+
+  // V21.3b：行李寄物編號輸入
+  document.querySelectorAll("[data-luggage-receipt]").forEach(el => {
+    el.addEventListener("input", (e) => {
+      const id = el.dataset.luggageReceipt;
+      localStorage.setItem(`luggage_receipt_${id}`, el.value);
+    });
+    el.addEventListener("click", (e) => e.stopPropagation());
   });
 }
 

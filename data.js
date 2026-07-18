@@ -1,13 +1,13 @@
 
 const TRIP_META = {
-  title: "瑞士家族大冒險 2027",
-  subtitle: "4 大 1 小・12 天親子自由行",
+  title: "瑞士旅行 2027",
+  subtitle: "4 大 1 小・瑞士親子自由行",
   version: "V21.3b · 2026/7 封版",
   departure: "2027-09-13",  // 台灣起飛
   arrival: "2027-09-14",    // 蘇黎世抵達
   returnDate: "2027-09-25", // 返回台灣
   members: [
-    { name:"Morris", role:"爸爸", note:"隊長 · 導航 · 交通後勤" },
+    { name:"Morris", role:"爸爸", note:"負責人 · 導航 · 交通後勤" },
     { name:"Emily",  role:"媽媽", note:"妞妞主要照護 · 妞妞包管理" },
     { name:"皮皮",   role:"成人", note:"與 Emily 熟識" },
     { name:"Milo",   role:"成人", note:"與 Morris、Emily 熟識" },
@@ -31,8 +31,55 @@ const QUICK_NUMBERS = [
 // 建議 B/C：外部連結（Day 頁與 BOOKINGS 用）
 const EXT_LINKS = {
   brienzRothornOps: "https://brienz-rothorn-bahn.ch/en/",
-  stpBuy: "https://www.swissrailways.com/en"
+  stpBuy: "https://www.swissrailways.com/en",
+  sbb: "https://www.sbb.ch/en",
+  sbbLuggage: "https://www.sbb.ch/en/travel-information/baggage.html",
+  meteoSwiss: "https://www.meteoswiss.admin.ch/",
+  pilatus: "https://www.pilatus.ch/en",
+  spb: "https://jungfrau.ch/en-gb/schynige-platte/",
+  zurichAirport: "https://www.zurich-airport.com/",
+  emiratesManage: "https://www.emirates.com/tw/chinese/manage-booking/",
+  interhome: "https://www.interhome.ch/",
+  etias: "https://travel-europe.europa.eu/etias_en"
 };
+
+// V21.3b 功能：2027 待確認控制中心
+const PENDING_2027 = [
+  { id:"ek_flight", cat:"航班", item:"EK87 / EK88 2027 正式航班時間", suggestBy:"訂票時（2026/11 雙11、黑五）", link:"emiratesManage", note:"目前使用現行參考時間（EK88 15:30 起飛）；正式時間以 2027 訂票確認為準" },
+  { id:"brb_2027", cat:"班表", item:"BRB Brienz Rothorn Bahn 2027 班表", suggestBy:"T-2 個月（2027/7）", link:"brienzRothornOps", note:"2026 官方 9 個班次僅作模擬；2027 正式班表公布後決定 9/23 上山班次" },
+  { id:"spb_2027", cat:"班表", item:"SPB Schynige Platte Bahn 2027 班表與末班", suggestBy:"T-2 個月（2027/7）", link:"spb", note:"Day 8 下山方案 A/B 為暫定；末班時間依 2027 官方班表確認" },
+  { id:"lie_seat", cat:"預約", item:"LIE Luzern-Interlaken Express 2027/9 座位預約費", suggestBy:"T-1 個月（2027/8）", link:"sbb", note:"透過 Zentralbahn 官方指定座位預約系統；STP 涵蓋列車本身，預約費另計。未預約仍可持 STP 搭乘（備援）" },
+  { id:"pilatus_2027", cat:"預約", item:"Pilatus 2027 齒軌預約政策", suggestBy:"T-3 個月（2027/6）", link:"pilatus", note:"官方措辭存在「強烈建議」與「不強制」不同措辭；2027 出發前確認是否成為強制" },
+  { id:"mountain_season", cat:"營運", item:"高山設施 2027 營運期", suggestBy:"T-3 個月（2027/6）", link:"", note:"Firstbahn、SPB、BRB、Pilatus 等秋季末營運期以官網為準" },
+  { id:"sbb_luggage", cat:"物流", item:"SBB Gepäck 2027 櫃檯時段/費率", suggestBy:"T-1 個月（2027/8）", link:"sbbLuggage", note:"現行 Luggage dispatch 08:00-17:00、reclaim 08:00-18:00、CHF 12/件；2027 出發前分站頁確認" },
+  { id:"stp_2027_price", cat:"票務", item:"STP 2027 正式價格/購買", suggestBy:"T-2 個月（2027/7）", link:"stpBuy", note:"SBB 官方預售期為出發前 60 天；2027/9/14 啟用最早 2027/7/16 起可購買。預算暫採 CHF 515" },
+  { id:"etias_status", cat:"入境", item:"ETIAS 實際執行狀態", suggestBy:"T-6 個月（2027/3）", link:"etias", note:"ETIAS 官方預計 2026 Q4 啟用；瑞士非申根國，ETIAS 對本團不強制；2027 出發前 6 個月確認實際上線" },
+  { id:"interhome_key", cat:"住宿", item:"Interhome Sans Souci W1 鑰匙交付方式/精確地址", suggestBy:"訂房後", link:"interhome", note:"訂房後 Interhome email 告知；Day 5 領鑰匙流程以當時 email 為準" }
+];
+
+// V21.3b 功能：天氣/行程調整決策中心
+const WEATHER_DECISION = {
+  principles:[
+    { icon:"🔄", label:"Day 7/8/9 可依天氣互換", detail:"曼利申全景健行、SPB 歷史齒軌、First+Bachalpsee 三日為高山日靈活調度：好天氣鎖三峰視角日，一般天氣走低海拔或室內" },
+    { icon:"🔒", label:"Day 10 原則鎖定 BRB", detail:"BRB 主題日受班表限制，非機動天。只有 BRB 明顯停駛（大風/濃霧/機車故障）才啟動專屬備案" },
+    { icon:"⚠️", label:"高山 Webcam 白牆撤退", detail:"Day 4 皮拉圖斯前一晚 20:00 檢查 Webcam，若白牆隔日啟動備案 A（Oeschinensee 單點）或 B（琉森室內日）" },
+    { icon:"🌧️", label:"下雨天低海拔優先", detail:"Rothorn/First/Männlichen 山頂雨雪時視野零，改走 Lauterbrunnen 谷地、Interlaken 市區、伯恩舊城拱廊、琉森室內展館" }
+  ],
+  externalLinks:[
+    { label:"MeteoSwiss（瑞士氣象局）", url:"meteoSwiss", note:"隔日天氣預報 + 逐時風速" },
+    { label:"Brienz Rothorn Bahn 營運狀態", url:"brienzRothornOps", note:"Day 10 早上必查" },
+    { label:"Pilatus 官方 Webcam / 營運", url:"pilatus", note:"Day 4 前一晚 20:00 檢查" },
+    { label:"Schynige Platte Bahn 官方", url:"spb", note:"Day 8 SPB 車型/班表" }
+  ]
+};
+
+// V21.3b 功能：SBB 行李追蹤（5 件 × 4 節點）
+const LUGGAGE_MILESTONES = [
+  { id:"D3_send", day:"Day 3", date:"9/16 (四) 07:00", loc:"Luzern 車站", action:"寄出", target:"Grindelwald" },
+  { id:"D5_receive", day:"Day 5", date:"9/18 (六) 13:00", loc:"Grindelwald 車站", action:"領取", target:"5 件" },
+  { id:"D8_send", day:"Day 8", date:"9/21 (二) 08:00", loc:"Grindelwald 車站", action:"寄出", target:"Zürich Flughafen" },
+  { id:"D11_receive", day:"Day 11", date:"9/24 (五) 11:45", loc:"ZRH 機場 SBB", action:"領取", target:"5 件" }
+];
 
 const HOTELS = {
   luzern: {
@@ -66,8 +113,7 @@ const HOTELS = {
     status:"已預訂（Booking.com 免費取消至 2027/7/20）",
     priceCHF:2830,
     mapQuery:"Sans Souci W1 Grindelwald",
-    notes:"108㎡ 兩房兩衛，1 樓+電梯，南向陽台，private washer/dryer。Check-in 前不得進入公寓/陽台/私人區域",
-    changelog:"V21 已由 Apartment Atlanta 更改為 Sans Souci W1"
+    notes:"108㎡ 兩房兩衛，1 樓+電梯，南向陽台，private washer/dryer。Check-in 前不得進入公寓/陽台/私人區域"
   }
 };
 
@@ -154,7 +200,7 @@ const EMERGENCY = [
   ]},
   { cat:"住宿聯絡", items:[
     { label:"KoBi Hirschenplatz (琉森)", tel:"", note:"booking.com 預訂，詳見訂房確認信" },
-    { label:"GRIWA RENT (格林德瓦)", tel:"+41 33 854 11 40", note:"⚠️ Apartment Atlanta 管理處，出發前務必至 griwarent.ch 核對" }
+    { label:"Interhome / Sans Souci W1 (格林德瓦)", tel:"", note:"聯絡方式以訂房確認信、Booking.com / Interhome 訂房資料為準" }
   ]},
   { cat:"航空與保險", items:[
     { label:"Emirates 台灣客服", tel:"+886 2 7745 0420", note:"改班、行李（已驗證）" },
@@ -251,7 +297,7 @@ const DAYS = [
   },
 
   {
-    day:2, date:"09/15 (三)", loc:"琉森 Luzern", theme:"女皇登山慶典（瑞吉山）",
+    day:2, date:"09/15 (三)", loc:"琉森 Luzern", theme:"瑞吉山環遊",
     hotelKey:"luzern",
     tl:[
       {
@@ -331,7 +377,7 @@ const DAYS = [
         steps:[
           "回琉森後前往獅子紀念碑",
           "漫步舊城區石板路與濕壁畫",
-          "前往預定的餐廳（Rathaus Brauerei 或 Restaurant Pfistern）吃晚餐慶祝"
+          "前往預定的餐廳（Rathaus Brauerei 或 Restaurant Pfistern）吃晚餐"
         ],
         defense:[
           "獅子紀念碑公園步道平緩好推推車",
@@ -343,11 +389,11 @@ const DAYS = [
   },
 
   {
-    day:3, date:"09/16 (四)", loc:"琉森 Luzern", theme:"人文日 ＋ SBB 行李戰術寄送",
+    day:3, date:"09/16 (四)", loc:"琉森 Luzern", theme:"人文日 ＋ SBB 行李寄送",
     hotelKey:"luzern",
     tl:[
       {
-        time:"07:00–09:00", title:"🛅 SBB 行李戰術寄送 ＋ 戰術集結",
+        time:"07:00–09:00", title:"🛅 SBB 行李寄送 + 集結",
         tr:{ label:"步行至琉森車站", icon:"luggage" }, stp:"none",
         steps:[
           "早上 07:00 起床（時差已調整 2 天）",
@@ -358,7 +404,7 @@ const DAYS = [
           "08:30 全家集合前往獅子紀念碑（步行 15 分鐘）"
         ],
         defense:[
-          "全寄策略：5 件全部寄送，全員只帶過夜包 + 推車移動",
+          "全部寄送方案：5 件全部寄送，全員只帶過夜包 + 推車移動",
           "彈性：若擔心延誤，可留妞妞那件當保險（尿布奶粉不斷炊），CHF 12 × 4 = CHF 48"
         ],
         critical:[
@@ -368,7 +414,7 @@ const DAYS = [
           "電池、鋰電池類產品全部抽出放隨身",
           "🚨【SBB 禁寄易腐食品・已查證】 SBB 明文禁止運送乳製品、肉類等易腐食品",
           "妞妞奶粉、副食品、優格絕對不可放進寄送的大行李，必須全放隨身過夜包",
-          "✅ 過夜包戰術剛好符合：奶粉本就在 Emily 隨身包，但務必確認執行時不誤放"
+          "✅ 過夜包方案剛好符合：奶粉本就在 Emily 隨身包，但務必確認執行時不誤放"
         ]
       },
       {
@@ -436,7 +482,7 @@ const DAYS = [
         steps:[
           "購票進場（STP 享 5 折）",
           "必玩清單：戶外工地施工區、實體飛機艙門體驗、巧克力工廠（需加購）",
-          "妞妞主場：兒童 Media Factory + 小火車互動區",
+          "妞妞放電區：兒童 Media Factory + 小火車互動區",
           "累了在中庭喝咖啡休息"
         ],
         defense:[
@@ -871,7 +917,7 @@ const DAYS = [
           "左側俯瞰格林德瓦谷地"
         ],
         defense:[
-          "🥇 硬派戰術：嬰兒背巾為主方案，運動型推車當裝備運輸車",
+          "🥇 主方案：嬰兒背巾為主方案，運動型推車當裝備運輸車",
           "緩下坡 2,230m → 2,061m，途中 3-4 段平緩段可放下妞妞自己走",
           "全程無遮蔽物，墨鏡+遮陽帽+防曬乳必備",
           "洋蔥穿搭：多帶薄外套輪流穿脫"
@@ -942,7 +988,7 @@ const DAYS = [
           "均為暫定班次；2027 出發前 SBB App 確認"
         ],
         defense:[
-          "🥇 終極防禦邏輯：Day 11 兩次轉車會是災難，提前寄送機場",
+          "🥇 主要防禦邏輯：Day 11 兩次轉車會是災難，提前寄送機場",
           "Day 8 早交件 + Day 10 送達 + Day 11 絕對到位，容錯率高",
           "彈性：若擔心延誤可留妞妞包當保險，4 件寄送"
         ],
@@ -1062,7 +1108,7 @@ const DAYS = [
         defense:[
           "推車直接推進纜車不需折疊",
           "🥇 上山往行進方向左側看：格林德瓦谷地全景",
-          "Bort Spielplatz 是妞妞今日「放電主場」"
+          "Bort Spielplatz 是妞妞今日「放電區」"
         ],
         critical:[
           "First 山上 First Flyer/Glider/Mountain Cart 全部年齡限制 6+/8+，妞妞不能參與",
@@ -1097,7 +1143,7 @@ const DAYS = [
           "🥇 全行程最美照片：若上午風平、無雲、光線齊備，可拍到三峰倒映湖面的經典構圖",
           "⚠️ 此為天氣條件苛刻的畫面，非到訪即得——不保證一定拍到",
           "湖水深綠中帶藍，是冰川融水，水溫極低不可下水",
-          "🥇 硬派戰術：嬰兒背巾為主，推車放水外套零食（省力 60%）"
+          "🥇 主方案：嬰兒背巾為主，推車放水外套零食（省力 60%）"
         ],
         critical:[
           "海拔 2,168m → 2,265m 累積約 100m 爬升，官方定位為易走路線但無遮蔽",
@@ -1132,15 +1178,15 @@ const DAYS = [
           "🥇 Bort 才是格林德瓦最頂級的幼兒遊樂區（非 Pfingstegg，那邊滑道有 4 歲下限）",
           "Bort 海拔 1,560m，天氣較溫和"
         ],
-        critical:["別直接坐纜車到底，中段 Bort 下車是妞妞真正主場"]
+        critical:["別直接坐纜車到底，中段 Bort 下車是妞妞放電區"]
       },
       {
-        time:"16:30–21:00", title:"木屋休息 ＋ 慶祝晚餐",
+        time:"16:30–21:00", title:"木屋休息 ＋ 晚餐",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "回木屋，全員洗熱水澡，妞妞放電後可能秒睡午覺",
           "大人輪流去主街採買甜點、葡萄酒",
-          "自炊豐盛晚餐慶祝 Bachalpsee 健行",
+          "自炊晚餐 Bachalpsee 健行",
           "21:00 前讓妞妞入睡"
         ],
         defense:[
@@ -1154,7 +1200,7 @@ const DAYS = [
   },
 
   {
-    day:10, date:"09/23 (四)", loc:"格林德瓦 → Brienz → Interlaken", theme:"Brienz Rothorn 蒸汽火車 ＋ 慶功宴（BRB 主題日，受固定班次限制）",
+    day:10, date:"09/23 (四)", loc:"格林德瓦 → Brienz → Interlaken", theme:"Brienz Rothorn 蒸汽火車 ＋ 晚餐（BRB 主題日，受固定班次限制）",
     hotelKey:"grindelwald",
     hasBackup: true,
     tl:[
@@ -1170,7 +1216,7 @@ const DAYS = [
           "🥇 Day 10 為 BRB 主題日，受固定班次限制，非機動天",
           "🎯 三大調度原則：① Day 7/8/9 可視天氣互換（高山日靈活調度） ② Day 10 原則上鎖 BRB（受固定班次） ③ 只有 BRB 停駛才啟動 Day 10 專屬備援",
           "旺季偶爾改柴油機車，但景觀相同",
-          "💡 山頂野餐配 693 山峰大景，比餐廳更有儀式感"
+          "💡 山頂野餐配 693 山峰大景，比餐廳更有"
         ],
         critical:[
           "Rothorn Kulm 海拔 2,244m，9 月底可能 5-10°C 且風大",
@@ -1329,7 +1375,7 @@ const DAYS = [
         ]
       },
       {
-        time:"19:00–21:30", title:"🍴 Barry's 起司鍋慶功宴（19:00 訂位）",
+        time:"19:00–21:30", title:"🍴 Barry's 晚餐（19:00 訂位）",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "18:30-19:00 換正式裝、洗熱水澡，推妞妞出發 Barry's",
@@ -1376,7 +1422,7 @@ const DAYS = [
             "Höheweg 大道 + Höhematte 草坪",
             "Harder Kulm 纜車（若晴）",
             "賭場周邊逛街",
-            "16:34 BOB 回 Grindelwald 接 Barry's 慶功宴"
+            "16:34 BOB 回 Grindelwald 接 Barry's 晚餐"
           ],
           defense:["湖邊天氣也差時採用此備案"],
           critical:[]
@@ -1493,9 +1539,9 @@ const SIGHTS = [
   { region:"伯恩高地", city:"少女峰山區", name:"曼利申 (Männlichen)", stp:"50% 折扣", family:"⭐⭐⭐⭐ 高：碎石路建議背巾", note:"海拔 2,230m 三大名峰正對視角" },
   { region:"伯恩高地", city:"少女峰山區", name:"33 號全景步道 Panorama Trail", stp:"纜車 50% 折扣", family:"⭐⭐⭐ 中：背巾為主推車運輸", note:"瑞士最美平緩步道，面對艾格北壁 6km" },
   { region:"伯恩高地", city:"少女峰山區", name:"施尼格普拉特 Schynige Platte", stp:"50% 折扣", family:"⭐⭐⭐⭐ 高：植物園步道平緩", note:"1893 古董齒軌火車，私房秘境" },
-  { region:"伯恩高地", city:"少女峰山區", name:"First 纜車 + Cliff Walk", stp:"50% 折扣", family:"⭐⭐⭐⭐ 高：Bort 遊樂場妞妞主場", note:"Bachalpsee 倒影湖，全行程最美照片" },
+  { region:"伯恩高地", city:"少女峰山區", name:"First 纜車 + Cliff Walk", stp:"50% 折扣", family:"⭐⭐⭐⭐ 高：Bort 遊樂場妞妞放電區", note:"Bachalpsee 倒影湖，全行程最美照片" },
   { region:"伯恩高地", city:"少女峰山區", name:"格林德瓦冰河峽谷 Gletscherschlucht", stp:"CHF 19 自費", family:"⭐⭐⭐⭐ 高：木棧道嵌岩壁", note:"雨天備案首選（含天然遮蔽）" },
-  { region:"伯恩高地", city:"少女峰山區", name:"Pfingstegg 森林溜滑梯（非正式行程）", stp:"50% 折扣", family:"⚠️ 4 歲以下嚴禁滑道與 Fly-Line", note:"非正式行程，僅供參考。妞妞無滑道可玩，大人看景用。Day 9 的幼童放電主場已改為 Bort 遊樂場" },
+  { region:"伯恩高地", city:"少女峰山區", name:"Pfingstegg 森林溜滑梯（非正式行程）", stp:"50% 折扣", family:"⚠️ 4 歲以下嚴禁滑道與 Fly-Line", note:"非正式行程，僅供參考。妞妞無滑道可玩，大人看景用。Day 9 的幼童放電區已改為 Bort 遊樂場" },
   { region:"伯恩高地", city:"布里恩茨", name:"Brienz Rothorn 1892 蒸汽齒軌", stp:"50% 折扣（2026 實查 CHF 49，2027 推估 CHF 50）+ 預約 CHF 8", family:"⭐⭐⭐⭐ 高：山頂步道平緩，推車 80% 路段可用", note:"瑞士最古老蒸汽齒軌之一，2,244m 看 693 座山峰。旺季可能改柴油機車，出發當日查官網" },
   { region:"伯恩高地", city:"因特拉肯", name:"Höheweg 大道 + Höhematte 草坪", stp:"100% 免費", family:"⭐⭐⭐⭐⭐ 極高：平地大道", note:"三峰最後合照黃金地點" }
 ];
@@ -1506,7 +1552,7 @@ const RESTAURANTS = [
   { area:"皮拉圖斯", name:"Pilatus Kulm Restaurant", plan:"Day 4 主線午餐備案", spec:"海拔 2,073m 山頂景觀", must:"高山牛肉湯、Rösti", price:"CHF 30-45", book:"不需訂位" },
   { area:"小夏戴克", name:"Restaurant Grindelwaldblick", plan:"Day 7 午餐", spec:"正面迎擊少女峰雪山露台", must:"Goulash、炸豬排", price:"CHF 25-35", book:"現場排隊" },
   { area:"施尼格普拉特", name:"Hotel Restaurant Schynige Platte", plan:"Day 8 午餐", spec:"面三峰雙湖古蹟旅館", must:"Älplermagronen、蘋果派", price:"CHF 25-35", book:"人少不需訂位" },
-  { area:"格林德瓦", name:"🥇 Barry's Restaurant", plan:"🚨 Day 10 慶功宴必訂", spec:"最後一頓外食", must:"起司火鍋 Moitié-Moitié、Raclette", price:"CHF 45-60", book:"🚨 出發前 1.5-2 個月訂 (2027/7 底前)" }
+  { area:"格林德瓦", name:"🥇 Barry's Restaurant", plan:"🚨 Day 10 晚餐必訂", spec:"最後一頓外食", must:"起司火鍋 Moitié-Moitié、Raclette", price:"CHF 45-60", book:"🚨 出發前 1.5-2 個月訂 (2027/7 底前)" }
 ];
 
 const RAIN_PLANS = [
@@ -1610,7 +1656,7 @@ const PACKING = [
   { cat:"📄 文件", items:[
     "護照（效期至少 2027/3 後 6 個月）",
     "ETIAS 授權證明（若 2027 前正式上路才需辦理）",
-    "訂房憑證（KoBi + Apartment Atlanta）紙本+電子",
+    "訂房憑證（KoBi + Sans Souci W1）紙本+電子",
     "機票電子檔（EK87 去 + EK88 回）",
     "旅遊保險證明",
     "STP 通行證紙本",
