@@ -2,7 +2,7 @@
 const TRIP_META = {
   title: "瑞士旅行 2027",
   subtitle: "4 大 1 小・瑞士親子自由行",
-  version: "V21.3b · 2026/7 封版",
+  version: "V21.7d Web · 基於 V21.4a 行程資料",
   departure: "2027-09-13",  // 台灣起飛
   arrival: "2027-09-14",    // 蘇黎世抵達
   returnDate: "2027-09-25", // 返回台灣
@@ -17,12 +17,197 @@ const TRIP_META = {
 };
 
 // 建議 D：首頁重要數字速查（現場最常查的號碼與代碼）
+// V21.4：定義移至 CONSULATE_CONTACT + FLIGHT_CODES 之後，改用常數引用，避免多處抄寫不同步
+
+// V21.3e：駐瑞士代表處共用聯絡（避免 PACKING / EMERGENCY / QUICK 各處抄寫版本不同步）
+const CONSULATE_CONTACT = {
+  general:   "+41 31 382 2927",
+  altGeneral:"+41 31 350 8050",
+  emergency: "+41 76 336 6979",
+  freeCall:  "+800 0885 0885",
+  address:   "Kirchenfeldstrasse 14, 3005 Bern"
+};
+
+// V21.5：航班資訊真正 SSoT — 4 航段完整資料模型
+// 未來訂票確認實際航班時，只需將 status 改為 "booked" 並填入實際時間
+const FLIGHT_ITINERARY = {
+  status: "current_reference", // current_reference / booked
+  airline: "Emirates 阿聯酋",
+  airlineTW: "+886 2 7745 0420",
+  manageURL: "https://www.emirates.com/tw/chinese/manage-booking/",
+  outbound: {
+    label: "去程 TPE → ZRH",
+    date: "2027-09-13 (一) → 2027-09-14 (二)",
+    leg1: {
+      flightNo: "EK367",
+      from: "TPE 桃園",
+      to:   "DXB 杜拜",
+      depart: "23:50 (TPE, 2027-09-13 一)",
+      arrive: "04:35+1 (DXB, 2027-09-14 二)",
+      status: "current_reference",
+      note:   "現行參考航班；2027 訂票時實際為準"
+    },
+    leg2: {
+      flightNo: "EK87",
+      from: "DXB 杜拜",
+      to:   "ZRH 蘇黎世",
+      depart: "08:20 (DXB, 2027-09-14 二)",
+      arrive: "13:20 (ZRH, 2027-09-14 二)",
+      status: "current_reference",
+      note:   "現行參考航班；2027 訂票時實際為準"
+    }
+  },
+  return: {
+    label: "回程 ZRH → TPE",
+    date:  "2027-09-24 (五) → 2027-09-25 (六)",
+    leg1: {
+      flightNo: "EK88",
+      from: "ZRH 蘇黎世",
+      to:   "DXB 杜拜",
+      depart: "15:30 (ZRH, 2027-09-24 五)",
+      arrive: "00:15+1 (DXB, 2027-09-25 六)",
+      status: "current_reference",
+      note:   "現行參考航班；2027 訂票時實際為準"
+    },
+    leg2: {
+      flightNo: "EK386",
+      from: "DXB 杜拜",
+      to:   "TPE 桃園",
+      depart: "08:45 (DXB, 2027-09-25 六)",
+      arrive: "21:20 (TPE, 2027-09-25 六)",
+      status: "current_reference",
+      note:   "現行參考航班；2027 訂票時實際為準（另一選項 EK366 03:45→16:15）"
+    }
+  }
+};
+
+// V21.5：計算 DXB 轉機時間（HH:MM）— 由 SSoT 自動計算，不再 hardcode
+function calculateConnectionMinutes(arriveStr, departStr) {
+  // arriveStr / departStr 格式類似 "04:35+1 (DXB, ...)" 或 "08:20 (DXB, ...)"
+  const parseHM = (s) => {
+    const m = s.match(/^(\d{2}):(\d{2})/);
+    if (!m) return null;
+    const plus = s.includes("+1") ? 1 : 0;
+    return { h: +m[1], m: +m[2], dayOffset: plus };
+  };
+  const a = parseHM(arriveStr), d = parseHM(departStr);
+  if (!a || !d) return null;
+  // 假設同一段：arrive 已在前一日跨到今天（+1），depart 在今天
+  // 若 arrive.dayOffset === 1，dep 通常視為當日 00:00 之後計
+  let arriveMin = a.h * 60 + a.m;      // arrive 是實際 DXB 當地時
+  let departMin = d.h * 60 + d.m;
+  if (departMin < arriveMin) departMin += 24 * 60; // 跨日
+  return departMin - arriveMin;
+}
+
+const _OUTBOUND_CONN = calculateConnectionMinutes(FLIGHT_ITINERARY.outbound.leg1.arrive, FLIGHT_ITINERARY.outbound.leg2.depart);
+const _RETURN_CONN   = calculateConnectionMinutes(FLIGHT_ITINERARY.return.leg1.arrive,   FLIGHT_ITINERARY.return.leg2.depart);
+
+// V21.5：向後兼容 alias（不再新增 hardcode；未來直接引用 FLIGHT_ITINERARY 更好）
+const FLIGHT_CODES = {
+  outbound:      FLIGHT_ITINERARY.outbound.leg2.flightNo,  // "EK87"
+  outboundLeg1:  FLIGHT_ITINERARY.outbound.leg1.flightNo,  // "EK367"
+  return:        FLIGHT_ITINERARY.return.leg1.flightNo,    // "EK88"
+  dubaiHomeLeg:  FLIGHT_ITINERARY.return.leg2.flightNo,    // "EK386"
+  airline:       FLIGHT_ITINERARY.airline,
+  airlineTW:     FLIGHT_ITINERARY.airlineTW,
+  manageURL:     FLIGHT_ITINERARY.manageURL,
+  timeStatusNote:"所有具體時間為現行參考；2027 訂票時實際為準"
+};
+
+// V21.5：旅行證件規則 SSoT — Day / PACKING / PENDING 共同引用
+const TRAVEL_DOCUMENT_RULES = {
+  passport: {
+    // 官方最低（EU Your Europe / 申根規則，2026/7 查證）
+    legalMinimum: "申根區官方最低：預定離開申根區後護照仍需至少有效 3 個月，且入境時該旅行證件簽發未滿 10 年",
+    legalMinimumPoints: [
+      "離開申根區後護照至少仍有效 3 個月",
+      "入境時旅行證件簽發未滿 10 年"
+    ],
+    // 本團自訂保守管理標準（不是法規）
+    conservativeRecommendation: "本團保守管理建議：護照效期涵蓋出發後至少 6 個月",
+    reason: "3 個月與 10 年為官方最低要求；6 個月屬本團自訂保守標準，用於降低航空公司值機與過境地實務風險，不得寫成申根法定最低要求",
+    officialURL: "https://europa.eu/youreurope/citizens/travel/entry-exit/non-eu-nationals/index_en.htm",
+    checkedAt: "2026-07（本輪查證）"
+  },
+  etias: {
+    status: "尚未強制執行（2026/7 現況）",
+    officialTiming: "ETIAS 官方預計於 2026 Q4 啟用",
+    forSwiss: "瑞士屬申根區；ETIAS 正式強制後，適用的免簽旅客原則上需取得旅行授權",
+    forThisTrip: "2027/9 出發前是否需辦理，視當年度是否已對本團各成員依所持護照正式要求為準；於 2027/3 再至 EU 官方網站確認實際啟用、過渡期與各成員依所持護照適用情況",
+    // V21.7（Excel V21.4a）：若 2027 已正式適用時的申請範圍與費用
+    ifApplicable2027: "若 2027 已正式適用：4 大 1 小【全員】均依規定取得 ETIAS travel authorisation",
+    feeRule: "4 位成人依現行規則支付申請費（EU 執委會 2025-07-17 公告 EUR 20/人）；妞妞未滿 18 歲【免申請費】",
+    childWarning: "🚨 免申請費 ≠ 不需申請。妞妞仍須依規定取得自己的 ETIAS travel authorisation",
+    officialURL: "https://travel-europe.europa.eu/etias",
+    checkedAt: "2026-07（本輪查證）"
+  }
+};
+
+// V21.6：證件文案共用 helper — Day / PACKING / PENDING 統一由此產生，
+// 避免各處自行手寫造成「6 個月被寫成法定最低」等偏差。
+function passportRequirementLine() {
+  return `${TRAVEL_DOCUMENT_RULES.passport.legalMinimum}；${TRAVEL_DOCUMENT_RULES.passport.conservativeRecommendation}`;
+}
+function passportPackingLine() {
+  return `護照（官方最低：離開申根區後仍有效 3 個月、簽發未滿 10 年；${TRAVEL_DOCUMENT_RULES.passport.conservativeRecommendation}）`;
+}
+function etiasPackingLine(who) {
+  const prefix = who ? `${who} ` : "";
+  const childNote = who ? "（未滿 18 歲免申請費，但仍須取得自己的授權）" : "";
+  return `${prefix}ETIAS 授權資料${childNote}（${TRAVEL_DOCUMENT_RULES.etias.status}；若 2027 已正式適用，4 大 1 小全員均需依規定取得授權，2027/3 再至官方確認）`;
+}
+// V21.7：ETIAS 申請範圍與費用共用文案
+function etiasApplicabilityLine() {
+  return `${TRAVEL_DOCUMENT_RULES.etias.ifApplicable2027}。${TRAVEL_DOCUMENT_RULES.etias.feeRule}。${TRAVEL_DOCUMENT_RULES.etias.childWarning}`;
+}
+
+// V21.6：航班 SSoT helper — 讓 user-facing 文字由 FLIGHT_ITINERARY 產生，
+// 未來換航班只需改 FLIGHT_ITINERARY 的核心資料，主要 user-facing 航班資訊即同步更新。
+function _flightHM(s) {                    // "15:30 (ZRH, ...)" → "15:30"
+  const m = String(s || "").match(/^(\d{1,2}:\d{2})/);
+  return m ? m[1] : "";
+}
+function formatFlightLeg(leg) {            // "EK88 ZRH 15:30 → DXB 00:15+1"
+  const dep = String(leg.depart || "").match(/^([\d:]+(?:\+1)?)/);
+  const arr = String(leg.arrive || "").match(/^([\d:]+(?:\+1)?)/);
+  return `${leg.flightNo} ${String(leg.from).split(" ")[0]} ${dep ? dep[1] : ""} → ${String(leg.to).split(" ")[0]} ${arr ? arr[1] : ""}`;
+}
+function formatFlightRoute(dir) {          // dir: "outbound" | "return"
+  const d = FLIGHT_ITINERARY[dir];
+  return `${formatFlightLeg(d.leg1)}；${formatFlightLeg(d.leg2)}`;
+}
+function formatFlightReference() {         // 兩個方向的完整現行參考敘述
+  return `現行參考：去 ${formatFlightRoute("outbound")}；回 ${formatFlightRoute("return")}。正式時間、航段組合以 2027 訂票確認為準`;
+}
+function flightCodesSummary() {            // "去 EK367+EK87 / 回 EK88+EK386"
+  const o = FLIGHT_ITINERARY.outbound, r = FLIGHT_ITINERARY.return;
+  return `去 ${o.leg1.flightNo}+${o.leg2.flightNo} / 回 ${r.leg1.flightNo}+${r.leg2.flightNo}`;
+}
+// 由指定航段起飛時間計算 T-minus 管理時間，取代硬寫 14:00 / 14:30 / 15:10
+function subtractMinutesFromFlightDeparture(minutes, dir, legKey) {
+  const leg = FLIGHT_ITINERARY[dir || "return"][legKey || "leg1"];
+  const hm = _flightHM(leg.depart);
+  if (!hm) return "";
+  const [h, m] = hm.split(":").map(Number);
+  let total = h * 60 + m - minutes;
+  while (total < 0) total += 24 * 60;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+const ZRH_DEPART_HM = _flightHM(FLIGHT_ITINERARY.return.leg1.depart);   // 15:30
+const ZRH_T90_HM    = subtractMinutesFromFlightDeparture(90);           // 14:00
+const ZRH_T60_HM    = subtractMinutesFromFlightDeparture(60);           // 14:30
+const ZRH_T20_HM    = subtractMinutesFromFlightDeparture(20);           // 15:10
+const ZRH_ARRIVE_HM = _flightHM(FLIGHT_ITINERARY.outbound.leg2.arrive); // 13:20
+
+// V21.4：QUICK_NUMBERS 引用上述 SSoT 常數（避免各處抄寫不同步）
+// V21.5：112 稱謂改為「歐洲通用緊急」；Emirates 顯示兩段航班（不再誤導為 EK87 = 整段）
 const QUICK_NUMBERS = [
-  { icon:"🚨", label:"瑞士急難", value:"144 醫療 · 117 警察 · 118 火警 · 112 歐盟" },
+  { icon:"🚨", label:"瑞士急難", value:"112 歐洲通用緊急 · 144 醫療 · 117 警察 · 118 火警" },
   { icon:"🚁", label:"高山救援 REGA", value:"1414" },
-  { icon:"🆘", label:"駐瑞士代表處急難手機", value:"+41 76 336 6979" },
-  { icon:"✈️", label:"Emirates 航班（現行參考）", value:"EK87（去）/ EK88 現行 15:30 起飛（2027 訂票時實際為準）" },
-  { icon:"📞", label:"Emirates 台灣客服", value:"+886 2 7745 0420" },
+  { icon:"🆘", label:"駐瑞士代表處急難手機", value:CONSULATE_CONTACT.emergency },
+  { icon:"✈️", label:"Emirates 航班（現行參考）", value:`${flightCodesSummary()}（2027 訂票時實際為準）` },
+  { icon:"📞", label:"Emirates 台灣客服", value:FLIGHT_CODES.airlineTW },
   { icon:"🏨", label:"Interhome 客服（Sans Souci W1）", value:"訂房後 email 告知；Sans Souci W1 位於 cul-de-sac 死巷" },
   { icon:"🏨", label:"KoBi Hirschenplatz（琉森）", value:"訂房確認信提供" },
   { icon:"🚂", label:"SBB 瑞士國鐵客服", value:"+41 848 44 66 88" }
@@ -33,7 +218,8 @@ const EXT_LINKS = {
   brienzRothornOps: "https://brienz-rothorn-bahn.ch/en/",
   stpBuy: "https://www.swissrailways.com/en",
   sbb: "https://www.sbb.ch/en",
-  sbbLuggage: "https://www.sbb.ch/en/travel-information/baggage.html",
+  sbbLuggage: "https://www.sbb.ch/en/offers/luggage-transport-station-to-station",
+  lieOfficial: "https://www.zentralbahn.ch/en/experience/leisure/luzern-interlaken-express",
   meteoSwiss: "https://www.meteoswiss.admin.ch/",
   pilatus: "https://www.pilatus.ch/en",
   spb: "https://jungfrau.ch/en-gb/schynige-platte/",
@@ -45,24 +231,24 @@ const EXT_LINKS = {
 
 // V21.3b 功能：2027 待確認控制中心
 const PENDING_2027 = [
-  { id:"ek_flight", cat:"航班", item:"EK87 / EK88 2027 正式航班時間", suggestBy:"訂票時（2026/11 雙11、黑五）", link:"emiratesManage", note:"目前使用現行參考時間（EK88 15:30 起飛）；正式時間以 2027 訂票確認為準" },
+  { id:"ek_flight", cat:"航班", item:"Emirates 去回 4 航段 2027 正式時間", suggestBy:"訂票時（2026/11 雙11、黑五）", link:"emiratesManage", note:formatFlightReference() },
   { id:"brb_2027", cat:"班表", item:"BRB Brienz Rothorn Bahn 2027 班表", suggestBy:"T-2 個月（2027/7）", link:"brienzRothornOps", note:"2026 官方 9 個班次僅作模擬；2027 正式班表公布後決定 9/23 上山班次" },
   { id:"spb_2027", cat:"班表", item:"SPB Schynige Platte Bahn 2027 班表與末班", suggestBy:"T-2 個月（2027/7）", link:"spb", note:"Day 8 下山方案 A/B 為暫定；末班時間依 2027 官方班表確認" },
-  { id:"lie_seat", cat:"預約", item:"LIE Luzern-Interlaken Express 2027/9 座位預約費", suggestBy:"T-1 個月（2027/8）", link:"sbb", note:"透過 Zentralbahn 官方指定座位預約系統；STP 涵蓋列車本身，預約費另計。未預約仍可持 STP 搭乘（備援）" },
-  { id:"pilatus_2027", cat:"預約", item:"Pilatus 2027 齒軌預約政策", suggestBy:"T-3 個月（2027/6）", link:"pilatus", note:"官方措辭存在「強烈建議」與「不強制」不同措辭；2027 出發前確認是否成為強制" },
+  { id:"lie_seat", cat:"預約", item:"LIE Luzern-Interlaken Express 2027/9 座位預約（5 個座位）", suggestBy:"T-1 個月（2027/8）", link:"lieOfficial", note:"座位預約用於【確保座位】，不是搭乘的必要條件：持 STP 即可搭乘（Zentralbahn 官方：本線全額包含於 Swiss Travel Pass），但旺季週末可能難以取得相鄰座位。主方案：透過 Zentralbahn 官方指定座位預約系統預約相連座位。🚨【車票免費 ≠ 座位預約免費】妞妞依現行規則車票免費，但若希望她擁有獨立保證座位，仍需依 2027 Zentralbahn 規則確認並支付相應 reservation fee。📌 本團 4 大 1 小若希望 5 人皆有固定座位，應依 2027 實際規則【處理 5 個座位】（而非只訂 4 個）。官方現行預約費參考：2026/5/2-11/1 CHF 16；2027 費率待公布" },
+  { id:"pilatus_2027", cat:"預約", item:"Pilatus 2027 齒軌預約政策", suggestBy:"T-3 個月（2027/6）", link:"pilatus", note:"官方措辭存在「強烈建議」與「不強制」不同措辭；2027 出發前確認是否成為強制。🚨 交通票券與座位預約應分開確認：持有效交通票券仍可能需要另外辦理／購買座位預約，不視為 Golden Round Trip 套票自動含齒軌座位。⚠️ 若當日啟動 B 計畫（Kriens 上山 → Pilatus Kulm → Alpnachstad 齒軌下山），原上山方向的預約【不會自動適用於下山方向】，需確認：① 原上山預約是否需取消 ② 下山方向是否需另行取得座位預約 ③ 改訂管道與可否當日辦理" },
   { id:"mountain_season", cat:"營運", item:"高山設施 2027 營運期", suggestBy:"T-3 個月（2027/6）", link:"", note:"Firstbahn、SPB、BRB、Pilatus 等秋季末營運期以官網為準" },
-  { id:"sbb_luggage", cat:"物流", item:"SBB Gepäck 2027 櫃檯時段/費率", suggestBy:"T-1 個月（2027/8）", link:"sbbLuggage", note:"現行 Luggage dispatch 08:00-17:00、reclaim 08:00-18:00、CHF 12/件；2027 出發前分站頁確認" },
-  { id:"stp_2027_price", cat:"票務", item:"STP 2027 正式價格/購買", suggestBy:"T-2 個月（2027/7）", link:"stpBuy", note:"SBB 官方預售期為出發前 60 天；2027/9/14 啟用最早 2027/7/16 起可購買。預算暫採 CHF 515" },
-  { id:"etias_status", cat:"入境", item:"ETIAS 實際執行狀態", suggestBy:"T-6 個月（2027/3）", link:"etias", note:"ETIAS 官方預計 2026 Q4 啟用；瑞士非申根國，ETIAS 對本團不強制；2027 出發前 6 個月確認實際上線" },
+  { id:"sbb_luggage", cat:"物流", item:"SBB Gepäck 2027 櫃檯時段/費率", suggestBy:"T-1 個月（2027/8）", link:"sbbLuggage", note:"現行費率 CHF 12/件（Station-to-Station）。⚠️ 各站 luggage counter 開放時段依所選車站公告為準，SBB 官方要求依分站查詢；本團涉及 Luzern / Grindelwald / Zürich Flughafen 三站，2027 出發前需分別確認" },
+  { id:"stp_2027_price", cat:"票務", item:"STP 2027 正式價格與最終方案比較", suggestBy:"T-2 個月（2027/7）", link:"stpBuy", note:"15 天版 Swiss Travel Pass 為【目前基準方案（baseline）】，不是唯一方案。2027 官方價格公布後，仍應與 8 天版 STP＋其餘單買、Swiss Half Fare Card＋單買等可行方案做最終成本比較後再鎖定。4 大人購買；妞妞 6 歲以下完全免費。預算暫採 CHF 515/成人（估算值，2027 實際售價公布後重算）" },
+  { id:"etias_status", cat:"入境", item:"ETIAS 實際執行狀態", suggestBy:"T-6 個月（2027/3）", link:"etias", note:`${TRAVEL_DOCUMENT_RULES.etias.officialTiming}。${TRAVEL_DOCUMENT_RULES.etias.forSwiss}。${TRAVEL_DOCUMENT_RULES.etias.forThisTrip}。${etiasApplicabilityLine()}` },
   { id:"interhome_key", cat:"住宿", item:"Interhome Sans Souci W1 鑰匙交付方式/精確地址", suggestBy:"訂房後", link:"interhome", note:"訂房後 Interhome email 告知；Day 5 領鑰匙流程以當時 email 為準" }
 ];
 
 // V21.3b 功能：天氣/行程調整決策中心
 const WEATHER_DECISION = {
   principles:[
-    { icon:"🔄", label:"Day 7/8/9 可依天氣互換", detail:"曼利申全景健行、SPB 歷史齒軌、First+Bachalpsee 三日為高山日靈活調度：好天氣鎖三峰視角日，一般天氣走低海拔或室內" },
+    { icon:"🔄", label:"Day 7/8/9 可依天氣互換（需同步比對三處）", detail:"曼利申全景健行、SPB 歷史齒軌、First+Bachalpsee 三日為高山日靈活調度。🚨 不可只看「今天這座山白牆」就盲目跳到另一座山：① 每晚 19:00-21:00 同步比對 Männlichen / Schynige Platte / First 三處 webcam（jungfrau.ch）＋當日目的地官方營運狀態 ② 只有當某一目的地即時能見度明顯較佳時才互換 ③ 若三處皆白牆 → 直接啟動低海拔方案，不在白牆山頭之間輪流換 ④ 不以海拔高低推論雲層厚薄" },
     { icon:"🔒", label:"Day 10 原則鎖定 BRB", detail:"BRB 主題日受班表限制，非機動天。只有 BRB 明顯停駛（大風/濃霧/機車故障）才啟動專屬備案" },
-    { icon:"⚠️", label:"高山 Webcam 白牆撤退", detail:"Day 4 皮拉圖斯前一晚 20:00 檢查 Webcam，若白牆隔日啟動備案 A（Oeschinensee 單點）或 B（琉森室內日）" },
+    { icon:"⚠️", label:"高山 Webcam 白牆撤退（Day 4 需雙向確認）", detail:"Day 4 皮拉圖斯前一晚 20:00 檢查 Webcam，若白牆隔日啟動備案 A（Oeschinensee 單點）或 B（琉森室內日）。🚨 不能只看「Pilatus 白牆 + Kandersteg 低地天氣」就直接切 Oeschinensee：必須同步確認 Oeschinensee webcam、纜車是否營運、當地實際天氣後再決定" },
     { icon:"🌧️", label:"下雨天低海拔優先", detail:"Rothorn/First/Männlichen 山頂雨雪時視野零，改走 Lauterbrunnen 谷地、Interlaken 市區、伯恩舊城拱廊、琉森室內展館" }
   ],
   externalLinks:[
@@ -95,7 +281,9 @@ const HOTELS = {
     sleepPlanC:"備選：Emily+Morris+妞妞睡 Bedroom 1；皮皮獨佔 Bedroom 2；Milo 沙發床",
     sleepNote:"關鍵原則：皮皮怕生只跟 Emily 熟 → 皮皮與 Emily 同房或獨房，絕不跟 Milo 同房",
     checkIn:"2027-09-14 (二)", checkOut:"2027-09-18 (六)",
-    nights:4, status:"已預訂",
+    nights:4,
+    bookingStatus:"confirmed",
+    status:"✅ 已訂房（已收到 Booking.com 確認信；付款依原訂單條款辦理）",
     priceTWD:125000,
     mapQuery:"KoBi Apartments Hirschenplatz Luzern",
     notes:"130 m² 兩房兩衛含陽台公寓，含電梯／洗衣機＋烘乾機，booking.com 免費取消方案"
@@ -109,28 +297,59 @@ const HOTELS = {
     roomType:"108 m² · 2 房 2 衛 · 1 樓 + 電梯",
     features:["南向陽台","私人洗衣機+烘乾機","完整廚房","位於 cul-de-sac 死巷（無車流、安靜）","距 Coop 超市 50m","距室內游泳池 100m","距兒童遊樂場 100m","距主車站 300m"],
     checkIn:"2027-09-18 (六)", checkOut:"2027-09-24 (五)",
+    checkInWindow:"15:00–17:00",
+    checkOutBy:"10:00 前",
+    houseRulesLabel:"參考方案條款（僅於實際完成該方案訂購後成立）",
+    houseRules:[
+      "Check-in 15:00–17:00",
+      "Check-out 10:00 前",
+      "CHF 400 damage deposit（押金，由 Interhome 預授權）",
+      "Children all ages welcome",
+      "無嬰兒床（crib）、無加床（extra bed）",
+      "禁菸",
+      "不可攜帶寵物",
+      "免費取消至 2027/7/20 · Pay nothing until 2027/7/18"
+    ],
+    pendingItems:[
+      "🚩 實際訂房狀態（是否已完成下訂）— 待使用者確認",
+      "訂房完成後的 Booking Ref 與確認信",
+      "key collection 方式與地點（Interhome 辦公室 / 密碼鎖）",
+      "是否支援 self check-in",
+      "13:00–15:00 抵達後的行李寄放安排",
+      "17:00 後的 late check-in 是否可行",
+      "床欄（bed rail / portable bed rail）是否可提供",
+      "紗窗（insect screens）配置"
+    ],
     nights:6,
-    status:"已預訂（Booking.com 免費取消至 2027/7/20）",
+    bookingStatus:"user_confirmation_required",
+    status:"🚩 目前選定方案｜實際訂房狀態待使用者確認",
+    selectionNote:"房源已選定：Apartment Sans Souci W1 by Interhome。Excel V21.4a 為全檔唯一資料來源，實際訂房狀態待使用者確認。",
+    referenceQuoteNote:"CHF 2,830、免費取消至 2027/7/20、Pay nothing until 2027/7/18、押金 CHF 400 等，均為曾查得的「參考報價／方案條款」，僅於實際完成該方案訂購後才成立。",
     priceCHF:2830,
+    priceIsReferenceQuote:true,
     mapQuery:"Sans Souci W1 Grindelwald",
     notes:"108㎡ 兩房兩衛，1 樓+電梯，南向陽台，private washer/dryer。Check-in 前不得進入公寓/陽台/私人區域"
   }
 };
 
+// V21.5：FLIGHTS 由 FLIGHT_ITINERARY 4 航段自動生成（不再獨立 hardcode）
+// 未來訂票確認實際航班時，只需改 FLIGHT_ITINERARY 即可全站同步
 const FLIGHTS = {
   outbound: {
-    airline:"Emirates 阿聯酋",
-    flightNo:"EK87 / EK+杜拜轉機",
-    depart:"2027-09-13 (日) 晚間 · TPE 桃園",
-    stopover:"DXB 杜拜（約 2h 轉機）",
-    arrive:"2027-09-14 (二) 13:20 · ZRH 蘇黎世（現行參考；2027 訂票時實際為準）"
+    airline: FLIGHT_ITINERARY.airline,
+    flightNo: `${FLIGHT_ITINERARY.outbound.leg1.flightNo} + ${FLIGHT_ITINERARY.outbound.leg2.flightNo}（兩段）`,
+    depart: `${FLIGHT_ITINERARY.outbound.leg1.depart} · TPE 桃園`,
+    stopover: `${FLIGHT_ITINERARY.outbound.leg1.arrive} DXB 抵達 → ${FLIGHT_ITINERARY.outbound.leg2.depart} DXB 起飛` +
+              (_OUTBOUND_CONN ? `（DXB 轉機約 ${Math.floor(_OUTBOUND_CONN/60)}h${_OUTBOUND_CONN%60}m，由現行資料計算）` : ""),
+    arrive: `${FLIGHT_ITINERARY.outbound.leg2.arrive} · ZRH 蘇黎世（現行參考，2027 訂票時實際為準）`
   },
   return: {
-    airline:"Emirates 阿聯酋",
-    flightNo:"EK88 → EK366",
-    depart:"EK88 · 現行 15:30 起飛（2027 訂票時實際為準） · 2027-09-24 (五) · ZRH 蘇黎世",
-    stopover:"DXB 杜拜（EK366 約 09:30 起飛）",
-    arrive:"2027-09-25 (六) 約 22:00 · TPE 桃園"
+    airline: FLIGHT_ITINERARY.airline,
+    flightNo: `${FLIGHT_ITINERARY.return.leg1.flightNo} + ${FLIGHT_ITINERARY.return.leg2.flightNo}（兩段）`,
+    depart: `${FLIGHT_ITINERARY.return.leg1.depart} · ZRH 蘇黎世`,
+    stopover: `${FLIGHT_ITINERARY.return.leg1.arrive} DXB 抵達 → ${FLIGHT_ITINERARY.return.leg2.depart} DXB 起飛` +
+              (_RETURN_CONN ? `（DXB 轉機約 ${Math.floor(_RETURN_CONN/60)}h${_RETURN_CONN%60}m，由現行資料計算）` : ""),
+    arrive: `${FLIGHT_ITINERARY.return.leg2.arrive} · TPE 桃園（現行參考，2027 訂票時實際為準）`
   }
 };
 
@@ -163,13 +382,13 @@ const EMIRATES_RULES = {
     warning:"⚠️ 不是免費 city tour；最終資格以 Emirates 訂位系統/客服確認"
   },
   timeRules:{
-    baseFlight:"EK88 現行 15:30 起飛（2027 訂票時實際為準）",
+    baseFlight:`${FLIGHT_ITINERARY.return.leg1.flightNo} 現行 ${ZRH_DEPART_HM} 起飛（2027 訂票時實際為準）`,
     note:"以下均為現行參考時間；ZRH 實體 check-in / bag-drop 截止時間以 2027 電子機票及 Emirates / Zürich Airport 當日規則為準",
     points:[
-      { label:"Online check-in（App/網站）關閉", value:"起飛前 90 分鐘（15:30 → 14:00）", note:"App 端關閉，非機場實體 bag drop 硬截止" },
-      { label:"T-90｜Passport control / Security 管理基準", value:"14:00" },
-      { label:"T-60｜Economy 抵達 Gate 硬時間點", value:"14:30" },
-      { label:"T-20｜登機門關閉", value:"15:10" }
+      { label:"Online check-in（App/網站）關閉", value:`起飛前 90 分鐘（${ZRH_DEPART_HM} → ${ZRH_T90_HM}）`, note:"App 端關閉，非機場實體 bag drop 硬截止" },
+      { label:"T-90｜Passport control / Security 管理基準", value:ZRH_T90_HM },
+      { label:"T-60｜Economy 抵達 Gate 硬時間點", value:ZRH_T60_HM },
+      { label:"T-20｜登機門關閉", value:ZRH_T20_HM }
     ]
   }
 };
@@ -178,10 +397,207 @@ const EMIRATES_RULES = {
 const BRB_SCHEDULE = {
   season:"2026 官方班次（非每小時等距；2027 待官方公布）",
   departures:["07:36","08:36","09:40","10:45","11:45","12:58","13:58","14:58","16:36"],
-  note:"turnstile 於發車前約 30 分鐘開放通行；建議發車前 20 分鐘完成換票，10 分鐘前上車",
-  buffer:"湖船抵 Brienz 後預留至少 30-45 分鐘 buffer 至下一班 BRB",
-  simulation2026:"船 11:22 抵 Brienz → 12:58 BRB → 13:57 抵頂 → 15:28 下山 → 16:32 回 Brienz（山頂約 1.5 小時）"
+  note:"turnstile 現行約於發車前 30 分鐘開放；若所購產品需要辦理換票或其他票務手續，應額外預留時間。建議至少於發車前適當時間完成進站準備。",
+  buffer:"湖船抵 Brienz 後預留至少 30-45 分鐘 buffer 至下一班 BRB"
+  // V21.7a：simulation2026 已移除獨立 hardcode，改由 BRB_DAY_PLAN + BRB_DERIVED 於下方統一產生
 };
+
+// V21.6：Day 10 BRB 行程 SSoT
+// 目的：修正 V21.5「12:58 發車 / 13:57 抵頂」與「12:30–14:00 山頂」的物理矛盾。
+// 所有 Day 10 BRB 相關絕對時間都由此推導，2027 官方班表公布後只需改此處。
+const BRB_DAY_PLAN = {
+  // ── 狀態（V21.7：Excel V21.4a 明確要求 2027 班表未公布前不鎖死正式班次）──
+  status: "simulated_2026",   // simulated_2026 / official_2027 / booked
+  statusLabel: "2026 班表模擬（2027 官方班表待公布，尚未決定實際搭乘班次）",
+  scheduleFramework: "relative",  // relative（相對時間框架）/ absolute（2027 班表公布後）
+  frameworkNote: "2027 BRB 時刻表尚未公布。本日採【相對時間框架】：湖船抵 Brienz → 預留至少 30-45 分鐘 buffer → 已選 BRB 班次 → 約 60 分鐘登頂 → 山頂停留約 1.5 小時 → 已選下山班次 → Brienz → Barry's。下方絕對時間僅為 2026 班表模擬，供 Preview 與 Today Engine 測試用，非 2027 已確認搭乘班次。",
+
+  // ── 相對時間框架參數（2027 班表公布後仍成立）──
+  minBufferMinutes: 30,
+  recommendedBufferMinutes: 45,
+  ascentMinutes: 60,
+  summitStayMinutes: 90,
+  descentMinutes: 64,
+
+  // ── 2026 模擬用絕對時間（僅供模擬，非 2027 決定）──
+  boatArriveBrienz: "11:22",
+  chosenUpDeparture: "12:58",   // 2026 官方班次之一（模擬選擇）
+  chosenDownDeparture: "15:28", // 2026 模擬下山班次
+  simulationDisclaimer: "以下絕對時間由 2026 官方班次模擬推導，不代表 2027 已決定搭乘 12:58 這班。2027 官方時刻表公布後需重新配對上下山班次。",
+
+  // ── 票務（Excel V21.4a：依所購產品辦理，不宣稱一定換 STP 實體票）──
+  reservationPolicy: {
+    kind: "recommended",        // recommended / mandatory
+    text: "強烈建議事先鎖定班次並購買座位保證（Seat Guarantee，現行約 CHF 8/人）；是否強制隨票種而定，2027 出發前再次確認",
+    ticketingNote: "BRB 進站與換票方式【依所購買的票券產品而定】。若購買 BRB 官方含有效車票與 Seat Guarantee 的產品，依當年度 QR Code／閘門規則使用；若僅持其他通票、折扣資格或座位保證，可能需要另外取得有效 BRB 車票。2027 實際規則於購票時再次確認。",
+    fareNote: "現行 STP 半價來回約 CHF 49／成人 + 座位保證約 CHF 8（2027 出發前確認）",
+    turnstileNote: "BRB turnstile 現行約於發車前 30 分鐘開放（「開放通行」不等於「乘客必須在此時通過」）；若所購產品需要辦理換票或其他票務手續，應額外預留時間。建議至少於發車前適當時間完成進站準備，並提前上車安置推車與幼兒。",
+    childNote: "妞妞未滿 6 歲，依當年度兒童票價規則可能可免費搭乘；但「免費搭乘」不等於「保證有獨立座位」。若希望妞妞擁有保證座位，需依 2027 BRB Seat Guarantee 規則另外確認或辦理"
+  },
+
+  // ── 銜接失敗備援（Excel V21.4a 明確要求）──
+  connectionFallback: {
+    trigger: "若 2027 船班（BLS）與 BRB 上山班次無法合理銜接（例如船抵 Brienz 距下一班 BRB 少於 30 分鐘且無湖畔緩衝空間）",
+    actions: [
+      "① 取消湖船，改搭火車直達 Brienz：Grindelwald BOB → Interlaken Ost → SBB Brienz（現行約 30 分鐘）",
+      "② 優先保留 BRB 與 Barry's 晚餐（今日雙主軸）",
+      "③ 湖船體驗延後至 Day 6 或未來旅程再訪"
+    ]
+  },
+  brbClosedFallback: {
+    A: "BRB 停駛時採用：保留布里恩茨湖遊船 + Brienz 木雕村深度逛（11:22 抵 Brienz → 湖畔午餐 + 木雕村 → 火車回 Interlaken Ost）",
+    B: "湖邊天氣也差時採用：因特拉肯市區全日（Höheweg 大道 + Höhematte 草坪 + Harder Kulm 纜車若晴 + 賭場周邊）"
+  },
+
+  officialCheckedAt: "2026-07（本輪查證：brienz-rothorn-bahn.ch）"
+};
+
+// V21.6：Day 方案選擇 SSoT
+// 目的：修正 V21.5 將 "14:30 / 15:10" 交給通用 parser 自行猜測的問題。
+// Today Dashboard 只讀「已選定方案」的時間；未選定時顯示「今日方案尚未選定」，
+// 絕不把 alternative time 誤當單一路線。
+const DAY_PLAN_CHOICES = {
+  day8_spb: {
+    dayIndex: 7,                      // DAYS[7] = Day 8
+    label: "Schynige Platte 活動方案（A 家庭預設 / B Bonus）",
+    storageKey: "planchoice_day8_spb_descent",   // V21.6 沿用，不破壞既有選擇
+    defaultKey: "A",
+    note: "A 為家庭預設主方案；B 為天氣、能見度、步道狀況、成人體力與妞妞狀態全部理想時才啟動的 Bonus Plan。不確定時選 A。所有班次為現行參考，2027 出發前以 SBB App / jungfrau.ch 確認。",
+    decisionHint: "不確定時選 A。B 不是與 A 同等推薦的選項。",
+
+    // ── V21.7a：Plan Activation Boundary（分流邊界）──────────────────────
+    // 目的：修正 V21.7「只要當日有 planRef 就整天 plan_unselected」的行為錯誤。
+    //
+    // 語意：A/B 分流【不是】從當日 00:00 開始生效，而是抵達 Schynige Platte 後
+    //       才需要依天氣、能見度、步道、成人體力與妞妞狀態決定。
+    //       在分流點之前的共同行程（早餐、SBB 行李、BOB、SPB 上山）
+    //       必須照常由 Today Engine 解析，不得被 plan_unselected 遮蔽。
+    //
+    // 實作原則（不使用 fragile hardcode "if now < 11:15"）：
+    //   activationFrom = "earliest_plan_block_start"
+    //     → 由「所有 option 中，最早的 planRole 起始時間」自動推導分流邊界。
+    //       2027 班次調整時只需改 option 的 activityTime，邊界自動跟著改。
+    //   decisionPrompt = 到達分流點且未選時，UI 顯示的提示語
+    // ────────────────────────────────────────────────────────────────
+    planActivation: {
+      mode: "earliest_plan_block_start",
+      // 分流前的共同行程照常解析（不被遮蔽）
+      commonScheduleBeforeActivation: true,
+      decisionPrompt: "請依今日天氣、能見度、步道、成人體力與妞妞狀態選擇 A 或 B。",
+      boundaryNote: "分流點＝抵達 Schynige Platte、準備開始山上活動時。此前的行李寄送、BOB、SPB 上山為 A/B 共同行程。"
+    },
+
+    options: [
+      {
+        key: "A",
+        tier: "family_default",
+        label: "A · 家庭預設主方案（推薦）",
+        pro: "植物園＋短版觀景路線；保留餐廳正式午餐；推車相對較友善",
+        // ── 山上活動 ──
+        activityTime: "11:15–12:45",
+        activityTitle: "🌸 Alpine Garden ＋ 短版 Swiss Flower & Panorama Trail（家庭版）",
+        activitySteps: [
+          "「Alpine Garden 高山植物園」——歐洲最古老高山植物園之一，約 800 種高山植物標示牌完整，妞妞自然啟蒙絕佳場所",
+          "車站附近「短版 Swiss Flower & Panorama Trail／短版觀景路線」",
+          "11:15 左右開始活動；以妞妞可使用推車休息為前提",
+          "12:30–12:45 開始往餐廳方向收尾（非硬性截止，考量 4 大人＋幼兒＋推車＋拍照＋如廁的實際彈性）"
+        ],
+        activityDefense: [
+          "⚠️ 推車「相對較友善」不等於無障礙保證：部分路面可能有碎石或不平整，實際可行性依當日路況與現場判斷",
+          "適用狀況：妞妞需要推車休息／不適合長時間使用背巾／天氣或能見度普通／成人不想長距離健行／希望保留正式餐廳午餐"
+        ],
+        // ── 午餐 ──
+        lunchTime: "13:00–14:15",
+        lunchTitle: "🍽️ Hotel Restaurant Schynige Platte 正式午餐",
+        lunchSteps: [
+          "目標 13:00 左右進入 Hotel Restaurant Schynige Platte",
+          "推薦 Rösti 或 Älplermagronen",
+          "餐後整裝，準備搭 14:30 SPB 下山"
+        ],
+        lunchDefense: ["餐廳午餐是 A 方案的一部分；若改走 B 方案則改為野餐"],
+        // ── 下山 ──
+        descentTime: "14:30–16:07",
+        descentTitle: "🚂 SPB 下山（方案 A：14:30 發車）",
+        descentSteps: [
+          "14:30 SPB 下山 → 約 15:20 抵 Wilderswil（車程約 50 分鐘）",
+          "15:34 轉 BOB Wilderswil → 約 16:07 抵 Grindelwald",
+          "🥇 下山改坐右側，換另一邊視角俯瞰湖區"
+        ],
+        townTime: "16:30–18:30",
+        strollerPolicy: "推車可攜；相對較友善但非無障礙保證，依現場路況判斷",
+        carrierPolicy: "背巾備用"
+      },
+      {
+        key: "B",
+        tier: "bonus",
+        label: "B · Bonus Plan · 正式 Panorama Hike（條件全部理想才啟動）",
+        pro: "約 6 km 正式健行；午餐改野餐；背巾限定",
+        // ── 山上活動 ──
+        activityTime: "11:15–14:15",
+        activityTitle: "🏔️ Schynige Platte Panorama Hike（正式健行版 · Bonus）",
+        activitySteps: [
+          "正式「Schynige Platte Panorama Hike」，約 6 公里",
+          "理想條件下約 2.5～3 小時；幼兒同行實際可能更久",
+          "有實際健行地形與高度變化，沿途觀景點視野開闊",
+          "沿線可含 Daube 觀景台（自植物園方向步行約 15 分鐘量級；實際距離與路況依當日步道指標為準）",
+          "午餐改為野餐（不進餐廳）"
+        ],
+        activityDefense: [
+          "🚨 推車不得視為本方案的行程交通工具——背巾為限定主策略",
+          "🚨 啟動條件：天氣／能見度／步道狀況／成人體力／妞妞狀態全部理想才啟動",
+          "任一條件不理想 → 直接回到 A 家庭預設方案"
+        ],
+        // ── 午餐（野餐，含在活動時段內）──
+        lunchTime: "（野餐，含於健行途中）",
+        lunchTitle: "🥪 步道途中野餐",
+        lunchSteps: [
+          "午餐改為野餐，於步道途中視野良好處進行",
+          "不安排 Hotel Restaurant Schynige Platte 正式午餐",
+          "野餐食材需於前一晚或當日早上先備妥"
+        ],
+        lunchDefense: ["B 方案不使用餐廳午餐；A/B 午餐邏輯互斥，不可並存"],
+        // ── 下山 ──
+        descentTime: "15:10–16:37",
+        descentTitle: "🚂 SPB 下山（方案 B：15:10 發車）",
+        descentSteps: [
+          "15:10 SPB 下山 → 約 16:00 抵 Wilderswil（車程約 50 分鐘）",
+          "16:04 轉 BOB Wilderswil → 約 16:37 抵 Grindelwald",
+          "🥇 下山改坐右側，換另一邊視角俯瞰湖區"
+        ],
+        townTime: "16:45–18:30",
+        strollerPolicy: "🚨 推車不得視為行程交通工具",
+        carrierPolicy: "背巾為限定主策略，妞妞由父母輪流揹"
+      }
+    ]
+  }
+};
+function _brbAddMinutes(hm, mins) {
+  const [h, m] = hm.split(":").map(Number);
+  const total = h * 60 + m + mins;
+  const hh = String(Math.floor(total / 60) % 24).padStart(2, "0");
+  const mm = String(total % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+const BRB_DERIVED = {
+  summitArrive: _brbAddMinutes(BRB_DAY_PLAN.chosenUpDeparture, BRB_DAY_PLAN.ascentMinutes),           // 13:58
+  summitLeave:  BRB_DAY_PLAN.chosenDownDeparture,                                                     // 15:28
+  brienzBack:   _brbAddMinutes(BRB_DAY_PLAN.chosenDownDeparture, BRB_DAY_PLAN.descentMinutes)         // 16:32
+};
+// 下游段落（木雕村 → SBB → BOB → 休息）同樣由 brienzBack 推導，避免手寫造成矛盾
+BRB_DERIVED.souvenirEnd   = _brbAddMinutes(BRB_DERIVED.brienzBack, 23);   // 16:55
+BRB_DERIVED.sbbDepart     = _brbAddMinutes(BRB_DERIVED.brienzBack, 28);   // 17:00
+BRB_DERIVED.sbbArriveIntO = _brbAddMinutes(BRB_DERIVED.sbbDepart, 16);    // 17:16
+BRB_DERIVED.bobDepart     = _brbAddMinutes(BRB_DERIVED.sbbArriveIntO, 9); // 17:25
+BRB_DERIVED.bobArriveGrin = _brbAddMinutes(BRB_DERIVED.bobDepart, 35);    // 18:00
+
+// V21.7a：BRB 模擬敘述由 SSoT 單一產生，回填 BRB_SCHEDULE
+// 修正 V21.7「BRB_SCHEDULE 寫 13:57、BRB_DERIVED 算出 13:58」的雙 hardcode 不一致
+BRB_DERIVED.simulationText =
+  `船 ${BRB_DAY_PLAN.boatArriveBrienz} 抵 Brienz → ${BRB_DAY_PLAN.chosenUpDeparture} BRB → ` +
+  `${BRB_DERIVED.summitArrive} 抵頂 → ${BRB_DERIVED.summitLeave} 下山 → ` +
+  `${BRB_DERIVED.brienzBack} 回 Brienz（山頂約 ${(BRB_DAY_PLAN.summitStayMinutes / 60).toFixed(1).replace(/\.0$/, "")} 小時）` +
+  `｜${BRB_DAY_PLAN.statusLabel}`;
+BRB_SCHEDULE.simulation2026 = BRB_DERIVED.simulationText;
 
 const EMERGENCY = [
   { cat:"急難救助", items:[
@@ -192,11 +608,11 @@ const EMERGENCY = [
     { label:"高山救援 REGA", tel:"1414", note:"直升機山難救援" }
   ]},
   { cat:"台灣官方", items:[
-    { label:"駐瑞士代表處 · 一般聯絡", tel:"+41 31 382 29 27", note:"護照遺失、簽證、文件驗證（辦公時間）" },
-    { label:"駐瑞士代表處 · 另一線", tel:"+41 31 350 80 50", note:"備用聯絡電話" },
-    { label:"🆘 駐瑞士代表處 · 急難救助手機", tel:"+41 76 336 6979", note:"限車禍、搶劫、生命安危等重大急難" },
-    { label:"外交部旅外急難救助 · 全球免付費", tel:"+800 0885 0885", note:"境外免付費專線（原號碼已更正）" },
-    { label:"地址", tel:"", note:"Kirchenfeldstrasse 14, 3005 Bern" }
+    { label:"駐瑞士代表處 · 一般聯絡", tel:CONSULATE_CONTACT.general, note:"護照遺失、簽證、文件驗證（辦公時間）" },
+    { label:"駐瑞士代表處 · 另一線", tel:CONSULATE_CONTACT.altGeneral, note:"備用聯絡電話" },
+    { label:"🆘 駐瑞士代表處 · 急難救助手機", tel:CONSULATE_CONTACT.emergency, note:"限車禍、搶劫、生命安危等重大急難" },
+    { label:"外交部旅外急難救助 · 全球免付費", tel:CONSULATE_CONTACT.freeCall, note:"境外免付費專線" },
+    { label:"地址", tel:"", note:CONSULATE_CONTACT.address }
   ]},
   { cat:"住宿聯絡", items:[
     { label:"KoBi Hirschenplatz (琉森)", tel:"", note:"booking.com 預訂，詳見訂房確認信" },
@@ -218,13 +634,13 @@ const DAYS = [
     hotelKey:"luzern",
     tl:[
       {
-        time:"13:20–15:00", title:"抵達蘇黎世機場 ZRH + 從容通關領行李",
+        time:`${ZRH_ARRIVE_HM}–15:00`, title:"抵達蘇黎世機場 ZRH + 從容通關領行李",
         tr:{ label:"入境", icon:"plane" },
         stp:"none",
         steps:[
-          "飛機 13:20 落地後立刻開啟網路報平安（現行參考時間；2027 訂票時實際為準）",
+          `飛機約 ${ZRH_ARRIVE_HM} 落地後立刻開啟網路報平安（現行參考時間；2027 訂票時實際為準）`,
           "跟隨 Exit / Baggage Claim 指標往入境大廳",
-          "護照查驗（誠實答 Tourism）；護照效期建議至少至 2028/3/24 之後",
+          `護照查驗（誠實答 Tourism）；${passportRequirementLine()}`,
           "確認行李轉盤，提領 5 件大行李 + 推車",
           "走綠色通道 Nothing to declare 出關"
         ],
@@ -333,23 +749,27 @@ const DAYS = [
           "找戶外木椅或草地野餐"
         ],
         defense:[
-          "推車天堂：山頂步道極度平緩",
+          "山頂步道相對平緩，對推車與長輩較友善",
           "山上風大需加件薄外套",
-          "13:15 準時收拾出發下山"
+          "⚠️ 13:15 準時收拾出發下山，留出充裕時間走碎石坡"
         ],
         critical:[]
       },
       {
-        time:"13:15–14:30", title:"下坡健行至 Rigi Kaltbad",
-        tr:{ label:"步行 2.5km", icon:"walk" }, stp:"none",
+        time:"13:15–14:30", title:"下山第一段：下坡健行至 Rigi Kaltbad",
+        tr:{ label:"步行 2.5km（或齒軌列車）", icon:"walk" }, stp:"none",
         steps:[
-          "沿指標往下坡至半山腰 Rigi Kaltbad（緩坡碎石路約 75 分鐘）"
+          "沿指標往下坡步行至半山腰 Rigi Kaltbad（約 2.5 km，緩降碎石／山徑路面）",
+          "帶妞妞＋推車實際耗時抓 75-90 分鐘以上"
         ],
         defense:[
-          "健行步道風景極佳且平緩，適合推推車散步",
-          "🆘 備案：若妞妞鬧，Kulm 搭紅色火車 1 站至 Kaltbad（8 分鐘），不影響後續"
+          "⚠️【推車可行性・保守判斷】實際推車可行性需依當日選定步道路線與路況判斷，不視為無障礙路線",
+          "🛡️ Rigi 雖有多條 stroller-friendly 步道，但不等於 Kulm → Kaltbad 所有路線都適合推車；出發前於 rigi.ch 確認當日建議路線",
+          "🆘 若路況不適合推車或家庭體力不足，直接搭齒軌列車由 Rigi Kulm 下至 Rigi Kaltbad"
         ],
-        critical:[]
+        critical:[
+          "⚠️ Kulm → Kaltbad 不是「1 站」——中間尚有 Rigi Staffel、Rigi Staffelhöhe 等站；現行車程約 10 分鐘量級，2027 實際班次與車程依 rigi.ch／SBB 時刻表確認"
+        ]
       },
       {
         time:"14:30–15:05", title:"高空纜車降落 Weggis",
@@ -547,9 +967,11 @@ const DAYS = [
         critical:[]
       },
       {
-        time:"11:10–11:50", title:"世界最陡齒軌火車攀升",
+        time:"11:10–11:50", title:"世界最陡齒軌上山 ＋ 抵達轉場緩衝（現行模擬）",
         tr:{ label:"Pilatus 齒軌", icon:"train" }, stp:"half",
         steps:[
+          "⏱️ 本段 11:10–11:50 為【購票／上車 → 齒軌上山 → 抵達下車轉場】的整段緩衝，不是純搭車時間",
+          "🚞 純齒軌乘車時間：現行參考約 30 分鐘（Alpnachstad → Pilatus Kulm）；2027 正式時刻 🟡 PENDING",
           "下船後至售票處",
           "⭐ STP 分段購買原則：不要買整段 Golden Round Trip 套票（船 + Bus 對持 STP 者已 100% 免費會重複計價）",
           "  · 船段：STP 100% 免費（已完成）",
@@ -560,10 +982,12 @@ const DAYS = [
           "🥇 直奔整台列車的最後一節（車尾）視野最佳"
         ],
         defense:[
+          "🟡 11:10 / 11:50 皆為 2026 現行班次模擬，非 2027 已確認時刻；2027 正式時刻表公布後重算",
           "推車必收折，大人抱緊寶寶",
           "耳壓對策：準備水或小零食讓寶寶咀嚼減壓",
           "耳壓不適哭鬧 5-10 分鐘屬正常",
-          "⚠️ Pilatus 齒軌預約：pilatus.ch 官方措辭存在「強烈建議」與「不強制」不同措辭；強烈建議出發前於 pilatus.ch 訂位；2027 出發前確認是否成為強制"
+          "⚠️ Pilatus 齒軌預約：pilatus.ch 官方措辭存在「強烈建議」與「不強制」不同措辭；強烈建議出發前於 pilatus.ch 訂位；2027 出發前確認是否成為強制",
+          "🚨【交通票券 ≠ 座位預約】持有效交通票券仍可能需要另外辦理／購買座位預約；不視為 Golden Round Trip 套票自動包含齒軌座位預約。座位預約費現行約 CHF 5/人（幼童若不佔位通常免收）"
         ],
         critical:[]
       },
@@ -587,7 +1011,7 @@ const DAYS = [
         time:"14:30–15:30", title:"高空撤退 → Kriens",
         tr:{ label:"大纜車+小纜車", icon:"cablecar" }, stp:"half",
         steps:[
-          "搭大纜車至 Fräkmüntegg",
+          "搭大纜車 Pilatus Kulm → Fräkmüntegg（Panorama Gondola 路線；2027 精確班次待確認）",
           "轉四人小纜車降落至 Kriens 站"
         ],
         defense:[
@@ -652,6 +1076,25 @@ const DAYS = [
             "KKL 大廳免費開放，午餐可在大廳附設咖啡"
           ],
           critical:[]
+        },
+        {
+          time:"逆時針 B 計畫", title:"🆘 Kriens 上山逆時針路線（早上天氣不佳／錯過船班／起不來）",
+          tr:{ label:"Bus 1 + 纜車 + 齒軌", icon:"cablecar" }, stp:"half",
+          steps:[
+            "捨棄遊船：早上直接從琉森火車站搭 1 號公車到 Kriens, Zentrum Pilatus（Bus 1 號 STP 100% 免費）",
+            "纜車上山：Kriens 纜車隨到隨搭（不需預約）→ Fräkmüntegg 換 Dragon Ride 空中纜車 → Pilatus Kulm",
+            "火車下山：山頂玩夠後搭齒軌火車下山到 Alpnachstad",
+            "回程：Alpnachstad → Luzern，可搭船或 SBB S-Bahn 火車約 20 分鐘（STP 皆 100% 免費）"
+          ],
+          defense:[
+            "STP 現場出示買纜車／齒軌半價票",
+            "⚠️ 齒軌下山段官方仍強烈建議座位預約，尤其週末好天氣；未預約可能長時間等候（尖峰）"
+          ],
+          critical:[
+            "🚨【B 計畫啟動時的預約決策｜務必先處理，勿假設自動沿用】主方案預約的是「Alpnachstad → Pilatus Kulm 上山」齒軌座位；B 計畫走的是「Pilatus Kulm → Alpnachstad 齒軌下山」，方向相反。上山方向的預約【不會自動適用於下山方向】",
+            "啟動 B 計畫當天必須先確認三件事：① 原上山預約是否需要取消（避免無故 no-show 或費用損失）② 下山方向是否需要另行取得座位預約 ③ 改訂管道與可否當日辦理（pilatus.ch 線上／現場櫃檯）",
+            "⚠️ 2027 實際預約政策與可否更改，於開放預約時向 pilatus.ch 確認"
+          ]
         },
         {
           time:"補充", title:"Trümmelbach 4 歲以下禁入（safety reasons）",
@@ -720,27 +1163,31 @@ const DAYS = [
         ]
       },
       {
-        time:"13:00–14:30", title:"抵達格林德瓦 ＋ 領行李 + Interhome 領鑰匙",
+        time:"13:00–15:00", title:"抵達格林德瓦 ＋ 領 SBB 行李（入住前等待時段）",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "出 Grindelwald 車站",
-          "🥇 兵分兩路：Morris 輕裝去 Interhome 辦公室領 Sans Souci W1 鑰匙",
+          "🥇 兵分兩路：Morris 輕裝去 Interhome 辦公室辦理 key collection（方式待訂房確認）",
           "家人（Emily/皮皮/Milo+妞妞）在車站 SBB Luggage 櫃台領 5 件大行李",
-          "會合後全體推行李 300m 到 Sans Souci W1",
-          "📸 車站前廣場拍第一張全家合照，背景就是艾格北壁"
+          "📸 車站前廣場拍第一張全家合照，背景就是艾格北壁",
+          "⏳ 13:00–15:00 為入住前等待時段：可在車站周邊 / Coop / 咖啡店休息",
+          "🕒 Sans Souci W1 check-in 時段為 15:00–17:00，15:00 前不得預設可進入公寓"
         ],
         defense:[
-          "SBB Luggage reclaim 現行 08:00-18:00（Day 5 為領件端）",
-          "2027 出發前 3 個月至 sbb.ch 分站頁確認實際時段",
-          "Sans Souci W1 位於 cul-de-sac 死巷，無車流、安靜"
+          "SBB Luggage reclaim 時段依 Grindelwald 分站公告為準（非全網統一時段）；2027 出發前 3 個月至 sbb.ch 分站頁確認",
+          "🟡 PENDING：13:00–15:00 的 5 件行李寄放安排尚未確認，不得自行假定 Interhome 一定可代寄放",
+          "🟡 PENDING：key collection 實際方式（辦公室領取 / 密碼鎖 / self check-in）待訂房確認",
+          "備援：若行李無處寄放，可先留在車站行李櫃台或請家人分批看顧，等 15:00 後一次搬入",
+          "Sans Souci W1 位於 cul-de-sac 死巷，無車流、安靜（距車站 300m）"
         ],
         critical:[
-          "🚨 未取得鑰匙、未到入住時間前不得進入公寓/陽台/私人區域",
+          "🚨 Check-in 15:00–17:00；未取得鑰匙、未到入住時間前不得進入公寓/陽台/私人區域",
+          "🚨 妞妞午睡不可預設在公寓進行；15:00 前請用推車或車站休息區安排",
           "Interhome 精確地址與辦公室位置訂房後 email 告知"
         ]
       },
       {
-        time:"14:30–17:00", title:"小鎮場勘 ＋ Coop 大採買",
+        time:"15:00–17:00", title:"正式 Check-in ＋ 小鎮場勘 ＋ Coop 大採買",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "沿主街 Dorfstrasse 散步：超市 Coop、餐廳、纜車站、火車站",
@@ -773,17 +1220,18 @@ const DAYS = [
   },
 
   {
-    day:6, date:"09/19 (日)", loc:"格林德瓦 Grindelwald", theme:"勞特布魯嫩谷地日",
+    day:6, date:"09/19 (日)", loc:"格林德瓦 Grindelwald", theme:"Mürren 懸崖村 ＋ Allmendhubel 高山遊樂場",
     hotelKey:"grindelwald",
     tl:[
       {
-        time:"09:00–10:00", title:"BOB 輕裝出擊 → 瀑布鎮",
+        time:"09:15–10:15", title:"BOB 輕裝出擊 → Lauterbrunnen",
         tr:{ label:"BOB 經 Zweilütschinen", icon:"train" }, stp:"free",
         steps:[
-          "輕裝出門，大行李全留木屋",
-          "🚂 從 Grindelwald 搭 BOB 往下山方向 Interlaken Ost",
+          "輕裝出門，大行李全留木屋；路上到 Coop 買野餐食材（三明治、水果、餅乾、水）",
+          "🚂 從 Grindelwald 主車站搭 BOB 往下山方向（Sans Souci W1 走 300m / 約 4 分鐘）",
           "在 Zweilütschinen 站下車（約 23 分鐘）",
-          "同月台或鄰近月台轉往 Lauterbrunnen 上山方向（約 5 分鐘）"
+          "同月台或鄰近月台轉往 Lauterbrunnen 上山方向（約 5 分鐘等車）",
+          "約 10:12 抵 Lauterbrunnen；走出車站正對面就是 BLM 纜車站"
         ],
         defense:[
           "輕裝原則：後背包+推車+野餐午餐+妞妞尿布 1 天份",
@@ -794,76 +1242,91 @@ const DAYS = [
         critical:["不要搭到 Interlaken Ost！那會多繞 40 分鐘冤枉路"]
       },
       {
-        time:"10:00–12:00", title:"🎠 Spielplatz Lauterbrunnen 兒童遊樂場",
-        tr:{ label:"步行", icon:"walk" }, stp:"none",
+        time:"10:15–11:00", title:"🚡 BLM 纜車 ＋ 山區小火車 → Mürren",
+        tr:{ label:"BLM 纜車 + 山區小火車", icon:"cable" }, stp:"free",
         steps:[
-          "村中心附近免費兒童遊樂場（Google Maps 搜「Spielplatz Lauterbrunnen」）",
-          "滑梯、鞦韆、爬繩應有盡有",
-          "放電 30-60 分鐘 CP 值最高"
+          "過馬路到 BLM 纜車站（Lauterbrunnen 車站正對面，Bahnhofplatz 477）",
+          "搭 BLM 纜車上 Grütschalp（約 4 分鐘）",
+          "同建築內轉乘 BLM 山區小火車 → Mürren（約 12 分鐘）",
+          "途經中間站 Winteregg（Top of Family 有兒童遊樂場，今日不下車）",
+          "抵 Mürren BLM 站（村莊北端），走出車站左轉即是主街 Dorfstrasse"
         ],
         defense:[
-          "妞妞在這裡的興奮度會比看瀑布高 10 倍",
-          "遊樂場設施完整，妞妞可自由放電"
+          "BLM 纜車 + 山區小火車 STP 100% 涵蓋",
+          "纜車車廂平坦，推車可直接推入",
+          "山區小火車班距約 20 分鐘，實際依當日 BLM 官方班表"
+        ],
+        critical:[]
+      },
+      {
+        time:"11:00–13:30", title:"🏘️ Mürren 懸崖無車村漫遊 ＋ 午餐",
+        tr:{ label:"步行（村內全平坦、無車）", icon:"walk" }, stp:"none",
+        steps:[
+          "Mürren 主街 Dorfstrasse 漫遊（無車村；村內核心區步行相對輕鬆，仍可能有坡度）",
+          "傳統瑞士 chalet + 花圃陽台，正對艾格北壁 + 僧侶峰 + 少女峰",
+          "村內有小型 Coop 可補給；午餐可野餐或於村內餐廳用餐",
+          "用餐後散步到 Allmendhubel funicular 站（主街中段，步行 3-5 分鐘）"
+        ],
+        defense:[
+          "全村無汽車，推車與幼兒走動安全度高",
+          "⏱️ 實際停留時間依拍照、午餐與幼兒節奏調整（不預設固定分鐘數走完全村）",
+          "村內平坦，妞妞可自行走一段消耗體力",
+          "教堂旁小空地可讓妞妞跑跳"
+        ],
+        critical:[]
+      },
+      {
+        time:"13:30–15:30", title:"🎠 Allmendhubel Flower Park（幼兒放電重點）",
+        tr:{ label:"Allmendhubel funicular", icon:"cable" }, stp:"half",
+        steps:[
+          "13:30 到 Allmendhubel funicular 站（Mürren 主街中段）",
+          "funicular 上山約 4 分鐘",
+          "Flower Park 冒險遊樂場（60-75 分鐘）：滑梯、鞦韆、爬繩、學擠牛奶、土撥鼠洞",
+          "隔壁 Water Labyrinth 水迷宮（9 月水溫較涼，注意鞋子別濕）",
+          "Flower Trail 20 分鐘環狀 loop（推車友善，若妞妞還有體力）",
+          "大人 Skyline Chill 躺椅看少女峰全景"
+        ],
+        defense:[
+          "STP 為 50% 折扣（非免費）；2027 正式費率待官方公布",
+          "Flower Trail 平坦環狀，150 種高山花卉沿途標示，沿途有小型兒童遊戲站",
+          "妞妞可放電 1-1.5 小時，是本日核心安排"
         ],
         critical:[
-          "Trümmelbachfälle 官方規定：4 歲以下幼童（含使用背巾、抱在身上）一律不得入內",
-          "妞妞（2.5 歲）100% 會被擋下，背巾、抱嬰、推車都不能規避",
-          "強烈建議跳過 Trümmelbach，改玩 Spielplatz + Staubbachfall"
+          "Allmendhubel funicular 為 STP 半價，非免費，現場需另購票",
+          "山上氣溫較 Mürren 低，備薄外套"
         ]
       },
       {
-        time:"12:00–13:00", title:"🌸 Staubbachfall 朝聖 ＋ 谷地野餐",
+        time:"15:30–17:15", title:"🌸 下山 ＋ Staubbach 朝聖 ＋ 撤退回木屋",
+        tr:{ label:"funicular → BLM 火車 → BLM 纜車 → BOB", icon:"train" }, stp:"free",
+        steps:[
+          "15:30 Allmendhubel funicular 下山（約 4 分鐘），走回 Mürren BLM 站（約 1 分鐘）",
+          "BLM 山區小火車 → Grütschalp → BLM 纜車 → Lauterbrunnen",
+          "Staubbach 快速朝聖約 25 分鐘：從 BLM 車站走到瀑布正對面約 5 分鐘（不用走到瀑布底）",
+          "拍山村教堂 + 300m 高瀑布同框構圖",
+          "約 16:30 回 Lauterbrunnen 車站搭 BOB → Zweilütschinen（5 分鐘）→ 轉車 → Grindelwald（23 分鐘）"
+        ],
+        defense:[
+          "Staubbach 全程免費、步道平緩柏油路，推車友善",
+          "若妞妞已累，可略過 Staubbach 直接搭 BOB 回程",
+          "備案：Spielplatz Lauterbrunnen（村中心附近免費兒童遊樂場）可作為候車 buffer"
+        ],
+        critical:[
+          "Trümmelbachfälle 官方規定 4 歲以下幼童（含背巾、抱在身上）一律不得入內；妞妞 2.5 歲會被擋下，本日不安排"
+        ]
+      },
+      {
+        time:"17:15–20:00", title:"木屋慢活 ＋ 自炊晚餐",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
-          "從 Lauterbrunnen 車站沿主街往南走 10-15 分鐘",
-          "正前方就是 Staubbach 瀑布（300m 高細白紗，全程免費）",
-          "找瀑布前的草地或長椅野餐",
-          "拍《愛的迫降》同款：山村教堂+瀑布合影"
+          "回木屋洗個熱水澡，妞妞可能一整天很累，早點睡覺",
+          "自炊晚餐：用 Day 5 採買的食材，簡單煮義大利麵/炒飯/微波熟食",
+          "大人可輪流去 Grindelwald 主街散步或 Coop 補貨（週日開到 18:30-19:00）"
         ],
         defense:[
-          "Staubbach 300m 高懸崖直落，水量大時細霧瀰漫整個山谷",
-          "步道平緩柏油路，推車友善"
+          "21:00 前務必讓妞妞入睡，保留體力迎接 Day 7 曼利申 Panorama Trail",
+          "明天 Day 7 走 4.5 km Panorama Trail（Royal Walk 加碼 +1.5km 來回），是這趟最長健行日"
         ],
-        critical:[]
-      },
-      {
-        time:"13:00–15:00", title:"瀑布谷地平緩健行（推車天堂）",
-        tr:{ label:"步行 4km", icon:"walk" }, stp:"none",
-        steps:[
-          "吃飽後沿谷地步道往 Lauterbrunnen 車站方向散步",
-          "全程平緩柏油/碎石路，推車極度滑順",
-          "沿途朝聖從 300m 高懸崖垂直落下的 Staubbach",
-          "抵達車站時間約 14:30-15:00"
-        ],
-        defense:[
-          "全瑞士最推薦嬰幼兒友善步道",
-          "9 月午後光線柔和，三面 300m 岩壁包圍的夢幻場景",
-          "備案：體力下降隨時跳上 141 號公車直接回車站"
-        ],
-        critical:[]
-      },
-      {
-        time:"15:00–16:00", title:"BOB 回格林德瓦",
-        tr:{ label:"BOB 經 Zweilütschinen", icon:"train" }, stp:"free",
-        steps:[
-          "Lauterbrunnen 搭 BOB 下山到 Zweilütschinen（約 5 分鐘）",
-          "Zweilütschinen 換乘往 Grindelwald 上山方向（約 23 分鐘）"
-        ],
-        defense:[
-          "回程一樣在 Zweilütschinen 轉，不需要再到 Interlaken Ost",
-          "BOB 每 30 分鐘一班，下午回程不用衝時間"
-        ],
-        critical:[]
-      },
-      {
-        time:"16:00–20:00", title:"木屋慢活 ＋ 自炊晚餐",
-        tr:{ label:"步行", icon:"walk" }, stp:"none",
-        steps:[
-          "回木屋洗熱水澡驅除瀑布水氣",
-          "自炊晚餐（用 Day 5 採購食材）",
-          "早早休息，保留體力迎接明天神級全景健行"
-        ],
-        defense:["明天 Day 7 走 4.5 km Panorama Trail（Royal Walk 加碼 +1.5km 來回），是這趟最長健行日"],
         critical:[]
       }
     ]
@@ -895,7 +1358,7 @@ const DAYS = [
         time:"10:00–10:30", title:"GGM 纜車直上曼利申（2,230m）",
         tr:{ label:"GGM 黃綠纜車", icon:"cablecar" }, stp:"half",
         steps:[
-          "出示 STP 購 Grindelwald Terminal → Männlichen 單程半價票（約 CHF 35-40/成人）",
+          "出示 STP 購 Grindelwald Terminal → Männlichen 單程半價票：2026 現行參考成人單程原價約 CHF 34，STP 50% 折扣後約 CHF 17/成人（妞妞免費）；2027 實際票價與折扣依官方最新資料確認",
           "妞妞免費",
           "搭 GGM 10 人座纜車，全程 19-20 分鐘",
           "⭐ 只買單程票：回程走 Panorama Trail 到 Kleine Scheidegg 再搭 WAB 火車回 Grindelwald"
@@ -917,7 +1380,8 @@ const DAYS = [
           "左側俯瞰格林德瓦谷地"
         ],
         defense:[
-          "🥇 主方案：嬰兒背巾為主方案，運動型推車當裝備運輸車",
+          "🥇 背巾為確定主方案：妞妞由父母輪流揹；運動型推車僅在出發前確認當日路況適合時才攜帶，主要作為裝備運輸車",
+          "⚠️ 不把「推車上午睡」視為行程成立的前提條件——官方未對完整 Panorama Trail 的推車通行做明確保證",
           "緩下坡 2,230m → 2,061m，途中 3-4 段平緩段可放下妞妞自己走",
           "全程無遮蔽物，墨鏡+遮陽帽+防曬乳必備",
           "洋蔥穿搭：多帶薄外套輪流穿脫"
@@ -970,7 +1434,7 @@ const DAYS = [
   },
 
   {
-    day:8, date:"09/21 (二)", loc:"格林德瓦 Grindelwald", theme:"歷史齒軌列車神奇日（百年電力齒軌 SPB）＋ 機場行李寄送",
+    day:8, date:"09/21 (二)", loc:"格林德瓦 Grindelwald", theme:"行李寄送＋Schynige Platte 親子輕健行日（百年電力齒軌 SPB）",
     hotelKey:"grindelwald",
     tl:[
       {
@@ -979,7 +1443,7 @@ const DAYS = [
         steps:[
           "前一晚 Day 7 已完成分裝",
           "08:00 Morris + Milo 出門到 Grindelwald 車站 SBB 櫃檯寄送 5 件行李",
-          "現行 Luggage dispatch 08:00-17:00（Day 8 為寄件端；2027 出發前 3 個月至 sbb.ch 分站頁確認實際時段）",
+          "Luggage dispatch 時段依 Grindelwald 分站公告為準（非全網統一時段）；2027 出發前 3 個月至 sbb.ch 分站頁確認實際時段",
           "寄送單填：起點 Grindelwald、終點 Zürich Flughafen、預計領取 9/24 (五) 中午",
           "現行 CHF 12 × 5 件 = CHF 60（2027 出發前確認）",
           "保留收據與寄物編號",
@@ -1000,66 +1464,112 @@ const DAYS = [
         ]
       },
       {
-        time:"11:00–12:00", title:"歷史齒軌列車 SPB 上山（百年電力齒軌）",
-        tr:{ label:"Schynige Platte Bahn", icon:"train" }, stp:"half",
+        time:"09:38–10:15", title:"🚂 BOB Grindelwald → Zweilütschinen → Wilderswil",
+        tr:{ label:"BOB 黃綠色山地火車", icon:"train" }, stp:"free",
         steps:[
-          "下 BOB 後跟「Schynige Platte Bahn」指標走，齒軌火車月台就在旁邊",
-          "出示 STP 至售票處購 50% 折扣票（成人約 CHF 32-35，妞妞免費）",
-          "⚠️ SPB 車型澄清：1893 開通時為蒸汽；1914 電氣化，日常班次全部為百年電力機車",
-          "蒸汽特別班每年僅約 4-6 場需另訂；9/21 (二) 平日幾乎不會排到蒸汽班",
-          "列車緩緩爬升 50 分鐘，全程「咔噠咔噠」齒輪聲"
+          "暫定 09:38 BOB Grindelwald → 約 10:00 Zweilütschinen（車程約 22 分鐘）",
+          "同月台或鄰近月台轉車 → 約 10:15 抵 Wilderswil（總共約 37 分鐘）",
+          "下山方向 BOB 不會拆解，兵分兩路壓力極低",
+          "⚠️ 具體班次為現行參考；2027 時刻表公布後於 SBB App 重新確認"
         ],
         defense:[
-          "🥇 上山務必坐左側（行進方向左），俯瞰 Brienzersee 與圖恩湖",
-          "推車放車廂端部（請司機協助），妞妞由大人輪流抱著",
-          "建議搭 11:05 班次更從容（09:38 BOB → 11:05 SPB 有充裕轉乘時間）"
+          "若 09:38 班次 2027 有變，退到 10:08 也可（SPB 約 40 分鐘一班有緩衝）",
+          "🥇 BOB 沿途左側偶見艾格北壁；右側是伯恩高地谷地",
+          "妞妞背巾 + 推車皆可上車"
         ],
-        critical:[]
+        critical:[
+          "⚠️ 若接 10:25 SPB 只有約 10 分鐘轉車（帶妞妞＋推車＋買折扣票可能不夠）；若 09:38 準點抵 10:15 可搭 10:25 SPB，若延誤或動作稍慢則退到 11:05 SPB 更從容"
+        ]
       },
       {
-        time:"12:00–14:30", title:"高山植物園 ＋ 全景步道 ＋ 三峰絕景",
+        time:"10:25–11:15", title:"🚞 百年電力齒軌 SPB 上山（Wilderswil → Schynige Platte 1,967m）",
+        tr:{ label:"Schynige Platte Bahn（1893 開通・1914 電氣化）", icon:"train" }, stp:"half",
+        steps:[
+          "下 BOB 後跟「Schynige Platte Bahn」指標，齒軌月台就在 BOB 月台旁（步行約 1 分鐘）",
+          "出示 STP 至售票處購買 50% 折扣票（暫定約 CHF 32/成人）；妞妞 6 歲以下免費",
+          "暫定 10:25 SPB 上山（現行約 40 分鐘一班；2027 出發前確認 jungfrau.ch）",
+          "車程約 50-53 分鐘 → 約 11:15 抵山頂",
+          "全程齒輪卡進軌道的「咔噠咔噠」聲，是全瑞士最有時光感的高山體驗"
+        ],
+        defense:[
+          "🥇 上山務必坐左側，可俯瞰 Brienzersee 與圖恩湖",
+          "古董車廂窄，推車放車廂端部（請司機協助），妞妞由大人輪流抱",
+          "氣壓：從 584m 上到 1,967m，準備水或零食讓妞妞咀嚼減壓"
+        ],
+        critical:[
+          "🚨 SPB 車型澄清：1893 開通時為蒸汽，1914 電氣化，日常班次全部為百年電力機車。蒸汽特別班僅於特定日期運行，本行程不預設搭乘；2027 若公布符合旅行日期的特別班，再另行評估（jungfrau.ch）"
+        ]
+      },
+      {
+        time:"（依所選方案）",
+        planRef:"day8_spb", planRole:"activity",
+        title:"🌸🏔️ Schynige Platte 活動（A 家庭版 / B Bonus 健行版，二選一）",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
-          "先繞 Alpine Garden 高山植物園一圈（歐洲最古老，600+ 種）",
-          "接著走 Panoramaweg 全景步道環狀路線（1-1.5 小時）",
-          "沿途艾格、僧侶、少女峰三峰排列，背後 Brienzersee + 圖恩湖",
-          "13:00 左右午餐（Hotel Restaurant Schynige Platte 或自備野餐）"
+          "出 Schynige Platte 站後，依當日天氣、能見度、妞妞狀況與成人意願，於 A／B 二方案中擇一",
+          "⭐ A 家庭預設主方案：Alpine Garden 高山植物園 ＋ 短版 Swiss Flower & Panorama Trail（11:15–12:45）",
+          "🏔️ B Bonus Plan：正式 Schynige Platte Panorama Hike，約 6 km、理想條件約 2.5–3 小時（11:15–14:15）",
+          "📌 不確定時選 A。B 不是與 A 同等推薦的選項"
         ],
         defense:[
-          "步道平緩碎石，推車可推。少數陡坡輪流抱妞妞",
-          "遊客密度低：9 月平日山頂僅 30-50 人，是私房景點",
-          "🥇 攝影點：Daube 觀景台從植物園走 15 分鐘"
+          "A：推車相對較友善，但部分路面可能有碎石或不平整，非無障礙路線",
+          "B：推車不得視為行程交通工具，背巾為限定主策略；幼兒同行實際可能超過 3 小時",
+          "ℹ️ 實際人潮依天氣、團客、假期與當日營運狀況而定，不以平日／假日推論"
+        ],
+        critical:[
+          "🚨 B 方案啟動條件：天氣／能見度／步道狀況／成人體力／妞妞狀態全部理想才啟動；任一條件不理想直接回到 A"
+        ]
+      },
+      {
+        time:"（依所選方案）",
+        planRef:"day8_spb", planRole:"lunch",
+        title:"🍽️ 午餐（依所選方案：A 餐廳／B 野餐）",
+        tr:{ label:"步行", icon:"walk" }, stp:"none",
+        steps:[
+          "⭐ A 方案：12:30–12:45 開始往餐廳方向收尾，目標 13:00 左右進入 Hotel Restaurant Schynige Platte（Rösti 或 Älplermagronen）",
+          "🏔️ B 方案：午餐改為野餐，於健行途中視野良好處進行，不進餐廳"
+        ],
+        defense:[
+          "A／B 午餐邏輯互斥，不可並存",
+          "A 的 12:30–12:45 為收尾起點，非硬性截止（考量 4 大人＋幼兒＋推車＋拍照＋如廁的實際彈性）",
+          "B 的野餐食材需於前一晚或當日早上先備妥"
         ],
         critical:[]
       },
       {
-        time:"14:30 / 15:10", title:"SPB 下山方案 A/B（暫定；2027 SBB 為準）",
+        time:"方案 A 14:30 ／ 方案 B 15:10 下山（依當日選定）",
+        planRef:"day8_spb", planRole:"descent",
+        title:"SPB 下山方案 A/B（需先選定；2027 SBB 為準）",
         tr:{ label:"Schynige Platte Bahn", icon:"train" }, stp:"half",
         steps:[
-          "⭐ 方案 A：14:30 SPB 下山 → 15:20 抵 Wilderswil → 15:34 BOB → 16:07 Grindelwald",
-          "⭐ 方案 B：15:10 SPB 下山 → 16:00 抵 Wilderswil → 16:04 BOB → 16:37 Grindelwald",
+          "⭐ 方案 A：14:30 SPB 下山 → 約 15:20 抵 Wilderswil → 15:34 BOB → 約 16:07 Grindelwald",
+          "⭐ 方案 B：15:10 SPB 下山 → 約 16:00 抵 Wilderswil → 16:04 BOB → 約 16:37 Grindelwald",
           "🥇 下山改坐右側，換另一邊視角俯瞰湖區",
           "SPB 末班時間依 2027 官方班表確認（不寫「不會錯過末班」絕對措辭）"
         ],
         defense:[
           "均為暫定班次；2027 出發前 SBB App 確認",
-          "方案 A 較從容，妞妞下午精神較好；方案 B 給山上多 40 分鐘"
+          "方案 A 較從容，妞妞下午精神較好；方案 B 給山上多 40 分鐘",
+          "📌 現場請先在本卡片選定 A 或 B，Today 才會顯示正確的「目前正在／下一步」"
         ],
         critical:[]
       },
       {
-        time:"14:30–18:00", title:"格林德瓦小鎮耍廢",
+        time:"（依所選方案）",
+        planRef:"day8_spb", planRole:"town",
+        title:"格林德瓦小鎮耍廢",
         tr:{ label:"BOB→步行", icon:"walk" }, stp:"none",
         steps:[
-          "14:30 回 Grindelwald，妞妞回木屋午睡",
+          "回 Grindelwald 後，妞妞回木屋午睡",
           "大人輪流逛 Dorfstrasse 戶外用品店（Mammut、Bächli）",
           "喝下午咖啡、買瑞士巧克力伴手禮",
-          "17:00 前回木屋準備自炊晚餐"
+          "18:00 前回木屋準備自炊晚餐"
         ],
         defense:[
           "今天節奏比 Day 7 輕鬆，是「半休息日」",
           "為明天 First 山+Bachalpsee 儲備體力",
-          "Bächli Bergsport 是瑞士最大連鎖戶外用品店"
+          "Bächli Bergsport 是瑞士最大連鎖戶外用品店",
+          "⏱️ 起始時間依所選下山方案自動調整（A：16:07／B：16:37）"
         ],
         critical:[]
       },
@@ -1257,47 +1767,64 @@ const DAYS = [
         critical:[
           "極限 8 分鐘轉乘：11:15 提早收折推車，全團在船艙出口/上層甲板下船通道待命",
           "一靠岸立刻下船，跟 Rothorn Bahn 指標走 3-5 分鐘",
-          "若已事先線上訂票，直接刷 QR Code 過閘"
+          "湖畔簡單補給／點心（不安排正式午餐，主要午餐保留至 Rothorn Kulm 山頂野餐）"
         ]
       },
       {
-        time:"11:22–12:58 集合 / 上車", title:"🚂 Brienz Rothorn Bahn（BRB · 2026 官方 9 個班次；2027 待公布）",
+        time:`${BRB_DAY_PLAN.boatArriveBrienz}–${BRB_DAY_PLAN.chosenUpDeparture} 集合 / 上車`, title:"🚂 BRB 票務／進站手續 ＋ 上車（2026 班表模擬）",
         tr:{ label:"BRB 齒軌", icon:"train" }, stp:"half",
         steps:[
           "⚠️ 2026 官方班次：07:36、08:36、09:40、10:45、11:45、12:58、13:58、14:58、16:36（非每小時等距）",
-          "湖船 11:22 抵 Brienz 後，預留至少 30-45 分鐘 buffer 至下一班 BRB",
-          "2026 班表模擬（僅參考）：船 11:22 抵 Brienz → 12:58 BRB → 13:57 抵頂 → 15:28 下山 → 16:32 回 Brienz（山頂約 1.5 小時）",
-          "BRB turnstile 於發車前約 30 分鐘開放通行；建議發車前 20 分鐘完成換票，10 分鐘前上車",
+          `湖船 ${BRB_DAY_PLAN.boatArriveBrienz} 抵 Brienz 後，本模擬選擇 ${BRB_DAY_PLAN.chosenUpDeparture} 這班上山（buffer 約 ${(() => { const [h1,m1]=BRB_DAY_PLAN.boatArriveBrienz.split(":").map(Number); const [h2,m2]=BRB_DAY_PLAN.chosenUpDeparture.split(":").map(Number); return (h2*60+m2)-(h1*60+m1); })()} 分鐘）`,
+          "實際是否需要換票，依所購產品與 2027 BRB 官方流程為準",
+          "BRB turnstile 現行約於發車前 30 分鐘開放；若所購產品需要辦理票務手續，應額外預留時間",
+          BRB_DAY_PLAN.reservationPolicy.ticketingNote,
           "櫻桃紅車廂 + 深綠齒軌機車，齒輪咬合聲是 2 歲半妞妞的瑞士記憶",
-          "中途 Planalp 站短停數分鐘",
-          "抵 Rothorn Kulm (2,244m)，山頂車站走 1 分鐘就是觀景台"
+          "中途 Planalp 站短停數分鐘"
         ],
         defense:[
-          "🚨 必須線上預約座位：出發前 2-3 個月透過官網 brienz-rothorn-bahn.ch 預約",
-          "4 個成人座位（現行 CHF 8/人 × 4 = CHF 32 座位保證費）",
-          "妞妞 6 歲以下完全免費、不佔位（坐大人腿上或共用座位），預約時不需特別註記",
-          "⚠️ 車型：1893 開通蒸汽；旺季偶爾改柴油機車，2027 出發當日查官網"
+          `📌 ${BRB_DAY_PLAN.reservationPolicy.text}`,
+          `${BRB_DAY_PLAN.reservationPolicy.fareNote}；${BRB_DAY_PLAN.reservationPolicy.childNote}`,
+          "⚠️ 車型：1893 開通蒸汽；旺季偶爾改柴油機車，2027 出發當日查官網",
+          `🟡 本日 BRB 所有絕對時間為 ${BRB_DAY_PLAN.statusLabel}，2027 官方班表公布後需整段重算`,
+          `📐 相對時間框架：湖船抵 Brienz → 至少 ${BRB_DAY_PLAN.minBufferMinutes}-${BRB_DAY_PLAN.recommendedBufferMinutes} 分鐘 buffer → 已選 BRB 班次 → 約 ${BRB_DAY_PLAN.ascentMinutes} 分鐘登頂 → 山頂約 ${BRB_DAY_PLAN.summitStayMinutes} 分鐘 → 已選下山班次 → Brienz → Barry's`,
+          `🆘 ${BRB_DAY_PLAN.connectionFallback.trigger} → ${BRB_DAY_PLAN.connectionFallback.actions.join("；")}`
         ],
         critical:[
           "BRB 車廂走道極度狹窄，推車無法推入車廂",
           "折疊後交由站務員放置於「專屬行李車廂」",
           "大人必須全程抱著妞妞搭乘（不能坐推車）",
-          "建議 Ergo/Beco 舒適背巾備用，60 分鐘上山比想像中久"
+          "建議 Ergo/Beco 舒適背巾備用，約 60 分鐘上山比想像中久"
         ]
       },
       {
-        time:"12:30–14:00", title:"🏔️ Rothorn Kulm 山頂 (693 山峰 + 野餐)",
+        time:`${BRB_DAY_PLAN.chosenUpDeparture}–${BRB_DERIVED.summitArrive}`, title:"🚂 蒸汽齒軌上山（約 60 分鐘）",
+        tr:{ label:"BRB 蒸汽齒軌", icon:"train" }, stp:"half",
+        steps:[
+          `${BRB_DAY_PLAN.chosenUpDeparture} 發車，官方上山約 ${BRB_DAY_PLAN.ascentMinutes} 分鐘`,
+          `約 ${BRB_DERIVED.summitArrive} 抵 Rothorn Kulm (2,244m)，山頂車站走 1 分鐘就是觀景台`,
+          "中途 Planalp 站短停，可看蒸汽機車加水"
+        ],
+        defense:[
+          "車廂每間約 8 人，走道窄；上車後先安置好妞妞再放隨身包",
+          `🟡 ${BRB_DAY_PLAN.statusLabel}`
+        ],
+        critical:[]
+      },
+      {
+        time:`${BRB_DERIVED.summitArrive}–${BRB_DERIVED.summitLeave}`, title:"🏔️ Rothorn Kulm 山頂（約 1.5 小時 · 693 山峰 + 野餐）",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
-          "12:30-13:00 觀景台拍照：北看皮拉圖斯、瑞吉、鐵力士；南看艾格、僧侶、少女峰；下方俯瞰布里恩茨湖",
-          "13:00-14:00 找大石頭或景觀椅野餐：瑞士起司、麵包、香腸、水果+保溫瓶熱可可",
+          "觀景台拍照：北看皮拉圖斯、瑞吉、鐵力士；南看艾格、僧侶、少女峰；下方俯瞰布里恩茨湖",
+          "找大石頭或景觀椅野餐：瑞士起司、麵包、香腸、水果 + 保溫瓶熱可可",
           "餐後 5-10 分鐘短步道散步，妞妞放電",
-          "14:00 收拾野餐，5 分鐘走回車站"
+          `${BRB_DERIVED.summitLeave} 前收拾野餐，5 分鐘走回車站搭下山班次`
         ],
         defense:[
           "🥇 全行程最廣景觀：鳥瞰式大範圍",
           "山頂步道平緩短小，推車可推 80% 路段",
-          "山頂 Berghotel Rothorn Kulm 餐廳可作備案"
+          "山頂 Berghotel Rothorn Kulm 餐廳可作備案",
+          `🟡 山頂停留長度依當日實際上下山班次調整；本模擬為 ${BRB_DAY_PLAN.summitStayMinutes} 分鐘`
         ],
         critical:[
           "🚨 山頂體感溫度防禦・無條件撤退預案",
@@ -1308,48 +1835,54 @@ const DAYS = [
         ]
       },
       {
-        time:"14:00–15:00", title:"🚂 蒸汽火車下山（60 分鐘）",
+        time:`${BRB_DERIVED.summitLeave}–${BRB_DERIVED.brienzBack}`, title:"🚂 蒸汽火車下山（約 60 分鐘）",
         tr:{ label:"BRB 蒸汽齒軌", icon:"train" }, stp:"half",
         steps:[
-          "14:00 火車下山（預約票同時涵蓋上下山）",
+          `${BRB_DERIVED.summitLeave} 火車下山（來回票同時涵蓋上下山）`,
           "下山時蒸汽機車變成拉著車廂下山，重力聲更明顯",
           "妞妞可能在下山時睡著（搖晃+引擎節奏=天然搖籃）",
-          "15:00 抵 Brienz BRB 山谷車站"
+          `約 ${BRB_DERIVED.brienzBack} 抵 Brienz BRB 山谷車站`
         ],
         defense:[
           "下山車廂位置會調換，建議坐朝向湖景那一側",
-          "妞妞 13:00-14:30 午睡時段被切斷，下山火車是補眠最佳時機"
+          "妞妞午睡時段被切斷，下山火車是補眠最佳時機",
+          `🟡 ${BRB_DAY_PLAN.statusLabel}`
         ],
         critical:[]
       },
       {
-        time:"15:00–15:20", title:"🏘️ Brienz 木雕村紀念品快速採購（20 分鐘）",
+        time:`${BRB_DERIVED.brienzBack}–${BRB_DERIVED.souvenirEnd}`, title:"🏘️ Brienz 木雕村紀念品快速採購（約 20 分鐘）",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "Brienz 是瑞士木雕家鄉，主街上有木雕工坊",
           "推薦：木雕牛、聖伯納犬擺飾、阿爾卑斯山玩具、牛鈴",
-          "20 分鐘快速採購——挑小件，避免大型作品"
+          "約 20 分鐘快速採購——挑小件，避免大型作品",
+          "⚠️ 若當日下山班次較晚，此段可整段略過直接搭車回程"
         ],
         defense:[
           "🥇 Brienz 木雕品質遠勝格林德瓦觀光區，價格較合理",
-          "5 件大行李已寄送機場，紀念品裝過夜包或請店家國際寄送"
+          "5 件大行李已寄送機場，紀念品裝過夜包或請店家國際寄送",
+          `🟡 ${BRB_DAY_PLAN.statusLabel}`
         ],
         critical:[]
       },
       {
-        time:"15:30–15:55", title:"🚂 SBB 火車回 Interlaken Ost (16 分鐘)",
+        time:`${BRB_DERIVED.sbbDepart}–${BRB_DERIVED.sbbArriveIntO}`, title:"🚂 SBB 火車回 Interlaken Ost（約 16 分鐘）",
         tr:{ label:"SBB IR", icon:"train" }, stp:"free",
         steps:[
-          "15:35 SBB 火車從 Brienz 出發 → 15:51 抵 Interlaken Ost",
-          "回程選火車不選船——船 75 分鐘 vs 火車 16 分鐘",
+          `約 ${BRB_DERIVED.sbbDepart} SBB 火車從 Brienz 出發 → 約 ${BRB_DERIVED.sbbArriveIntO} 抵 Interlaken Ost`,
+          "回程選火車不選船——船 75 分鐘 vs 火車約 16 分鐘",
           "火車沿布里恩茨湖南岸行駛，仍可看湖景（右側座位）",
           "⚠️ Day 5 已看過三峰，不再繞 Höheweg 大道，直接接 BOB 回 Grindelwald"
         ],
-        defense:["去程船已體驗過，回程節省時間"],
+        defense:[
+          "去程船已體驗過，回程節省時間",
+          "📱 現場以 SBB App 查當日實際班次為準"
+        ],
         critical:[]
       },
       {
-        time:"16:00–17:00", title:"🚂 BOB 回 Grindelwald",
+        time:`${BRB_DERIVED.bobDepart}–${BRB_DERIVED.bobArriveGrin}`, title:"🚂 BOB 回 Grindelwald",
         tr:{ label:"BOB", icon:"train" }, stp:"free",
         steps:[
           "轉乘 BOB Interlaken Ost → Grindelwald",
@@ -1360,7 +1893,7 @@ const DAYS = [
         critical:[]
       },
       {
-        time:"17:00–18:30", title:"妞妞補眠 ＋ 行李整理",
+        time:`${BRB_DERIVED.bobArriveGrin}–18:45`, title:"妞妞補眠 ＋ 行李整理",
         tr:{ label:"公寓", icon:"home" }, stp:"none",
         steps:[
           "妞妞補眠 30-60 分鐘",
@@ -1371,11 +1904,11 @@ const DAYS = [
           "清單檢查：護照、訂房憑證、機票、STP、現金、信用卡"
         ],
         critical:[
-          "🚨 洗衣球用完後務必裝入硬殼保鮮盒再放託運！絕對不可放隨身登機包（會被安檢沒收）"
+          "⚠️ 洗衣膠囊建議放入託運行李、裝入硬殼保鮮盒；避免放隨身登機包（依當年度隨身液體/凝膠限制與各機場安檢實務為準）"
         ]
       },
       {
-        time:"19:00–21:30", title:"🍴 Barry's 晚餐（19:00 訂位）",
+        time:"19:00–21:30", title:"🍴 Barry's 起司鍋晚餐（建議訂位 19:00–19:30）",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "18:30-19:00 換正式裝、洗熱水澡，推妞妞出發 Barry's",
@@ -1488,7 +2021,7 @@ const DAYS = [
         ],
         critical:[
           "🚨 SBB 領取單必須跟護照分開放，避免遺失同時發生",
-          "出發前 1 個月至 sbb.ch/en/travel-information/baggage 確認當年度服務條款"
+          "出發前 1 個月至 sbb.ch/en/offers/luggage-transport-station-to-station 確認當年度服務條款"
         ]
       },
       {
@@ -1510,12 +2043,12 @@ const DAYS = [
         critical:[]
       },
       {
-        time:"15:30 起飛（現行）", title:"✈️ EK88 起飛返台",
-        tr:{ label:"Emirates EK88", icon:"plane" }, stp:"none",
+        time:`${ZRH_DEPART_HM} 起飛（現行）`, title:`✈️ ${FLIGHT_ITINERARY.return.leg1.flightNo} 起飛返台`,
+        tr:{ label:`Emirates ${FLIGHT_ITINERARY.return.leg1.flightNo}`, icon:"plane" }, stp:"none",
         steps:[
-          "EK88 現行 15:30 ZRH → DXB（2027 訂票時實際為準）",
-          "杜拜轉機 EK366，符合資格的 6-26 小時轉機可申請 Dubai Connect（免費過境酒店+餐食+接駁+UAE transit visa）",
-          "9/25 (六) 當日 22:00 抵桃園"
+          `${formatFlightLeg(FLIGHT_ITINERARY.return.leg1)}（現行參考；2027 訂票時實際為準）`,
+          `杜拜轉機 ${formatFlightLeg(FLIGHT_ITINERARY.return.leg2)}，符合資格的 6-26 小時轉機可申請 Dubai Connect（免費過境酒店+餐食+接駁+UAE transit visa）`,
+          `9/25 (六) 當日約 ${_flightHM(FLIGHT_ITINERARY.return.leg2.arrive)} 抵桃園（現行參考）`
         ],
         defense:[
           "EK 親子硬體業界頂尖：兒童餐（CHML）、玩具包、bulkhead 前排",
@@ -1531,7 +2064,7 @@ const SIGHTS = [
   { region:"瑞士中部", city:"琉森", name:"卡貝爾木橋與舊城", stp:"100% 免費", family:"⭐⭐⭐⭐⭐ 極高：全程平地", note:"歐洲最古老有頂木橋，橋身種滿鮮花" },
   { region:"瑞士中部", city:"琉森", name:"獅子紀念碑", stp:"100% 免費", family:"⭐⭐⭐⭐ 高：公園平緩", note:"馬克吐溫譽為世界上最悲傷的石頭" },
   { region:"瑞士中部", city:"琉森", name:"瑞士交通博物館", stp:"50% 折扣", family:"⭐⭐⭐⭐⭐ 極高：全室內無障礙，雨天首選", note:"全歐最豐富交通博物館，大量幼兒互動區" },
-  { region:"瑞士中部", city:"琉森湖區", name:"瑞吉山 (Rigi Kulm)", stp:"100% 免費", family:"⭐⭐⭐⭐⭐ 極高：步道平緩推車天堂", note:"山巒皇后，360° 俯瞰琉森湖" },
+  { region:"瑞士中部", city:"琉森湖區", name:"瑞吉山 (Rigi Kulm)", stp:"100% 免費", family:"⭐⭐⭐⭐ 高：山頂步道相對平緩；下山步道推車可行性依當日路線與路況判斷", note:"山巒皇后，360° 俯瞰琉森湖" },
   { region:"瑞士中部", city:"琉森近郊", name:"皮拉圖斯山 (Pilatus)", stp:"50% 折扣", family:"⭐⭐⭐ 中：山頂碎石路推車稍吃力", note:"世界最陡齒軌+金色環遊船齒軌纜車" },
   { region:"伯恩高地", city:"坎德谷（備案）", name:"藍湖 (Blausee)", stp:"公車免費／門票 CHF 11-13", family:"⭐⭐⭐⭐ 高：全程無階梯", note:"森林深處的湛藍寶石" },
   { region:"伯恩高地", city:"坎德谷（備案）", name:"歐新能湖 (Oeschinensee)", stp:"纜車 50% 折扣", family:"⭐⭐⭐⭐ 高：湖畔平緩", note:"翡翠秘境，垂直峭壁包圍" },
@@ -1549,9 +2082,9 @@ const SIGHTS = [
 const RESTAURANTS = [
   { area:"琉森", name:"Rathaus Brauerei", plan:"Day 1 或 3 晚餐", spec:"百年地窖鮮釀黑啤", must:"脆皮烤豬腳、Luzerner Chügelipastete", price:"CHF 35-45", book:"提前 1-2 週" },
   { area:"琉森", name:"Restaurant Pfistern", plan:"Day 1 或 3 晚餐", spec:"卡貝爾橋第一排河畔景觀", must:"蘇黎世小牛肉附 Rösti", price:"CHF 45-60", book:"提前 1-2 週，備註二樓陽台" },
-  { area:"皮拉圖斯", name:"Pilatus Kulm Restaurant", plan:"Day 4 主線午餐備案", spec:"海拔 2,073m 山頂景觀", must:"高山牛肉湯、Rösti", price:"CHF 30-45", book:"不需訂位" },
+  { area:"皮拉圖斯", name:"Pilatus Kulm Restaurant", plan:"Day 4 主線午餐備案", spec:"海拔 2,073m 山頂景觀", must:"高山牛肉湯、Rösti", price:"CHF 30-45", book:"原則可現場用餐；2027 出發前確認營運與是否建議訂位" },
   { area:"小夏戴克", name:"Restaurant Grindelwaldblick", plan:"Day 7 午餐", spec:"正面迎擊少女峰雪山露台", must:"Goulash、炸豬排", price:"CHF 25-35", book:"現場排隊" },
-  { area:"施尼格普拉特", name:"Hotel Restaurant Schynige Platte", plan:"Day 8 午餐", spec:"面三峰雙湖古蹟旅館", must:"Älplermagronen、蘋果派", price:"CHF 25-35", book:"人少不需訂位" },
+  { area:"施尼格普拉特", name:"Hotel Restaurant Schynige Platte", plan:"Day 8 午餐（A 家庭預設方案）", spec:"面三峰雙湖古蹟旅館", must:"Älplermagronen、蘋果派", price:"CHF 25-35", book:"原則可現場用餐；2027 出發前確認營運與是否建議訂位" },
   { area:"格林德瓦", name:"🥇 Barry's Restaurant", plan:"🚨 Day 10 晚餐必訂", spec:"最後一頓外食", must:"起司火鍋 Moitié-Moitié、Raclette", price:"CHF 45-60", book:"🚨 出發前 1.5-2 個月訂 (2027/7 底前)" }
 ];
 
@@ -1635,13 +2168,13 @@ const SHOPPING = [
 ];
 
 const BOOKINGS = [
-  { when:"🚨 T-15 個月 (2026/6-7)", task:"訂 KoBi Hirschenplatz 琉森住宿", how:"booking.com 免費取消版立即下訂，9 月旺季稀缺", priority:"🔴 必做" },
-  { when:"🚨 T-15 個月 (2026/6-7)", task:"訂 Sans Souci W1 by Interhome 格林德瓦住宿", how:"Booking.com 免費取消至 2027/7/20，priceCHF 2830；訂房後 Interhome email 告知精確地址（cul-de-sac 死巷）", priority:"🔴 必做" },
-  { when:"🟠 T-11~13 個月 (2026/8-10)", task:"ETIAS 動向追蹤", how:"ETIAS 官方預計 2026 Q4 啟用；目前不需採取行動。2027 出發前 6 個月確認實際上線及強制執行日期", priority:"🟡 追蹤" },
+  { when:"✅ 已完成 (2026/6-7)", task:"KoBi Hirschenplatz 訂房後確認", how:"✅ 已完成訂房並收到 Booking.com 確認信（Two-Bedroom Apartment with Balcony，130 m²，2027/09/14 入住、09/18 退房共 4 晚，約 NT$ 125,000 含稅）。出發前確認訂單有效性、付款狀態與取消期限；保留憑證 PDF 與紙本。", priority:"🟢 建議" },
+  { when:"🚩 待確認 (2026/6-7)", task:"Sans Souci W1 by Interhome — 確認實際訂房狀態", how:"🚩 房源已選定（Apartment Sans Souci W1 by Interhome，108 m²，2027/09/18-24 共 6 晚），但實際訂房狀態待使用者確認。CHF 2,830、免費取消至 2027/7/20、Pay nothing until 2027/7/18、押金 CHF 400 均為參考報價／方案條款，僅於實際完成訂購後成立。若尚未下訂，請先於 Booking.com 確認該方案條款是否仍提供再下訂；下訂後透過 Booking Messages 向 Interhome 索取 key pickup、床欄、紗窗、late check-in 說明。", priority:"🔴 必做" },
+  { when:"🟠 T-11~13 個月 (2026/8-10)", task:"📱 ETIAS 動向追蹤（4 大 1 小全員）", how:"ETIAS 官方預計 2026 Q4 啟用；目前不需採取行動。2027 出發前 6 個月確認實際上線及強制執行日期。⚠️ 若 2027 已正式適用：4 大 1 小【全員】均依規定取得 ETIAS travel authorisation；4 位成人支付申請費（EU 執委會 2025-07-17 公告 EUR 20/人），妞妞未滿 18 歲免申請費——但【免申請費 ≠ 不需申請】，妞妞仍須取得自己的授權。網址：travel-europe.europa.eu/etias_en", priority:"🔴 必做" },
   { when:"🔴 機票鎖價（2026/11 雙11、黑五）", task:"🥇 EK 機票搶優惠", how:"目標 NT$ 33,000-38,000/人來回；托運 Weight Concept（依 fare 20-35kg/人）；4 大 + 妞妞 2 歲半兒童座位", priority:"🔴 必做" },
   { when:"🔵 T-3~4 個月 (2027/5-6)", task:"旅遊保險", how:"醫療給付建議 EUR 30,000 以上（風險管理與旅遊保障需求；EUR 30,000 為申根簽證申請人的強制門檻，本團為台灣護照免簽入境不受此強制，但仍強烈建議此額度）", priority:"🔴 必做" },
-  { when:"🔵 T-3 個月 (2027/6)", task:"Pilatus 齒軌線上預約", how:"pilatus.ch 官方措辭存在「強烈建議」與「不強制」不同措辭；出發前訂位；2027 出發前確認是否成為強制", priority:"🟡 重要" },
-  { when:"🟢 T-2 個月 (2027/7)", task:"🚂 STP 15 天版正式購買", how:"SBB 官方預售期為出發前 60 天；本團 2027/9/14 啟用 → 最早 2027/7/16 起可購買。2026 年底可先追蹤 2027 正式價格公告（sbb.ch 或 swissrailways.com）；預算採 CHF 515（統一單一金額）", priority:"🔴 必做" },
+  { when:"🔵 T-3 個月 (2027/6)", task:"🚂 Pilatus 齒軌線上預約", how:"Day 4 行程主菜，pilatus.ch 線上預約。⚠️ 交通票券與座位預約應分開確認：持有效交通票券仍可能需要另外辦理／購買座位預約；不視為 Golden Round Trip 套票自動含齒軌座位，實際 2027 規則與預約方式於開放後再次確認。旺季週末易爆滿，建議出發前 3 個月鎖定。座位預約費現行約 CHF 5/人。", priority:"🟡 重要" },
+  { when:"🟢 T-2 個月 (2027/7)", task:"🚂 票券方案最終比較與購買（基準：STP 15 天版）", how:"15 天版 STP 為目前基準方案，非唯一方案。待 2027 官方票價與購票開放時程公布後，與 8 天版 STP＋其餘單買、Swiss Half Fare Card＋單買比較總成本後鎖定並購買（sbb.ch / swissrailways.com）。不預設固定天數的官方購買限制。4 大人購買，妞妞 6 歲以下免費。預算暫採 CHF 515/成人（2027 實際售價公布後重算）", priority:"🔴 必做" },
   { when:"🔵 T-2 個月 (2027/7)", task:"🥇 Brienz Rothorn（BRB）班次預約", how:"brienz-rothorn-bahn.ch Webshop。2027 官方時刻表公布後決定；2026 官方班次為 07:36、08:36、09:40、10:45、11:45、12:58、13:58、14:58、16:36（非每小時等距）。STP 半價 CHF 49-50 + 座位保證 CHF 8/人，妞妞 6 歲以下免費不佔位", priority:"🔴 必做" },
   { when:"🟡 T-1.5~2 個月 (2027/7 底)", task:"🥇 Barry's Restaurant 訂位", how:"2027/9/23 (四) 19:00 4 大 1 小，備註 kein Alkohol（若因 BRB 實際班表返家過晚，改 19:30 或延後）", priority:"🔴 必做" },
   { when:"🟡 T-1 個月 (2027/8)", task:"LIE（Luzern-Interlaken Express）座位預約", how:"透過 Zentralbahn 官方指定座位預約系統辦理；2027/9 預約費率待官方公布；STP 涵蓋列車本身，座位預約費另計；未預約仍可持 STP 搭乘但不保證座位（備援）", priority:"🟡 建議" },
@@ -1649,21 +2182,21 @@ const BOOKINGS = [
   { when:"🟡 T-2 週 (2027/8 底)", task:"兒童藥品備齊", how:"退燒、止瀉、止癢、體溫計、防蚊液", priority:"🔴 必做" },
   { when:"⚫ T-2 天 (2027/9/11)", task:"SBB 行李寄送分裝", how:"5 件大行李 Day 3 早上寄琉森車站至 Grindelwald；主方案共 CHF 120（5 件 × CHF 12 × 2 段）", priority:"🟡 重要" },
   { when:"🔴 旅程中 · Day 3 (9/16)", task:"🛅 SBB 行李寄送 Round 1（琉森→Grindelwald）", how:"07:00 琉森車站 Luggage dispatch，5 件寄至 Grindelwald，現行 CHF 60", priority:"🔴 必做" },
-  { when:"🔴 旅程中 · Day 8 (9/21)", task:"🛅 SBB 行李寄送 Round 2（Grindelwald→ZRH 機場）", how:"08:00 Grindelwald 車站 Luggage dispatch 08:00-17:00，5 件寄至 Zürich Flughafen，現行 CHF 60。今日交件、後天領取（SBB 官方措辭，不是 2 工作天）", priority:"🔴 必做" }
+  { when:"🔴 旅程中 · Day 8 (9/21)", task:"🛅 SBB 行李寄送 Round 2（Grindelwald→ZRH 機場）", how:"上午於 Grindelwald 車站 luggage counter 寄送 5 件至 Zürich Flughafen，現行 CHF 60（CHF 12/件）。⚠️ 該站實際開放時段依 sbb.ch 分站頁為準。今日交件、後天領取（SBB 官方措辭，不是 2 工作天）", priority:"🔴 必做" }
 ];
 
 const PACKING = [
   { cat:"📄 文件", items:[
-    "護照（效期至少 2027/3 後 6 個月）",
-    "ETIAS 授權證明（若 2027 前正式上路才需辦理）",
+    passportPackingLine(),
+    etiasPackingLine(),
     "訂房憑證（KoBi + Sans Souci W1）紙本+電子",
-    "機票電子檔（EK87 去 + EK88 回）",
+    "機票電子檔（去程兩段 + 回程兩段，共 4 段登機證）",
     "旅遊保險證明",
     "STP 通行證紙本",
-    "緊急聯絡資訊（駐瑞士代表處 +41 31 382 21 36）",
+    `緊急聯絡資訊已存手機＋紙本（駐瑞士代表處急難手機 ${CONSULATE_CONTACT.emergency}；一般聯絡 ${CONSULATE_CONTACT.general}）`,
     "信用卡 × 2（含 PIN）",
     "現金：瑞郎 CHF 300 + 台幣轉機備用",
-    "妞妞護照 + 妞妞 ETIAS 證明（若 2027 前正式上路才需辦理）+ 出生證明備份"
+    `妞妞護照 ＋ ${etiasPackingLine("妞妞")} ＋ 出生證明備份`
   ], where:"🛂 隨身行李護照夾"},
   { cat:"📱 電子設備", items:[
     "手機（漫遊或 eSim）",
@@ -1676,7 +2209,7 @@ const PACKING = [
     "妞妞專屬平板 + 兒童耳機（下載 5-10 集卡通）"
   ], where:"🎒 隨身行李（絕不寄送）"},
   { cat:"👕 服裝", items:[
-    "💡 KoBi + Atlanta 都有洗衣機（KoBi 還有烘乾機），衣物按 4-5 天備即可",
+    "💡 KoBi + Sans Souci W1 都有洗衣機（KoBi 還有烘乾機），衣物按 4-5 天備即可",
     "防風防水外套 × 1（必）",
     "薄羽絨 × 1、長袖上衣 × 5、長褲 × 3-4",
     "健行褲 × 1、內衣褲 × 7、厚襪 × 5",
@@ -1749,10 +2282,10 @@ const PACKING = [
     "妞妞安撫玩具 × 1（最愛那隻）",
     "妞妞兒童睡眠音樂（手機 App 預存）"
   ], where:"👶 妞妞指定行李，安撫巾隨身"},
-  { cat:"🧴 洗衣球（關鍵警告）", items:[
-    "🚨 絕對不可放隨身登機包（會被安檢沒收，液體+凝膠超標）",
-    "🚨 必須裝入「硬殼保鮮盒」再放託運行李",
-    "🚨 高空失壓會擠壓爆裂，將洗劑滲入毀損整箱衣物",
+  { cat:"🧴 洗衣膠囊（包裝提醒）", items:[
+    "⚠️ 建議放入託運行李、避免放隨身登機包（依當年度隨身液體/凝膠限制與各機場安檢實務為準）",
+    "⚠️ 建議裝入「硬殼保鮮盒」再放託運行李",
+    "⚠️ 高空可能因壓力/擠壓破裂，滲入洗劑毀損整箱衣物",
     "✅ 建議：方形樂扣保鮮盒，內墊塑膠袋雙層防漏",
     "洗衣袋 × 2、拖鞋、衛生紙、口罩備用"
   ], where:"🛅 硬殼保鮮盒放寄送行李" }
