@@ -1575,7 +1575,10 @@ function renderHotels() {
           ${h.office ? `<div>🏢 ${escapeHTML(h.office)}</div>` : ''}
           ${h.phone ? `<div>📞 <a href="tel:${h.phone.replace(/[^+\d]/g,'')}" style="color:var(--jungfrau-blue);">${escapeHTML(h.phone)}</a></div>` : ''}
           ${h.priceTWD ? `<div>💰 約 NT$ ${h.priceTWD.toLocaleString()}</div>` : ''}
-          ${h.priceCHF ? `<div>💰 約 CHF ${h.priceCHF.toLocaleString()}</div>` : ''}
+          ${h.priceCHF ? `<div>💰 ${h.priceIsReferenceQuote ? '約 ' : ''}CHF ${h.priceCHF.toLocaleString()}</div>` : ''}
+          ${h.priceNote ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">ℹ️ ${escapeHTML(h.priceNote)}</div>` : ''}
+          ${h.payment ? `<div>💳 付款：待付 CHF ${Number(h.payment.dueCHF).toLocaleString()}｜已付 CHF ${Number(h.payment.paidCHF).toLocaleString()}｜付款期限：${escapeHTML(String(h.payment.deadline))}</div>` : ''}
+          ${h.cityTax ? `<div>🏛️ 城市稅：${escapeHTML(h.cityTax.rate)} × ${escapeHTML(String(h.cityTax.persons))} 人 × ${escapeHTML(String(h.cityTax.nights))} 晚 = ${escapeHTML(h.cityTax.total)}（${escapeHTML(h.cityTax.note)}）</div>` : ''}
         </div>
         ${roomHTML}
         ${featuresHTML}
@@ -1594,8 +1597,8 @@ function renderHotels() {
         ${h.pendingItems && h.pendingItems.length ? `
           <div style="margin-top:10px; padding:12px; background:var(--gold-bg); border:1px solid var(--gold-border); border-radius:10px;">
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
-              <div style="font-weight:800; font-size:13px; color:var(--gold);">🟡 待訂房確認事項</div>
-              ${renderStatusBadge("pending", "訂房確認後更新")}
+              <div style="font-weight:800; font-size:13px; color:var(--gold);">🟡 住宿待確認事項</div>
+              ${renderStatusBadge("pending", "出發前確認")}
             </div>
             <div style="font-size:12px; color:var(--text); line-height:1.75;">
               ${h.pendingItems.map(r => `<div>• ${escapeHTML(r)}</div>`).join("")}

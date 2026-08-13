@@ -54,8 +54,8 @@ console.log("=".repeat(84));
 console.log("\n【版本 · current V21.7d】");
 t("TRIP_META.version 為 V21.7d（基於 V21.4a）", () =>
   ctx.TRIP_META.version === "V21.7d Web · 基於 V21.4a 行程資料" || ctx.TRIP_META.version);
-t("CACHE_NAME 為 v21-7d-final（current deployment revision）", () =>
-  /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-final-2027"\s*;/.test(swSrc));
+t("CACHE_NAME 為 v21-7d-final-accsync（current deployment revision）", () =>
+  /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-final-accsync-r2-2027"\s*;/.test(swSrc));
 t("current CACHE_NAME const 不再是初次 v21-7d（舊 cache 僅存於註解/遷移）", () =>
   !/const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-2027"\s*;/.test(swSrc));
 t("user-facing 不再出現「基於 V21.3b 行程資料」", () =>
@@ -67,20 +67,35 @@ t("KoBi bookingStatus = confirmed", () =>
   ctx.HOTELS.luzern.bookingStatus === "confirmed" || String(ctx.HOTELS.luzern.bookingStatus));
 t("KoBi status 含「已訂房」", () =>
   /已訂房/.test(ctx.HOTELS.luzern.status) || ctx.HOTELS.luzern.status);
-t("Sans Souci bookingStatus ≠ confirmed", () =>
-  ctx.HOTELS.grindelwald.bookingStatus !== "confirmed" || "仍為 confirmed");
-t("Sans Souci bookingStatus = user_confirmation_required", () =>
-  ctx.HOTELS.grindelwald.bookingStatus === "user_confirmation_required" ||
-  String(ctx.HOTELS.grindelwald.bookingStatus));
-t("Sans Souci status 不得聲稱已預訂", () =>
-  !/^已預訂/.test(ctx.HOTELS.grindelwald.status) || ctx.HOTELS.grindelwald.status);
-t("Sans Souci 有 referenceQuoteNote（CHF 2,830 標為參考報價）", () =>
-  typeof ctx.HOTELS.grindelwald.referenceQuoteNote === "string" &&
-  /參考報價|方案條款/.test(ctx.HOTELS.grindelwald.referenceQuoteNote));
-t("Sans Souci priceIsReferenceQuote = true", () =>
-  ctx.HOTELS.grindelwald.priceIsReferenceQuote === true);
-t("Sans Souci pendingItems 含實際訂房狀態待確認", () =>
-  (ctx.HOTELS.grindelwald.pendingItems || []).some(x => /實際訂房狀態/.test(x)));
+// V21.4b Accommodation Sync：Sans Souci 已確認訂房（原 pre-booking locks 更新為 confirmed reality）
+t("Sans Souci bookingStatus = confirmed（V21.4b 已訂房）", () =>
+  ctx.HOTELS.grindelwald.bookingStatus === "confirmed" || String(ctx.HOTELS.grindelwald.bookingStatus));
+t("Sans Souci status 標示已訂房（confirmed）", () =>
+  /已訂房|已完成訂房/.test(ctx.HOTELS.grindelwald.status) || ctx.HOTELS.grindelwald.status);
+t("Sans Souci priceCHF = 2691.01（實際訂房價；未併城市稅、非 2847.01）", () =>
+  ctx.HOTELS.grindelwald.priceCHF === 2691.01);
+t("Sans Souci priceIsReferenceQuote = false", () =>
+  ctx.HOTELS.grindelwald.priceIsReferenceQuote === false);
+t("Sans Souci referenceQuoteNote 標明實際金額 2691.01 且作廢舊參考", () => {
+  const n = ctx.HOTELS.grindelwald.referenceQuoteNote || "";
+  return /2,?691\.01/.test(n) && /作廢|已不適用|下訂前參考/.test(n);
+});
+t("Sans Souci pendingItems 不再含「實際訂房狀態」且為 operational", () => {
+  const items = ctx.HOTELS.grindelwald.pendingItems || [];
+  return !items.some(x => /實際訂房狀態/.test(x)) && items.some(x => /key|鑰匙|紗窗|insect/.test(x));
+});
+t("Sans Souci 有 payment 結構（待付 2691 / 已付 0）", () => {
+  const pay = ctx.HOTELS.grindelwald.payment || {};
+  return pay.dueCHF === 2691 && pay.paidCHF === 0;
+});
+t("Sans Souci 有 cityTax 結構（CHF 156，獨立於住宿費）", () =>
+  /156/.test(String((ctx.HOTELS.grindelwald.cityTax || {}).total)));
+t("Sans Souci phone = +41 43 810 9126", () =>
+  (ctx.HOTELS.grindelwald.phone || "").replace(/[^0-9]/g, "") === "41438109126");
+t("KoBi phone = +41 79 235 6688", () =>
+  (ctx.HOTELS.luzern.phone || "").replace(/[^0-9]/g, "") === "41792356688");
+t("KoBi priceCHF = 2702.16（實際訂房原幣）且 NT$125000 標為預算基準", () =>
+  ctx.HOTELS.luzern.priceCHF === 2702.16 && ctx.HOTELS.luzern.priceTWD === 125000 && /預算|規劃基準/.test(ctx.HOTELS.luzern.priceNote || ""));
 t("KoBi 不再出現在「立即下訂」型 BOOKINGS", () => {
   const bad = ctx.BOOKINGS.filter(b => /KoBi/.test(b.task) && /立即下訂/.test(b.how || ""));
   return bad.length === 0 || JSON.stringify(bad);
@@ -89,9 +104,9 @@ t("KoBi BOOKINGS 已改為 post-booking checklist（非 🔴 必做訂房）", (
   const k = ctx.BOOKINGS.find(b => /KoBi/.test(b.task));
   return !!k && !/^訂 /.test(k.task) && /已完成訂房/.test(k.how);
 });
-t("Sans Souci BOOKINGS 標示待使用者確認", () => {
+t("Sans Souci BOOKINGS 標示已完成訂房（非待使用者確認）", () => {
   const b = ctx.BOOKINGS.find(b => /Sans Souci/.test(b.task));
-  return !!b && /待使用者確認/.test(b.how);
+  return !!b && /已完成訂房/.test(b.how) && !/待使用者確認/.test(b.how);
 });
 
 // ── STP ─────────────────────────────────────────────────
@@ -486,13 +501,13 @@ console.log("\n【V21.7b · 版本（歷史 regression guard）】");
 t("TRIP_META.version 已前進、非停留 V21.7b", () =>
   ctx.TRIP_META.version !== "V21.7b Web · 基於 V21.4a 行程資料" || ctx.TRIP_META.version);
 t("CACHE_NAME 已離開 v21-7b（現為 v21-7d-final）", () =>
-  !swSrc.includes('"swiss-trip-v21-7b-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-final-2027"\s*;/.test(swSrc));
+  !swSrc.includes('"swiss-trip-v21-7b-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-final-accsync-r2-2027"\s*;/.test(swSrc));
 
 console.log("\n【V21.7c · 版本（歷史 regression guard）】");
 t("TRIP_META.version 已前進、非停留 V21.7c", () =>
   ctx.TRIP_META.version !== "V21.7c Web · 基於 V21.4a 行程資料" || ctx.TRIP_META.version);
 t("CACHE_NAME 已離開 v21-7c（現為 v21-7d-final）", () =>
-  !swSrc.includes('"swiss-trip-v21-7c-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-final-2027"\s*;/.test(swSrc));
+  !swSrc.includes('"swiss-trip-v21-7c-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-final-accsync-r2-2027"\s*;/.test(swSrc));
 t("無舊 CACHE swiss-trip-v21-7a / -7b / -7c-2027（current 僅 v21-7d-final）", () =>
   !/swiss-trip-v21-7a-2027|swiss-trip-v21-7b-2027|swiss-trip-v21-7c-2027/.test(swSrc + dataSrc + appSrc));
 

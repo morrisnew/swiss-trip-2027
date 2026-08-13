@@ -208,8 +208,8 @@ const QUICK_NUMBERS = [
   { icon:"🆘", label:"駐瑞士代表處急難手機", value:CONSULATE_CONTACT.emergency },
   { icon:"✈️", label:"Emirates 航班（現行參考）", value:`${flightCodesSummary()}（2027 訂票時實際為準）` },
   { icon:"📞", label:"Emirates 台灣客服", value:FLIGHT_CODES.airlineTW },
-  { icon:"🏨", label:"Interhome 客服（Sans Souci W1）", value:"訂房後 email 告知；Sans Souci W1 位於 cul-de-sac 死巷" },
-  { icon:"🏨", label:"KoBi Hirschenplatz（琉森）", value:"訂房確認信提供" },
+  { icon:"🏨", label:"Interhome 客服（Sans Souci W1）", value:"+41 43 810 9126（Sans Souci W1 位於 cul-de-sac 死巷；精確門牌待 Interhome 確認）" },
+  { icon:"🏨", label:"KoBi Hirschenplatz（琉森）", value:"+41 79 235 6688" },
   { icon:"🚂", label:"SBB 瑞士國鐵客服", value:"+41 848 44 66 88" }
 ];
 
@@ -240,7 +240,7 @@ const PENDING_2027 = [
   { id:"sbb_luggage", cat:"物流", item:"SBB Gepäck 2027 櫃檯時段/費率", suggestBy:"T-1 個月（2027/8）", link:"sbbLuggage", note:"現行費率 CHF 12/件（Station-to-Station）。⚠️ 各站 luggage counter 開放時段依所選車站公告為準，SBB 官方要求依分站查詢；本團涉及 Luzern / Grindelwald / Zürich Flughafen 三站，2027 出發前需分別確認" },
   { id:"stp_2027_price", cat:"票務", item:"STP 2027 正式價格與最終方案比較", suggestBy:"T-2 個月（2027/7）", link:"stpBuy", note:"15 天版 Swiss Travel Pass 為【目前基準方案（baseline）】，不是唯一方案。2027 官方價格公布後，仍應與 8 天版 STP＋其餘單買、Swiss Half Fare Card＋單買等可行方案做最終成本比較後再鎖定。4 大人購買；妞妞 6 歲以下完全免費。預算暫採 CHF 515/成人（估算值，2027 實際售價公布後重算）" },
   { id:"etias_status", cat:"入境", item:"ETIAS 實際執行狀態", suggestBy:"T-6 個月（2027/3）", link:"etias", note:`${TRAVEL_DOCUMENT_RULES.etias.officialTiming}。${TRAVEL_DOCUMENT_RULES.etias.forSwiss}。${TRAVEL_DOCUMENT_RULES.etias.forThisTrip}。${etiasApplicabilityLine()}` },
-  { id:"interhome_key", cat:"住宿", item:"Interhome Sans Souci W1 鑰匙交付方式/精確地址", suggestBy:"訂房後", link:"interhome", note:"訂房後 Interhome email 告知；Day 5 領鑰匙流程以當時 email 為準" }
+  { id:"interhome_key", cat:"住宿", item:"Interhome Sans Souci W1 鑰匙交付/精確地址（已訂房後 operational 確認）", suggestBy:"出發前", link:"interhome", note:"已完成訂房；仍待 Interhome 確認：exact street address（精確門牌）／key pickup 領鑰匙方式／key return 還鑰匙方式／early check-in 是否可行／late check-in（17:00 後）procedure。Day 5 領鑰匙流程以住宿方最終說明為準" }
 ];
 
 // V21.3b 功能：天氣/行程調整決策中心
@@ -271,7 +271,7 @@ const HOTELS = {
   luzern: {
     name:"KoBi Apartments Hirschenplatz",
     city:"琉森 Luzern",
-    address:"Hirschenplatz 12, 6004 Luzern",
+    address:"Hirschenplatz 12, 6004 Luzern（訂房截圖地址為 5 Werchlaubengässli, 6004 Luzern；兩者同一街廓，實際 check-in 入口／門牌待住宿方確認）",
     roomType:"Two-Bedroom Apartment with Balcony",
     size:"130 m² · 2 房 2 衛",
     beds:"Bedroom 1: 1 twin + 1 queen · Bedroom 2: 1 queen · Living: 2 sofa beds",
@@ -281,54 +281,65 @@ const HOTELS = {
     sleepPlanC:"備選：Emily+Morris+妞妞睡 Bedroom 1；皮皮獨佔 Bedroom 2；Milo 沙發床",
     sleepNote:"關鍵原則：皮皮怕生只跟 Emily 熟 → 皮皮與 Emily 同房或獨房，絕不跟 Milo 同房",
     checkIn:"2027-09-14 (二)", checkOut:"2027-09-18 (六)",
+    checkInWindow:"15:00–21:00",
+    checkOutWindow:"10:00–11:00",
     nights:4,
     bookingStatus:"confirmed",
-    status:"✅ 已訂房（已收到 Booking.com 確認信；付款依原訂單條款辦理）",
+    status:"✅ 已訂房（已收到 Booking.com 確認信；付款狀態／時間待人工確認）",
+    phone:"+41 79 235 6688",
+    priceCHF:2702.16,
     priceTWD:125000,
+    priceNote:"CHF 2,702.16 為實際訂房金額（原幣）；NT$ 125,000 為既有預算／規劃基準，非 Booking.com 實際訂單金額",
+    cancellation:"2027/8/30 23:59 前可免費取消（Booking 截圖確認）",
     mapQuery:"KoBi Apartments Hirschenplatz Luzern",
-    notes:"130 m² 兩房兩衛含陽台公寓，含電梯／洗衣機＋烘乾機，booking.com 免費取消方案"
+    notes:"130 m² 兩房兩衛含陽台公寓，含電梯／洗衣機＋烘乾機。免費取消至 2027/8/30 23:59；付款狀態／時間待人工確認"
   },
   grindelwald: {
     name:"Apartment Sans Souci W1 by Interhome",
     city:"格林德瓦 Grindelwald",
-    address:"訂房後 Interhome email 告知精確地址（cul-de-sac 死巷）",
-    office:"Interhome 辦公室，訂房後 email 告知",
+    address:"3818 Grindelwald（鎮名層級；精確門牌待 Interhome 確認，位於 cul-de-sac 死巷）",
+    office:"Interhome 辦公室，位置／領鑰匙方式待 Interhome 確認",
+    phone:"+41 43 810 9126",
     website:"interhome.ch",
     roomType:"108 m² · 2 房 2 衛 · 1 樓 + 電梯",
     features:["南向陽台","私人洗衣機+烘乾機","完整廚房","位於 cul-de-sac 死巷（無車流、安靜）","距 Coop 超市 50m","距室內游泳池 100m","距兒童遊樂場 100m","距主車站 300m"],
     checkIn:"2027-09-18 (六)", checkOut:"2027-09-24 (五)",
     checkInWindow:"15:00–17:00",
     checkOutBy:"10:00 前",
-    houseRulesLabel:"參考方案條款（僅於實際完成該方案訂購後成立）",
+    houseRulesLabel:"入住條件（訂房平台現行資訊）",
     houseRules:[
       "Check-in 15:00–17:00",
       "Check-out 10:00 前",
-      "CHF 400 damage deposit（押金，由 Interhome 預授權）",
       "Children all ages welcome",
       "無嬰兒床（crib）、無加床（extra bed）",
       "禁菸",
       "不可攜帶寵物",
-      "免費取消至 2027/7/20 · Pay nothing until 2027/7/18"
+      "免費取消條件：待住宿方／Booking 確認（原免費取消至 2027/7/20 為下訂前參考，已不適用）",
+      "付款期限：待住宿方／Booking 確認（原 Pay nothing until 2027/7/18 為下訂前參考）",
+      "押金：待住宿方確認（原 CHF 400 damage deposit 為下訂前參考，訂單截圖未顯示）"
     ],
+    payment:{ dueCHF:2691, paidCHF:0, deadline:"待人工確認" },
+    cityTax:{ rate:"CHF 5.20 / 人 / 晚", persons:5, nights:6, total:"CHF 156", note:"住宿方現場另收，未含於住宿費" },
+    deposit:"待人工確認（原 CHF 400 為下訂前參考）",
     pendingItems:[
-      "🚩 實際訂房狀態（是否已完成下訂）— 待使用者確認",
-      "訂房完成後的 Booking Ref 與確認信",
-      "key collection 方式與地點（Interhome 辦公室 / 密碼鎖）",
+      "key collection 領鑰匙方式與地點（Interhome 辦公室 / 密碼鎖）",
       "是否支援 self check-in",
       "13:00–15:00 抵達後的行李寄放安排",
       "17:00 後的 late check-in 是否可行",
       "床欄（bed rail / portable bed rail）是否可提供",
-      "紗窗（insect screens）配置"
+      "紗窗（insect screens）配置",
+      "精確門牌地址（exact street address）",
+      "鑰匙返還（key return）方式"
     ],
     nights:6,
-    bookingStatus:"user_confirmation_required",
-    status:"🚩 目前選定方案｜實際訂房狀態待使用者確認",
-    selectionNote:"房源已選定：Apartment Sans Souci W1 by Interhome。Excel V21.4a 為全檔唯一資料來源，實際訂房狀態待使用者確認。",
-    referenceQuoteNote:"CHF 2,830、免費取消至 2027/7/20、Pay nothing until 2027/7/18、押金 CHF 400 等，均為曾查得的「參考報價／方案條款」，僅於實際完成該方案訂購後才成立。",
-    priceCHF:2830,
-    priceIsReferenceQuote:true,
+    bookingStatus:"confirmed",
+    status:"✅ 已訂房（Apartment Sans Souci W1 by Interhome，2027/09/18–24 共 6 晚）",
+    selectionNote:"已完成訂房；以下為已訂房後、出發前仍待住宿方確認的 operational 資訊。",
+    referenceQuoteNote:"實際訂房金額 CHF 2,691.01（原幣）；城市稅 CHF 156 由住宿方現場另收，不併入住宿費。舊 CHF 2,830／免費取消至 2027/7/20／Pay nothing until 2027/7/18／押金 CHF 400 為下訂前參考，已作廢，不代表現行訂單條款。",
+    priceCHF:2691.01,
+    priceIsReferenceQuote:false,
     mapQuery:"Sans Souci W1 Grindelwald",
-    notes:"108㎡ 兩房兩衛，1 樓+電梯，南向陽台，private washer/dryer。Check-in 前不得進入公寓/陽台/私人區域"
+    notes:"108㎡ 兩房兩衛，1 樓+電梯，南向陽台，private washer/dryer。Check-in 前（15:00 前）不得進入公寓/陽台/私人區域。付款狀態／取消條件／押金／精確門牌待人工確認"
   }
 };
 
@@ -1119,7 +1130,7 @@ const DAYS = [
         time:"09:15–10:06", title:"琉森拔營 ＋ LIE 景觀線",
         tr:{ label:"退房＋前往車站", icon:"walk" }, stp:"none",
         steps:[
-          "09:15 辦理退房（爭取彈性 45 分鐘）",
+          "預計 09:15 離開；Booking 標示退房時段為 10:00–11:00，09:15 早於該時段，提前退房／還鑰匙流程尚待住宿方確認",
           "09:30 抵達車站，09:50 前往月台卡位",
           "全團只帶過夜包 + 推車（5 件大行李 Day 3 已寄送）",
           "電子看板顯示「Luzern-Interlaken Express」或「zb」"
@@ -1969,19 +1980,20 @@ const DAYS = [
     hotelKey:"grindelwald",
     tl:[
       {
-        time:"07:00–08:30", title:"格林德瓦早餐 ＋ 退房",
+        time:"07:00–08:30", title:"格林德瓦早餐 ＋ 退房 ＋ 前往車站",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "07:00 起床，用 Day 10 剩下食材吃早餐",
-          "08:30 退房，清點 4 個過夜包 + 推車 + 隨身包 + 妞妞 + 護照",
-          "08:40 推行李慢步至格林德瓦火車站（5-10 分鐘）"
+          "08:00–08:15 完成退房並離開；清點 4 個過夜包 + 推車 + 隨身包 + 妞妞 + 護照後，立即步行 5–10 分鐘至 Grindelwald 車站，抵站後等待 08:49 BOB"
         ],
         defense:[
           "🥇 V21.3b 主方案時段大幅提前：08:49 BOB → 目標 11:15-11:45 抵達 Zürich Flughafen",
           "12:14 抵達降為錯過主班時的備援（不再是主方案）",
-          "退房時帶垃圾出來丟，Sans Souci W1 清潔費可省一些"
+          "退房時依住宿方退房規定處理垃圾（不宣稱可節省清潔費）"
         ],
-        critical:[]
+        critical:[
+          "🔑 鑰匙返還（key return）方式待 Interhome 確認：不得預設 dropbox、辦公室一定可還、或 self-return 一定可行；出發前以住宿方最終說明為準"
+        ]
       },
       {
         time:"08:49–11:15", title:"長途撤退 → 蘇黎世機場（主方案）",
@@ -2168,8 +2180,8 @@ const SHOPPING = [
 ];
 
 const BOOKINGS = [
-  { when:"✅ 已完成 (2026/6-7)", task:"KoBi Hirschenplatz 訂房後確認", how:"✅ 已完成訂房並收到 Booking.com 確認信（Two-Bedroom Apartment with Balcony，130 m²，2027/09/14 入住、09/18 退房共 4 晚，約 NT$ 125,000 含稅）。出發前確認訂單有效性、付款狀態與取消期限；保留憑證 PDF 與紙本。", priority:"🟢 建議" },
-  { when:"🚩 待確認 (2026/6-7)", task:"Sans Souci W1 by Interhome — 確認實際訂房狀態", how:"🚩 房源已選定（Apartment Sans Souci W1 by Interhome，108 m²，2027/09/18-24 共 6 晚），但實際訂房狀態待使用者確認。CHF 2,830、免費取消至 2027/7/20、Pay nothing until 2027/7/18、押金 CHF 400 均為參考報價／方案條款，僅於實際完成訂購後成立。若尚未下訂，請先於 Booking.com 確認該方案條款是否仍提供再下訂；下訂後透過 Booking Messages 向 Interhome 索取 key pickup、床欄、紗窗、late check-in 說明。", priority:"🔴 必做" },
+  { when:"✅ 已完成 (出發前確認)", task:"KoBi Hirschenplatz 訂房後確認", how:"✅ 已完成訂房並收到 Booking.com 確認信（Two-Bedroom Apartment with Balcony，130 m²，2027/09/14 入住、09/18 退房共 4 晚）。實際訂房金額（原幣）CHF 2,702.16；NT$ 125,000 為既有預算／規劃基準，非 Booking.com 實際訂單金額。免費取消至 2027/8/30 23:59（Booking 確認）。付款狀態／時間待人工確認。保留憑證 PDF 與紙本。", priority:"🟢 建議" },
+  { when:"✅ 已完成 (出發前確認)", task:"Sans Souci W1 by Interhome — 出發前 operational 確認", how:"✅ 已完成訂房（Apartment Sans Souci W1 by Interhome，108 m²，2027/09/18-24 共 6 晚）。實際訂房金額 CHF 2,691.01（原幣）；城市稅 CHF 156 由住宿方現場另收。出發前透過 Booking Messages／Interhome 確認：免費取消條件、付款期限、精確門牌地址、key pickup 領鑰匙、key return 還鑰匙、17:00 後 late check-in、床欄（bed rail）、紗窗（insect screens）。押金／取消／付款期限尚待確認（原 CHF 400／2027/7/20／2027/7/18 為下訂前參考，已不適用）。", priority:"🟡 重要" },
   { when:"🟠 T-11~13 個月 (2026/8-10)", task:"📱 ETIAS 動向追蹤（4 大 1 小全員）", how:"ETIAS 官方預計 2026 Q4 啟用；目前不需採取行動。2027 出發前 6 個月確認實際上線及強制執行日期。⚠️ 若 2027 已正式適用：4 大 1 小【全員】均依規定取得 ETIAS travel authorisation；4 位成人支付申請費（EU 執委會 2025-07-17 公告 EUR 20/人），妞妞未滿 18 歲免申請費——但【免申請費 ≠ 不需申請】，妞妞仍須取得自己的授權。網址：travel-europe.europa.eu/etias_en", priority:"🔴 必做" },
   { when:"🔴 機票鎖價（2026/11 雙11、黑五）", task:"🥇 EK 機票搶優惠", how:"目標 NT$ 33,000-38,000/人來回；托運 Weight Concept（依 fare 20-35kg/人）；4 大 + 妞妞 2 歲半兒童座位", priority:"🔴 必做" },
   { when:"🔵 T-3~4 個月 (2027/5-6)", task:"旅遊保險", how:"醫療給付建議 EUR 30,000 以上（風險管理與旅遊保障需求；EUR 30,000 為申根簽證申請人的強制門檻，本團為台灣護照免簽入境不受此強制，但仍強烈建議此額度）", priority:"🔴 必做" },
