@@ -67,6 +67,7 @@ eval(grab("toggleCheck"));
 eval(grab("isChecked"));
 // timeline / lifecycle（findCurrentAndNext 防禦測試需要）
 eval(grab("planRoleTimeKeys"));
+eval(grab("planRoleEngineTime"));   // V21.8b：display/engine time 分離
 eval(grab("parseTimelineTime"));
 eval(grab("planActivationStartMin"));
 eval(grab("planActivationEndMin"));

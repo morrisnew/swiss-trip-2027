@@ -394,6 +394,15 @@ function planRoleTimeKeys() {
   return ["activityTime", "lunchTime", "descentTime", "townTime"];
 }
 
+// V21.8b：display time / engine time 分離
+// 顯示層可用「11:15–下山前」等自然語意；Today engine 一律取可解析的 *EngineTime（若有）。
+// 未提供 EngineTime 時完全沿用原欄位，行為與 V21.8a 相同（向後相容）。
+function planRoleEngineTime(opt, key) {
+  if (!opt) return undefined;
+  const ek = key.replace(/Time$/, "EngineTime");
+  return (typeof opt[ek] === "string" && opt[ek]) ? opt[ek] : opt[key];
+}
+
 // V21.7a：計算某個 plan 的「分流邊界」起始分鐘（Activation Start）
 // 依 planActivation.mode 決定；預設 earliest_plan_block_start
 // = 所有 option 中，最早出現的 planRole 時間字串起始分鐘
@@ -406,7 +415,7 @@ function planActivationStartMin(planDef) {
   let earliest = null;
   (planDef.options || []).forEach(opt => {
     planRoleTimeKeys().forEach(k => {
-      const parsed = parseTimelineTime(opt[k]);
+      const parsed = parseTimelineTime(planRoleEngineTime(opt, k));
       if (parsed.type === "unknown" || parsed.startMin == null) return;
       if (earliest === null || parsed.startMin < earliest) earliest = parsed.startMin;
     });
@@ -432,7 +441,7 @@ function planActivationEndMin(planDef) {
   let latest = null;
   (planDef.options || []).forEach(opt => {
     planRoleTimeKeys().forEach(k => {
-      const parsed = parseTimelineTime(opt[k]);
+      const parsed = parseTimelineTime(planRoleEngineTime(opt, k));
       if (parsed.type === "unknown") return;
       const end = (parsed.endMin != null) ? parsed.endMin : parsed.startMin;
       if (end == null) return;
@@ -521,10 +530,10 @@ function findCurrentAndNext(tl, opts) {
     const opt = def.options.find(o => o.key === chosenKey);
     if (!opt) return;
     // 支援 activity / lunch / descent / town 四種 role
-    if (t.planRole === "activity")      expanded.push(Object.assign({}, t, { time: opt.activityTime, title: opt.activityTitle || t.title }));
-    else if (t.planRole === "lunch")    expanded.push(Object.assign({}, t, { time: opt.lunchTime,    title: opt.lunchTitle    || t.title }));
-    else if (t.planRole === "descent")  expanded.push(Object.assign({}, t, { time: opt.descentTime,  title: opt.descentTitle  || t.title }));
-    else if (t.planRole === "town")     expanded.push(Object.assign({}, t, { time: opt.townTime }));
+    if (t.planRole === "activity")      expanded.push(Object.assign({}, t, { time: planRoleEngineTime(opt, "activityTime"), timeDisplay: opt.activityTime, title: opt.activityTitle || t.title }));
+    else if (t.planRole === "lunch")    expanded.push(Object.assign({}, t, { time: planRoleEngineTime(opt, "lunchTime"),    timeDisplay: opt.lunchTime,    title: opt.lunchTitle    || t.title }));
+    else if (t.planRole === "descent")  expanded.push(Object.assign({}, t, { time: planRoleEngineTime(opt, "descentTime"),  timeDisplay: opt.descentTime,  title: opt.descentTitle  || t.title }));
+    else if (t.planRole === "town")     expanded.push(Object.assign({}, t, { time: planRoleEngineTime(opt, "townTime"),     timeDisplay: opt.townTime }));
     else expanded.push(t);
   });
 
@@ -703,6 +712,7 @@ function renderPage() {
   if (p === "pending")   return renderPending();
   if (p === "weather")   return renderWeather();
   if (p === "luggage")   return renderLuggage();
+  if (p === "maps")      return renderMaps();
   return renderHome();
 }
 
@@ -760,7 +770,7 @@ function renderHome() {
       flowHTML += `
         <div style="background:rgba(255,255,255,0.15); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
           <div style="font-size:10px; opacity:0.85; letter-spacing:0.08em; margin-bottom:2px;">🟢 目前正在</div>
-          <div style="font-size:14px; font-weight:700;">${escapeHTML(cn.current.time)} · ${escapeHTML(cn.current.title)}</div>
+          <div style="font-size:14px; font-weight:700;">${escapeHTML(cn.current.timeDisplay || cn.current.time)} · ${escapeHTML(cn.current.title)}</div>
         </div>
       `;
     } else if (dayState === "at_milestone") {
@@ -768,7 +778,7 @@ function renderHome() {
       flowHTML += `
         <div style="background:rgba(255,255,255,0.15); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
           <div style="font-size:10px; opacity:0.85; letter-spacing:0.08em; margin-bottom:2px;">⏰ 現在應完成／注意</div>
-          <div style="font-size:14px; font-weight:700;">${escapeHTML(cn.current.time)} · ${escapeHTML(cn.current.title)}</div>
+          <div style="font-size:14px; font-weight:700;">${escapeHTML(cn.current.timeDisplay || cn.current.time)} · ${escapeHTML(cn.current.title)}</div>
         </div>
       `;
     } else if (dayState === "plan_unselected") {
@@ -820,7 +830,7 @@ function renderHome() {
       flowHTML += `
         <div style="background:rgba(0,0,0,0.15); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
           <div style="font-size:10px; opacity:0.85; letter-spacing:0.08em; margin-bottom:2px;">${nextLabel}</div>
-          <div style="font-size:14px; font-weight:700;">${escapeHTML(cn.next.time)} · ${escapeHTML(cn.next.title)}</div>
+          <div style="font-size:14px; font-weight:700;">${escapeHTML(cn.next.timeDisplay || cn.next.time)} · ${escapeHTML(cn.next.title)}</div>
         </div>
       `;
     }
@@ -921,6 +931,11 @@ function renderHome() {
         <div class="label">天氣決策</div>
         <div class="sub">互換與撤退規則</div>
       </div>
+      <div class="quick-tile" data-nav="maps">
+        <span class="em">🗺️</span>
+        <div class="label">地圖與導航</div>
+        <div class="sub">車站·轉乘·移動鏈</div>
+      </div>
       <div class="quick-tile" data-nav="tools">
         <span class="em">🧰</span>
         <div class="label">全部工具</div>
@@ -981,6 +996,15 @@ function renderDay() {
 
   const timeline = State.showBackup && d.backup ? d.backup.tl : d.tl;
   const isBackupView = State.showBackup && d.backup;
+
+  // V21.8：本日相關地圖／轉乘示意（Day ↔ Map link）
+  const dayMapIds = (typeof DAY_MAP_LINKS !== "undefined" && DAY_MAP_LINKS[d.day]) ? DAY_MAP_LINKS[d.day] : [];
+  const dayMapsHTML = dayMapIds.length ? `
+    <div style="margin-bottom:12px;">
+      <div class="section-title" style="margin-bottom:6px;">🗺️ 本日地圖與轉乘示意</div>
+      ${dayMapIds.map(id => MAP_GUIDES[id] ? renderMapCard(MAP_GUIDES[id], { open: isChecked("mapopen_" + id) }) : "").join("")}
+      <button class="map-btn" data-nav="maps" style="margin-top:2px;">🗺️ 開啟完整地圖與導航</button>
+    </div>` : "";
 
   // 建議 B：Day 10 專屬：Brienz Rothorn 營運查詢外部連結
   const day10Extra = (idx === 9 && typeof EXT_LINKS !== "undefined" && EXT_LINKS.brienzRothornOps) ? `
@@ -1120,6 +1144,7 @@ function renderDay() {
     ${day11EmiratesTime}
     ${lieCard}
     ${planChooserCard}
+    ${dayMapsHTML}
     ${backupHTML}
 
     ${isBackupView ? `
@@ -1161,7 +1186,7 @@ function renderTimeblock(t, dayIdx) {
     <div class="timeblock">
       <div class="timeblock-header">
         <div>
-          <div class="timeblock-time">⏰ ${t.time}</div>
+          <div class="timeblock-time">⏰ ${t.timeDisplay || t.time}</div>
           <div class="timeblock-title">${t.title}</div>
         </div>
       </div>
@@ -1696,6 +1721,218 @@ function renderFlights() {
 }
 
 // ──────────── 工具集頁 ────────────
+// ──────────── V21.8 · Maps & Navigation ────────────
+const MAP_TYPE_META = {
+  town:     { em:"🏘️", label:"城鎮定位" },
+  route:    { em:"🧭", label:"當日移動鏈" },
+  station:  { em:"🚉", label:"站體指引" },
+  transfer: { em:"🔀", label:"轉乘指引" }
+};
+
+function mapStatusBadge(status) {
+  if (status === "pending") return renderStatusBadge("pending", "2027 Pending");
+  return renderStatusBadge("pending", "Current reference — verify for 2027");
+}
+
+// 簡化示意圖（Not to scale）：純 HTML/CSS，離線可用，不依賴外網
+// ══════════ V21.8a · Spatial schematic renderers ══════════
+// route → vertical flow（保留）；station/town/transfer → inline SVG 2D schematic。
+// 全部 inline、無外部資產、無 API key、offline 可用。
+
+const SCHEMATIC_STATUS = {
+  current: { fill:"var(--jungfrau-blue)", label:"現行方位" },
+  verify:  { fill:"var(--gold)",          label:"2027 verify" },
+  pending: { fill:"var(--warn-orange)",   label:"Pending / Day-of" }
+};
+const SCHEMATIC_LINK = {
+  walk:      { dash:"4 3", label:"步行" },
+  transport: { dash:"",    label:"交通工具" },
+  level:     { dash:"1 4", label:"同站體／樓層移動" }
+};
+
+function schematicLegend(sc) {
+  const used = {};
+  (sc.nodes || []).forEach(n => { used[n.status || "current"] = true; });
+  const items = Object.keys(SCHEMATIC_STATUS).filter(k => used[k])
+    .map(k => `<span style="white-space:nowrap;"><span aria-hidden="true" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${SCHEMATIC_STATUS[k].fill};margin-right:3px;"></span>${escapeHTML(SCHEMATIC_STATUS[k].label)}</span>`);
+  const lk = {};
+  (sc.links || []).forEach(l => { lk[l.style || "walk"] = true; });
+  Object.keys(SCHEMATIC_LINK).filter(k => lk[k]).forEach(k => {
+    items.push(`<span style="white-space:nowrap;">${k === "walk" ? "🚶" : k === "transport" ? "🔵" : "↕️"} ${escapeHTML(SCHEMATIC_LINK[k].label)}</span>`);
+  });
+  return `<div style="display:flex; flex-wrap:wrap; gap:8px; font-size:10px; color:var(--text-muted); margin-top:6px;">${items.join("")}</div>`;
+}
+
+// 文字 fallback（accessibility：不靠圖與顏色傳達資訊）
+function schematicTextFallback(sc) {
+  const byId = {}; (sc.nodes || []).forEach(n => { byId[n.id] = n; });
+  const lines = (sc.links || []).map(l => {
+    const a = byId[l.from], b = byId[l.to];
+    if (!a || !b) return "";
+    const lbl = l.label ? `（${l.label}）` : "";
+    return `<li>${escapeHTML(a.label.replace(/\n/g, " "))} → ${escapeHTML(b.label.replace(/\n/g, " "))}${escapeHTML(lbl)}</li>`;
+  }).filter(Boolean);
+  const notes = (sc.nodes || []).filter(n => n.note)
+    .map(n => `<li>${escapeHTML(n.label.replace(/\n/g, " "))}：${escapeHTML(n.note)}</li>`);
+  return `
+    <details style="margin-top:6px;">
+      <summary style="font-size:11px; color:var(--text-muted); cursor:pointer;">文字版說明（不看圖也能用）</summary>
+      <ul style="margin:6px 0 0; padding-left:18px; font-size:12px;">
+        ${lines.join("")}${notes.join("")}
+        ${(sc.pendingLabels || []).map(x => `<li>🟡 ${escapeHTML(x)}</li>`).join("")}
+      </ul>
+    </details>`;
+}
+
+function svgNode(n) {
+  const st = SCHEMATIC_STATUS[n.status || "current"] || SCHEMATIC_STATUS.current;
+  const lines = String(n.label).split("\n");
+  const w = Math.max(56, Math.min(120, Math.max.apply(null, lines.map(l => l.length)) * 7 + 16));
+  const h = 20 + (lines.length - 1) * 11;
+  const x = n.x - w / 2, y = n.y - h / 2;
+  return `
+    <g>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6"
+            fill="var(--bg-elev)" stroke="${st.fill}" stroke-width="1.6"></rect>
+      <circle cx="${x + 7}" cy="${y + 7}" r="3" fill="${st.fill}"></circle>
+      ${lines.map((l, i) => `<text x="${n.x}" y="${y + 13 + i * 11}" text-anchor="middle"
+            font-size="9.5" font-weight="600" fill="var(--text)">${escapeHTML((i === 0 && n.icon ? n.icon + " " : "") + l)}</text>`).join("")}
+    </g>`;
+}
+
+function svgLink(l, byId) {
+  const a = byId[l.from], b = byId[l.to];
+  if (!a || !b) return "";
+  const cfg = SCHEMATIC_LINK[l.style || "walk"] || SCHEMATIC_LINK.walk;
+  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  return `
+    <g>
+      <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"
+            stroke="var(--text-muted)" stroke-width="1.4"
+            ${cfg.dash ? `stroke-dasharray="${cfg.dash}"` : ""} marker-end="url(#schArrow)"></line>
+      ${l.label ? `<text x="${mx}" y="${my - 3}" text-anchor="middle" font-size="8.5"
+            fill="var(--text-muted)">${escapeHTML(l.label)}</text>` : ""}
+    </g>`;
+}
+
+function renderSchematicSVG(sc, kindLabel) {
+  const byId = {}; (sc.nodes || []).forEach(n => { byId[n.id] = n; });
+  return `
+    <div style="background:var(--bg-elev); border:1px solid var(--border); border-radius:10px; padding:10px; margin:10px 0;">
+      <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">${escapeHTML(kindLabel)} · <strong>Not to scale</strong></div>
+      <svg viewBox="${escapeHTML(sc.viewBox || "0 0 320 240")}" width="100%" role="img"
+           aria-label="${escapeHTML(sc.ariaLabel || kindLabel)}"
+           style="display:block; max-width:100%; height:auto; font-family:inherit;">
+        <defs>
+          <marker id="schArrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L8,4 L0,8 z" fill="var(--text-muted)"></path>
+          </marker>
+        </defs>
+        ${(sc.zones || []).map(z => `
+          <g>
+            <rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="8"
+                  fill="none" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 3"></rect>
+            <text x="${z.x + 8}" y="${z.y + 13}" font-size="9" fill="var(--text-muted)">${escapeHTML(z.label)}</text>
+          </g>`).join("")}
+        ${(sc.links || []).map(l => svgLink(l, byId)).join("")}
+        ${(sc.nodes || []).map(svgNode).join("")}
+      </svg>
+      ${schematicLegend(sc)}
+      ${(sc.pendingLabels || []).length ? `<div style="font-size:10.5px; color:var(--gold); margin-top:5px;">🟡 ${(sc.pendingLabels).map(escapeHTML).join("　")}</div>` : ""}
+      ${schematicTextFallback(sc)}
+    </div>`;
+}
+
+function renderStationSchematic(sc)  { return renderSchematicSVG(sc, "站體平面示意（相對位置）"); }
+function renderTownSchematic(sc)     { return renderSchematicSVG(sc, "城鎮定位示意（村軸與方向）"); }
+function renderTransferSchematic(sc) { return renderSchematicSVG(sc, "轉乘空間示意（相對位置）"); }
+
+function renderMapDiagram(diagram) {
+  if (!Array.isArray(diagram) || !diagram.length) return "";
+  return `
+    <div style="background:var(--bg-elev); border:1px solid var(--border); border-radius:10px; padding:12px; margin:10px 0;">
+      <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">移動鏈流程 · Not to scale</div>
+      ${diagram.map((n, i) => `
+        <div style="display:flex; align-items:flex-start; gap:8px; margin-bottom:${i === diagram.length - 1 ? 0 : 6}px;">
+          <div style="flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center;">${i + 1}</div>
+          <div style="flex:1 1 auto;">
+            <div style="font-weight:700; font-size:13px;">${escapeHTML(n.node)}</div>
+            ${n.note ? `<div style="font-size:11px; color:var(--text-muted);">${escapeHTML(n.note)}</div>` : ""}
+            ${i === diagram.length - 1 ? "" : `<div style="color:var(--text-muted); font-size:14px; line-height:1;">↓</div>`}
+          </div>
+        </div>
+      `).join("")}
+    </div>`;
+}
+
+// type → renderer（不同類型有不同 spatial representation）
+function renderGuideSpatial(g) {
+  const sc = g.schematic;
+  if (sc && Array.isArray(sc.nodes) && sc.nodes.length) {
+    switch (g.type) {
+      case "station":  return renderStationSchematic(sc);
+      case "town":     return renderTownSchematic(sc);
+      case "transfer": return renderTransferSchematic(sc);
+    }
+  }
+  return renderMapDiagram(g.diagram);
+}
+
+function renderMapCard(g, opts) {
+  opts = opts || {};
+  const open = opts.open === true;
+  const meta = MAP_TYPE_META[g.type] || { em:"🗺️", label:g.type };
+  return `
+    <div class="card" style="margin-bottom:12px;">
+      <button class="critical-toggle" data-toggle-check="mapopen_${g.id}" style="width:100%; text-align:left;">
+        <span style="display:flex; flex-direction:column; gap:2px;">
+          <span style="font-weight:800; font-size:14px;">${meta.em} ${escapeHTML(g.title)}</span>
+          <span style="font-size:11px; color:var(--text-muted);">${escapeHTML(meta.label)}${g.relatedDays && g.relatedDays.length ? "・Day " + g.relatedDays.join("/") : ""}${g.offlineAvailable ? "・離線可看" : ""}</span>
+        </span>
+        <span>${open ? "▲" : "▼"}</span>
+      </button>
+      ${open ? `
+        <div style="padding:10px 2px 2px;">
+          <div style="margin-bottom:6px;">${mapStatusBadge(g.status)}</div>
+          ${g.description ? `<div style="font-size:13px; margin-bottom:6px;">${escapeHTML(g.description)}</div>` : ""}
+          ${renderGuideSpatial(g)}
+          ${Array.isArray(g.steps) && g.steps.length ? `
+            <div style="font-weight:800; font-size:12px; margin:8px 0 4px;">現場重點</div>
+            <ul style="margin:0; padding-left:18px; font-size:13px;">
+              ${g.steps.slice(0, 5).map(x => `<li style="margin-bottom:3px;">${escapeHTML(x)}</li>`).join("")}
+            </ul>` : ""}
+          ${Array.isArray(g.pendingNotes) && g.pendingNotes.length ? `
+            <div style="margin-top:8px; padding:8px; border-left:3px solid var(--gold); background:rgba(224,168,0,0.08); font-size:12px;">
+              <div style="font-weight:800; margin-bottom:2px;">🟡 當天可能改變 / 尚未確認</div>
+              ${g.pendingNotes.map(x => `<div>${escapeHTML(x)}</div>`).join("")}
+            </div>` : ""}
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+            ${(g.officialLinks || []).map(l => `<a class="map-btn" href="${escapeHTML(l.url)}" target="_blank" rel="noopener">🔗 ${escapeHTML(l.label)}</a>`).join("")}
+            ${g.externalMap ? `<a class="map-btn" href="${escapeHTML(g.externalMap)}" target="_blank" rel="noopener">📍 開啟 Google Maps</a>` : ""}
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">外部連結（Google Maps／官方即時資訊）需要網路；本卡示意圖與文字離線可看。</div>
+        </div>` : ""}
+    </div>`;
+}
+
+function renderMaps() {
+  const guides = Object.values(MAP_GUIDES);
+  const order = ["station", "transfer", "route", "town"];
+  const groups = order.map(t => ({ t, items: guides.filter(g => g.type === t) })).filter(g => g.items.length);
+  return `
+    <div class="page-title">🗺️ 地圖與導航</div>
+    <div class="page-sub">現場回答：我在哪裡 · 我要往哪裡 · 下一段怎麼搭（簡化示意圖，離線可看）</div>
+    ${groups.map(gr => `
+      <div style="margin-bottom:16px;">
+        <div class="section-title" style="margin-bottom:8px;">${(MAP_TYPE_META[gr.t] || {}).em || ""} ${escapeHTML((MAP_TYPE_META[gr.t] || {}).label || gr.t)}</div>
+        ${gr.items.map(g => renderMapCard(g, { open: isChecked("mapopen_" + g.id) })).join("")}
+      </div>
+    `).join("")}
+    <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">
+      示意圖僅供現場辨位，未按比例；月台／櫃台／Gate／班次一律以當日 SBB App、車站看板、登機證與現場公告為準。
+    </div>`;
+}
+
 function renderTools() {
   const groups = [
     {
@@ -1723,7 +1960,8 @@ function renderTools() {
       tiles: [
         { nav:"hotels",  em:"🏨", label:"住宿",       sub:"Luzern · Grindelwald" },
         { nav:"flights", em:"✈️", label:"航班 + Emirates 規則", sub:`${FLIGHT_CODES.outbound} / ${FLIGHT_CODES.return}` },
-        { nav:"sights",  em:"📍", label:"景點導覽",   sub:`${SIGHTS.length} 個景點` }
+        { nav:"sights",  em:"📍", label:"景點導覽",   sub:`${SIGHTS.length} 個景點` },
+        { nav:"maps",    em:"🗺️", label:"地圖與導航", sub:`${Object.keys(MAP_GUIDES).length} 張現場指引` }
       ]
     }
   ];

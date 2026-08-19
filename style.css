@@ -37,6 +37,9 @@
   --text: var(--slate-800);
   --text-muted: var(--slate-500);
   --border: var(--slate-200);
+  /* V21.8b：Maps schematic 專用 — 正式 theme variable，不再依賴 renderer fallback */
+  --bg-elev: var(--surface);
+  --accent: var(--jungfrau-blue);
 }
 
 /* 深色模式 */
@@ -55,6 +58,9 @@
     --gold-bg: rgba(217,119,6,0.12);
     --safe-green-bg: rgba(5,150,105,0.12);
     --glacier: #253347;
+    /* V21.8b：深色模式的 elevated surface（與 --text #F1F5F9 對比充足） */
+    --bg-elev: #141821;
+    --accent: var(--jungfrau-blue);
   }
 }
 

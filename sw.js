@@ -1,11 +1,12 @@
 
-/* Swiss Trip PWA Service Worker · V21.7d Deployment Cache Revision (accsync-r2) */
-/* 網站版本維持 V21.7d（TRIP_META.version 不變）。本檔為同版 Service Worker 之
-   deployment cache revision：Accommodation Sync 後又完成 Final Micro-Patch（Day 11 08:40
-   stale residual 修正、actual CHF 不再顯示「約」），為讓已安裝於前一版 cache 的 PWA 取得
-   最新 data.js／app.js，cache 由 swiss-trip-v21-7d-final-accsync-2027 改為
-   swiss-trip-v21-7d-final-accsync-r2-2027。install/activate/fetch 架構未變更。 */
-const CACHE_NAME = "swiss-trip-v21-7d-final-accsync-r2-2027";
+/* Swiss Trip PWA Service Worker · V21.8c (Itinerary V21.4g + Final Residual Seal) */
+/* Web App version: V21.8c；Itinerary data version: V21.4g（兩條版本線分開）。
+   V21.8c：Final Residual Seal（R01 Day 8 午餐 wording、R02 固定午睡 wording、R03 Luzern 行李櫃台 specific link、R04 Interlaken Ost/BOB link），
+   僅 data.js 變更，cache 由 swiss-trip-v21-8b-v21-4g-corrective-2027 改為 swiss-trip-v21-8c-v21-4g-final-residual-seal-2027，
+   以觸發既有 PWA 重新 install/precache。install/activate/fetch 架構未變更。
+   Maps 的簡化示意圖與說明文字內建於 app.js／data.js，隨核心資產一併 precache → 離線可看；
+   Google Maps／官方即時連結需要網路，已於 UI 明示。 */
+const CACHE_NAME = "swiss-trip-v21-8c-v21-4g-final-residual-seal-2027";
 const ASSETS = [
   "./",
   "./index.html",

@@ -45,6 +45,7 @@ const planActivationEndMinSrc   = src.match(/function planActivationEndMin\([\s\
 const planLifecyclePhaseSrc     = src.match(/function planLifecyclePhase\([\s\S]*?\n}/)[0];
 
 eval(planRoleTimeKeysSrc);
+eval(src.match(/function planRoleEngineTime\([\s\S]*?\n}/)[0]);   // V21.8b：display/engine time 分離
 eval(parseTimelineTimeSrc);
 eval(planActivationStartMinSrc);
 eval(planActivationEndMinSrc);

@@ -71,6 +71,7 @@ eval(grab("getPlanChoice"));
 eval(grab("setPlanChoice"));
 eval(grab("allPlanChoices"));
 eval(grab("planRoleTimeKeys"));
+eval(grab("planRoleEngineTime"));   // V21.8b：display/engine time 分離
 eval(grab("parseTimelineTime"));
 eval(grab("planActivationStartMin"));
 eval(grab("planActivationEndMin"));
@@ -321,7 +322,7 @@ section("5b. 真實 Day 8 · 有效 A／B expansion 無 regression");
 {
   global.DAY_PLAN_CHOICES = { day8_spb: DAY8DEF };
   const cases = [
-    ["A", "11:30", "in_range", "11:15–12:45"],  // activity A
+    ["A", "11:30", "in_range", "11:15–13:00"],  // activity A（V21.8b engine time；display 為 11:15–下山前）
     ["A", "15:00", "in_range", "14:30–16:07"],  // descent A
     ["A", "17:00", "in_range", "16:30–18:30"],  // town A
     ["B", "12:00", "in_range", "11:15–14:15"],  // activity B（含午餐時段）

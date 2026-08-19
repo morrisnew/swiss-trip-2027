@@ -2,7 +2,9 @@
 const TRIP_META = {
   title: "瑞士旅行 2027",
   subtitle: "4 大 1 小・瑞士親子自由行",
-  version: "V21.7d Web · 基於 V21.4a 行程資料",
+  version: "V21.8c Web · 行程資料 V21.4g",
+  webAppVersion: "V21.8c",
+  itineraryVersion: "V21.4g",
   departure: "2027-09-13",  // 台灣起飛
   arrival: "2027-09-14",    // 蘇黎世抵達
   returnDate: "2027-09-25", // 返回台灣
@@ -238,7 +240,7 @@ const PENDING_2027 = [
   { id:"pilatus_2027", cat:"預約", item:"Pilatus 2027 齒軌預約政策", suggestBy:"T-3 個月（2027/6）", link:"pilatus", note:"官方措辭存在「強烈建議」與「不強制」不同措辭；2027 出發前確認是否成為強制。🚨 交通票券與座位預約應分開確認：持有效交通票券仍可能需要另外辦理／購買座位預約，不視為 Golden Round Trip 套票自動含齒軌座位。⚠️ 若當日啟動 B 計畫（Kriens 上山 → Pilatus Kulm → Alpnachstad 齒軌下山），原上山方向的預約【不會自動適用於下山方向】，需確認：① 原上山預約是否需取消 ② 下山方向是否需另行取得座位預約 ③ 改訂管道與可否當日辦理" },
   { id:"mountain_season", cat:"營運", item:"高山設施 2027 營運期", suggestBy:"T-3 個月（2027/6）", link:"", note:"Firstbahn、SPB、BRB、Pilatus 等秋季末營運期以官網為準" },
   { id:"sbb_luggage", cat:"物流", item:"SBB Gepäck 2027 櫃檯時段/費率", suggestBy:"T-1 個月（2027/8）", link:"sbbLuggage", note:"現行費率 CHF 12/件（Station-to-Station）。⚠️ 各站 luggage counter 開放時段依所選車站公告為準，SBB 官方要求依分站查詢；本團涉及 Luzern / Grindelwald / Zürich Flughafen 三站，2027 出發前需分別確認" },
-  { id:"stp_2027_price", cat:"票務", item:"STP 2027 正式價格與最終方案比較", suggestBy:"T-2 個月（2027/7）", link:"stpBuy", note:"15 天版 Swiss Travel Pass 為【目前基準方案（baseline）】，不是唯一方案。2027 官方價格公布後，仍應與 8 天版 STP＋其餘單買、Swiss Half Fare Card＋單買等可行方案做最終成本比較後再鎖定。4 大人購買；妞妞 6 歲以下完全免費。預算暫採 CHF 515/成人（估算值，2027 實際售價公布後重算）" },
+  { id:"stp_2027_price", cat:"票務", item:"STP 2027 正式價格與規則更新", suggestBy:"T-2 個月（2027/7）", link:"stpBuy", note:"15 天版 Swiss Travel Pass 為【既定主方案】。2027 僅更新正式售價、適用範圍與當年度規則，不重新進行票券方案比較（除非日後主動決定重開）。原比較說明：與 8 天版 STP＋其餘單買、Swiss Half Fare Card＋單買等可行方案做最終成本比較後再鎖定。4 大人購買；妞妞 6 歲以下完全免費。預算暫採 CHF 515/成人（估算值，2027 實際售價公布後重算）" },
   { id:"etias_status", cat:"入境", item:"ETIAS 實際執行狀態", suggestBy:"T-6 個月（2027/3）", link:"etias", note:`${TRAVEL_DOCUMENT_RULES.etias.officialTiming}。${TRAVEL_DOCUMENT_RULES.etias.forSwiss}。${TRAVEL_DOCUMENT_RULES.etias.forThisTrip}。${etiasApplicabilityLine()}` },
   { id:"interhome_key", cat:"住宿", item:"Interhome Sans Souci W1 鑰匙交付/精確地址（已訂房後 operational 確認）", suggestBy:"出發前", link:"interhome", note:"已完成訂房；仍待 Interhome 確認：exact street address（精確門牌）／key pickup 領鑰匙方式／key return 還鑰匙方式／early check-in 是否可行／late check-in（17:00 後）procedure。Day 5 領鑰匙流程以住宿方最終說明為準" }
 ];
@@ -261,7 +263,7 @@ const WEATHER_DECISION = {
 
 // V21.3b 功能：SBB 行李追蹤（5 件 × 4 節點）
 const LUGGAGE_MILESTONES = [
-  { id:"D3_send", day:"Day 3", date:"9/16 (四) 07:00", loc:"Luzern 車站", action:"寄出", target:"Grindelwald" },
+  { id:"D3_send", day:"Day 3", date:"9/16 (四) 08:00 起", loc:"Luzern 車站", action:"寄出", target:"Grindelwald" },
   { id:"D5_receive", day:"Day 5", date:"9/18 (六) 13:00", loc:"Grindelwald 車站", action:"領取", target:"5 件" },
   { id:"D8_send", day:"Day 8", date:"9/21 (二) 08:00", loc:"Grindelwald 車站", action:"寄出", target:"Zürich Flughafen" },
   { id:"D11_receive", day:"Day 11", date:"9/24 (五) 11:45", loc:"ZRH 機場 SBB", action:"領取", target:"5 件" }
@@ -298,7 +300,7 @@ const HOTELS = {
     name:"Apartment Sans Souci W1 by Interhome",
     city:"格林德瓦 Grindelwald",
     address:"3818 Grindelwald（鎮名層級；精確門牌待 Interhome 確認，位於 cul-de-sac 死巷）",
-    office:"Interhome 辦公室，位置／領鑰匙方式待 Interhome 確認",
+    office:"key collection 方式／地點待 Interhome 確認（office／lockbox／self check-in 未確認前不預設）",
     phone:"+41 43 810 9126",
     website:"interhome.ch",
     roomType:"108 m² · 2 房 2 衛 · 1 樓 + 電梯",
@@ -322,7 +324,7 @@ const HOTELS = {
     cityTax:{ rate:"CHF 5.20 / 人 / 晚", persons:5, nights:6, total:"CHF 156", note:"住宿方現場另收，未含於住宿費" },
     deposit:"待人工確認（原 CHF 400 為下訂前參考）",
     pendingItems:[
-      "key collection 領鑰匙方式與地點（Interhome 辦公室 / 密碼鎖）",
+      "key collection 領鑰匙最終方式與地點（office 領取／密碼鎖 lockbox／self check-in，未確認前不預設）",
       "是否支援 self check-in",
       "13:00–15:00 抵達後的行李寄放安排",
       "17:00 後的 late check-in 是否可行",
@@ -502,40 +504,45 @@ const DAY_PLAN_CHOICES = {
       {
         key: "A",
         tier: "family_default",
-        label: "A · 家庭預設主方案（推薦）",
-        pro: "植物園＋短版觀景路線；保留餐廳正式午餐；推車相對較友善",
-        // ── 山上活動 ──
-        activityTime: "11:15–12:45",
-        activityTitle: "🌸 Alpine Garden ＋ 短版 Swiss Flower & Panorama Trail（家庭版）",
+        label: "A · 家庭預設主方案（推薦・V21.4g）",
+        pro: "主觀景／Skywalk＋Alpine Playground 為核心；保留餐廳正式午餐；不為走完整步道硬走",
+        // ── 山上活動（V21.4g：11:15–下山前，逐項進行、後段可捨去）──
+        // display time = 自然語意；engine time = Today engine 可解析的保守區間（不含午餐後段，避免與 lunch 區塊重疊）
+        activityTime: "11:15–下山前",
+        activityEngineTime: "11:15–13:00",
+        activityTitle: "🏔️ Schynige Platte 家庭版主方案（主觀景／Skywalk → Playground → 午餐 → Naturkino → Alpine Garden Optional）",
         activitySteps: [
-          "「Alpine Garden 高山植物園」——歐洲最古老高山植物園之一，約 800 種高山植物標示牌完整，妞妞自然啟蒙絕佳場所",
-          "車站附近「短版 Swiss Flower & Panorama Trail／短版觀景路線」",
-          "11:15 左右開始活動；以妞妞可使用推車休息為前提",
-          "12:30–12:45 開始往餐廳方向收尾（非硬性截止，考量 4 大人＋幼兒＋推車＋拍照＋如廁的實際彈性）"
+          "1. 抵達 Schynige Platte：觀景平台看伯恩三峰（Eiger/Mönch/Jungfrau）＋雙湖全景，全家合照",
+          "2. 主要觀景點／Skywalk（山頂展望）：車站周邊主觀景點與 Skywalk 平台走動賞景",
+          "3. Alpine Playground（高山兒童遊憩區）：妞妞放電主場",
+          "4. 午餐／休息：約 12:30–13:00 進 Hotel Restaurant Schynige Platte（非硬性截止）",
+          "5. Naturkino 短環線：餐後走「自然劇院」短觀景環線（短、緩、可隨時折返）",
+          "6. Alpine Garden 高山植物園（放最後・Optional）：視時間／體力／路況再決定，時間或體力不足可直接略過，不影響本日核心"
         ],
         activityDefense: [
-          "⚠️ 推車「相對較友善」不等於無障礙保證：部分路面可能有碎石或不平整，實際可行性依當日路況與現場判斷",
-          "適用狀況：妞妞需要推車休息／不適合長時間使用背巾／天氣或能見度普通／成人不想長距離健行／希望保留正式餐廳午餐"
+          "⚠️ 順序為建議順序，時間／體力／路況允許時逐項進行；後段可視情況捨去，不為走完整步道而硬走",
+          "⚠️ 部分路面碎石／不平，非無障礙、非「推車一定全程可行」；個別路段可能需大人抬或改背巾",
+          "適用狀況：妞妞需要推車休息／不適合長時間背巾／天氣或能見度普通／成人不想長距離健行／希望保留正式餐廳午餐"
         ],
         // ── 午餐 ──
         lunchTime: "13:00–14:15",
         lunchTitle: "🍽️ Hotel Restaurant Schynige Platte 正式午餐",
         lunchSteps: [
-          "目標 13:00 左右進入 Hotel Restaurant Schynige Platte",
+          "約 12:30–13:00 進入 Hotel Restaurant Schynige Platte（非硬性截止，含 4 大人＋幼兒＋推車＋拍照＋如廁的實際彈性）",
           "推薦 Rösti 或 Älplermagronen",
-          "餐後整裝，準備搭 14:30 SPB 下山"
+          "餐後續行 Naturkino 短環線 → Alpine Garden（Optional，可略過），再準備下山"
         ],
         lunchDefense: ["餐廳午餐是 A 方案的一部分；若改走 B 方案則改為野餐"],
-        // ── 下山 ──
+        // ── 下山（班次為現行參考；2027 SPB timetable 仍為 Pending）──
         descentTime: "14:30–16:07",
-        descentTitle: "🚂 SPB 下山（方案 A：14:30 發車）",
+        descentTitle: "🚂 SPB 下山（方案 A・現行參考班次，2027 待確認）",
         descentSteps: [
-          "14:30 SPB 下山 → 約 15:20 抵 Wilderswil（車程約 50 分鐘）",
-          "15:34 轉 BOB Wilderswil → 約 16:07 抵 Grindelwald",
+          "SPB 下山 → 轉 BOB Wilderswil → 抵 Grindelwald",
+          "⚠️ 現行參考：14:30 發車、約 15:20 抵 Wilderswil、15:34 轉 BOB、約 16:07 抵 Grindelwald——**2027 SPB／BOB 班表尚未公布，出發前以 SBB App／jungfrau.ch 為準，不視為已確認班次**",
           "🥇 下山改坐右側，換另一邊視角俯瞰湖區"
         ],
         townTime: "16:30–18:30",
-        strollerPolicy: "推車可攜；相對較友善但非無障礙保證，依現場路況判斷",
+        strollerPolicy: "推車可攜；非無障礙、非全程可行，必要時改背巾，依現場路況判斷",
         carrierPolicy: "背巾備用"
       },
       {
@@ -762,21 +769,22 @@ const DAYS = [
         defense:[
           "山頂步道相對平緩，對推車與長輩較友善",
           "山上風大需加件薄外套",
-          "⚠️ 13:15 準時收拾出發下山，留出充裕時間走碎石坡"
+          "⚠️ 13:15 準時收拾出發，前往 Rigi Kulm 車站準備搭齒軌火車下山至 Rigi Kaltbad"
         ],
         critical:[]
       },
       {
-        time:"13:15–14:30", title:"下山第一段：下坡健行至 Rigi Kaltbad",
-        tr:{ label:"步行 2.5km（或齒軌列車）", icon:"walk" }, stp:"none",
+        time:"13:15–14:30", title:"下山第一段：Rigi Kulm → Rigi Kaltbad（Default：齒軌火車）",
+        tr:{ label:"齒軌火車（Optional：部分步行）", icon:"train" }, stp:"free",
         steps:[
-          "沿指標往下坡步行至半山腰 Rigi Kaltbad（約 2.5 km，緩降碎石／山徑路面）",
-          "帶妞妞＋推車實際耗時抓 75-90 分鐘以上"
+          "⭐ Default：於 Rigi Kulm 站搭齒軌火車下至 Rigi Kaltbad（rigi.ch 現行車程約 10 分鐘量級）",
+          "Optional：僅在天氣／路況／幼兒狀態／推車條件皆良好時，才改為部分步行；步行非 Must-do",
+          "實際班次與車程依當日 rigi.ch／SBB 時刻表，不預設固定發車時刻"
         ],
         defense:[
-          "⚠️【推車可行性・保守判斷】實際推車可行性需依當日選定步道路線與路況判斷，不視為無障礙路線",
-          "🛡️ Rigi 雖有多條 stroller-friendly 步道，但不等於 Kulm → Kaltbad 所有路線都適合推車；出發前於 rigi.ch 確認當日建議路線",
-          "🆘 若路況不適合推車或家庭體力不足，直接搭齒軌列車由 Rigi Kulm 下至 Rigi Kaltbad"
+          "⚠️ 步行段已降為 Optional：不再把 Kulm → Kaltbad 下坡健行當作應完成的主行程",
+          "🛡️ Rigi 雖有多條 stroller-friendly 步道，但不等於 Kulm → Kaltbad 所有路線都適合推車；若選 Optional 步行，出發前於 rigi.ch 確認當日建議路線",
+          "🆘 第一個完整旅遊日以降低體力負荷為原則，不確定時一律搭齒軌火車"
         ],
         critical:[
           "⚠️ Kulm → Kaltbad 不是「1 站」——中間尚有 Rigi Staffel、Rigi Staffelhöhe 等站；現行車程約 10 分鐘量級，2027 實際班次與車程依 rigi.ch／SBB 時刻表確認"
@@ -803,15 +811,16 @@ const DAYS = [
         critical:[]
       },
       {
-        time:"16:15–19:00", title:"獅子紀念碑 ＋ 舊城區晚餐",
+        time:"16:15–19:00", title:"卡貝爾木橋 ＋ 舊城散步 ＋ 晚餐",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
-          "回琉森後前往獅子紀念碑",
+          "回琉森後前往卡貝爾木橋（Kapellbrücke）",
           "漫步舊城區石板路與濕壁畫",
-          "前往預定的餐廳（Rathaus Brauerei 或 Restaurant Pfistern）吃晚餐"
+          "前往預定的餐廳（Rathaus Brauerei 或 Restaurant Pfistern）吃晚餐",
+          "晚餐後回住宿休息，避免 Day 2 過長"
         ],
         defense:[
-          "獅子紀念碑公園步道平緩好推推車",
+          "ℹ️ 獅子紀念碑正式安排於 Day 3 文化日，Day 2 回程不重複排入",
           "舊城區石板路稍有顛簸"
         ],
         critical:[]
@@ -824,12 +833,12 @@ const DAYS = [
     hotelKey:"luzern",
     tl:[
       {
-        time:"07:00–09:00", title:"🛅 SBB 行李寄送 + 集結",
+        time:"07:45–09:00", title:"🛅 SBB 行李寄送 + 集結",
         tr:{ label:"步行至琉森車站", icon:"luggage" }, stp:"none",
         steps:[
           "早上 07:00 起床（時差已調整 2 天）",
           "3 大人前一晚已分裝好的 5 件大行李推到琉森車站",
-          "跟 Gepäck / Luggage 指標找 SBB 行李櫃台（通常 07:00 開門）",
+          "約 07:45 從住宿出發；跟 Gepäck / Luggage 指標找 SBB 行李櫃台（現行 08:00 開門後才可辦理，約 08:20–08:30 完成；2027 實際營業時間出發前重新確認）",
           "出示護照 + STP，填寄送單：寄至 Grindelwald 站，9/18 (六) 領取",
           "付費 CHF 12 × 5 件 = CHF 60，保留收據與寄物編號",
           "08:30 全家集合前往獅子紀念碑（步行 15 分鐘）"
@@ -1178,7 +1187,7 @@ const DAYS = [
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "出 Grindelwald 車站",
-          "🥇 兵分兩路：Morris 輕裝去 Interhome 辦公室辦理 key collection（方式待訂房確認）",
+          "🥇 兵分兩路：Morris 輕裝依 Interhome 最終 key collection instructions 執行（office 領取／密碼鎖 lockbox／self check-in 未確認前不預設；出發前以住宿方說明為準）",
           "家人（Emily/皮皮/Milo+妞妞）在車站 SBB Luggage 櫃台領 5 件大行李",
           "📸 車站前廣場拍第一張全家合照，背景就是艾格北壁",
           "⏳ 13:00–15:00 為入住前等待時段：可在車站周邊 / Coop / 咖啡店休息",
@@ -1194,7 +1203,7 @@ const DAYS = [
         critical:[
           "🚨 Check-in 15:00–17:00；未取得鑰匙、未到入住時間前不得進入公寓/陽台/私人區域",
           "🚨 妞妞午睡不可預設在公寓進行；15:00 前請用推車或車站休息區安排",
-          "Interhome 精確地址與辦公室位置訂房後 email 告知"
+          "Interhome 精確門牌地址與 key collection 最終方式／地點仍為 Pending，依住宿方最終 instructions 為準"
         ]
       },
       {
@@ -1271,7 +1280,7 @@ const DAYS = [
       },
       {
         time:"11:00–13:30", title:"🏘️ Mürren 懸崖無車村漫遊 ＋ 午餐",
-        tr:{ label:"步行（村內全平坦、無車）", icon:"walk" }, stp:"none",
+        tr:{ label:"步行（無車山村；部分路段有坡度／不平）", icon:"walk" }, stp:"none",
         steps:[
           "Mürren 主街 Dorfstrasse 漫遊（無車村；村內核心區步行相對輕鬆，仍可能有坡度）",
           "傳統瑞士 chalet + 花圃陽台，正對艾格北壁 + 僧侶峰 + 少女峰",
@@ -1311,7 +1320,7 @@ const DAYS = [
         time:"15:30–17:15", title:"🌸 下山 ＋ Staubbach 朝聖 ＋ 撤退回木屋",
         tr:{ label:"funicular → BLM 火車 → BLM 纜車 → BOB", icon:"train" }, stp:"free",
         steps:[
-          "15:30 Allmendhubel funicular 下山（約 4 分鐘），走回 Mürren BLM 站（約 1 分鐘）",
+          "Allmendhubel funicular 下山（約 4 分鐘），出站後步行約 5–10 分鐘至 Mürren BLM 站，搭下一班往 Grütschalp（不硬綁固定班次；班距依 2027 Jungfrau／SBB timetable）",
           "BLM 山區小火車 → Grütschalp → BLM 纜車 → Lauterbrunnen",
           "Staubbach 快速朝聖約 25 分鐘：從 BLM 車站走到瀑布正對面約 5 分鐘（不用走到瀑布底）",
           "拍山村教堂 + 300m 高瀑布同框構圖",
@@ -1453,7 +1462,7 @@ const DAYS = [
         tr:{ label:"步行至車站 + BOB", icon:"luggage" }, stp:"free",
         steps:[
           "前一晚 Day 7 已完成分裝",
-          "08:00 Morris + Milo 出門到 Grindelwald 車站 SBB 櫃檯寄送 5 件行李",
+          "約 07:45 Morris + Milo 從住宿出發 → 08:00 Grindelwald SBB luggage counter 開門後辦理 5 件行李寄送至 Zürich Flughafen（約 08:20–08:30 完成；2027 營業時間出發前再確認）",
           "Luggage dispatch 時段依 Grindelwald 分站公告為準（非全網統一時段）；2027 出發前 3 個月至 sbb.ch 分站頁確認實際時段",
           "寄送單填：起點 Grindelwald、終點 Zürich Flughafen、預計領取 9/24 (五) 中午",
           "現行 CHF 12 × 5 件 = CHF 60（2027 出發前確認）",
@@ -1518,12 +1527,12 @@ const DAYS = [
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "出 Schynige Platte 站後，依當日天氣、能見度、妞妞狀況與成人意願，於 A／B 二方案中擇一",
-          "⭐ A 家庭預設主方案：Alpine Garden 高山植物園 ＋ 短版 Swiss Flower & Panorama Trail（11:15–12:45）",
+          "⭐ A 家庭預設主方案（11:15–下山前）：主觀景／Skywalk → Alpine Playground → 午餐／休息 → Naturkino 短環線 → Alpine Garden（永遠最後、Optional，視時間／體力／路況可略過）",
           "🏔️ B Bonus Plan：正式 Schynige Platte Panorama Hike，約 6 km、理想條件約 2.5–3 小時（11:15–14:15）",
           "📌 不確定時選 A。B 不是與 A 同等推薦的選項"
         ],
         defense:[
-          "A：推車相對較友善，但部分路面可能有碎石或不平整，非無障礙路線",
+          "A：部分路面可能有碎石或不平整，非無障礙、非全程推車路線，必要時改用背架；不為走完整步道硬走",
           "B：推車不得視為行程交通工具，背巾為限定主策略；幼兒同行實際可能超過 3 小時",
           "ℹ️ 實際人潮依天氣、團客、假期與當日營運狀況而定，不以平日／假日推論"
         ],
@@ -1537,12 +1546,12 @@ const DAYS = [
         title:"🍽️ 午餐（依所選方案：A 餐廳／B 野餐）",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
-          "⭐ A 方案：12:30–12:45 開始往餐廳方向收尾，目標 13:00 左右進入 Hotel Restaurant Schynige Platte（Rösti 或 Älplermagronen）",
+          "⭐ A 方案：Playground 之後往餐廳方向收尾，目標 13:00 前後進入 Hotel Restaurant Schynige Platte（Rösti 或 Älplermagronen）；午餐後再視狀況進行 Naturkino → Alpine Garden（Optional）",
           "🏔️ B 方案：午餐改為野餐，於健行途中視野良好處進行，不進餐廳"
         ],
         defense:[
           "A／B 午餐邏輯互斥，不可並存",
-          "A 的 12:30–12:45 為收尾起點，非硬性截止（考量 4 大人＋幼兒＋推車＋拍照＋如廁的實際彈性）",
+          "A 方案於 Playground 後往餐廳方向移動，目標約 12:30–13:00 進入午餐／休息；依 4 大人＋幼兒＋推車＋拍照＋如廁與現場狀況彈性調整，非硬性截止",
           "B 的野餐食材需於前一晚或當日早上先備妥"
         ],
         critical:[]
@@ -1571,7 +1580,7 @@ const DAYS = [
         title:"格林德瓦小鎮耍廢",
         tr:{ label:"BOB→步行", icon:"walk" }, stp:"none",
         steps:[
-          "回 Grindelwald 後，妞妞回木屋午睡",
+          "回 Grindelwald 後回公寓休息；妞妞是否午睡、睡多久，依當日睡眠、精神與晚間作息彈性決定",
           "大人輪流逛 Dorfstrasse 戶外用品店（Mammut、Bächli）",
           "喝下午咖啡、買瑞士巧克力伴手禮",
           "18:00 前回木屋準備自炊晚餐"
@@ -1609,7 +1618,7 @@ const DAYS = [
           "在 Firstbahn 售票處出示 STP，購 50% 折扣來回票（約 CHF 35/成人，妞妞免費）"
         ],
         defense:[
-          "後背包：兩瓶水、能量棒、薄外套、妞妞推車與野餐午餐",
+          "後背包：兩瓶水、能量棒、薄外套與野餐午餐；幼兒移動主方案為背巾／背架，推車視當日路線與成人分工決定是否攜帶（非必帶）",
           "9 月底山頂可能少量殘雪，鞋子建議防水或厚襪",
           "🚨 SOS 撤退決策點：走到 1/3 路程（20-30 分鐘），若妞妞明顯疲累或哭鬧 → 原路折返，不勉強"
         ],
@@ -1862,7 +1871,7 @@ const DAYS = [
         critical:[]
       },
       {
-        time:`${BRB_DERIVED.brienzBack}–${BRB_DERIVED.souvenirEnd}`, title:"🏘️ Brienz 木雕村紀念品快速採購（約 20 分鐘）",
+        time:`${BRB_DERIVED.brienzBack}–${BRB_DERIVED.souvenirEnd}`, title:"🏘️（Optional Bonus）Brienz 木雕村紀念品快速採購",
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "Brienz 是瑞士木雕家鄉，主街上有木雕工坊",
@@ -1872,6 +1881,7 @@ const DAYS = [
         ],
         defense:[
           "🥇 Brienz 木雕品質遠勝格林德瓦觀光區，價格較合理",
+          "🚨 Optional Bonus：僅在 BRB 順利／下山準時／妞妞狀態佳／回程 buffer 充足時才執行；不得壓縮 BRB、回 Grindelwald 銜接、Barry's 晚餐與休息。時間偏緊直接整段跳過",
           "5 件大行李已寄送機場，紀念品裝過夜包或請店家國際寄送",
           `🟡 ${BRB_DAY_PLAN.statusLabel}`
         ],
@@ -1984,7 +1994,7 @@ const DAYS = [
         tr:{ label:"步行", icon:"walk" }, stp:"none",
         steps:[
           "07:00 起床，用 Day 10 剩下食材吃早餐",
-          "08:00–08:15 完成退房並離開；清點 4 個過夜包 + 推車 + 隨身包 + 妞妞 + 護照後，立即步行 5–10 分鐘至 Grindelwald 車站，抵站後等待 08:49 BOB"
+          "08:00–08:15 完成退房並離開；清點 4 個過夜包 + 推車 + 隨身包 + 妞妞 + 護照後，立即從 Sans Souci W1 推行李走 300m 至 Grindelwald 主車站（步行約 4-5 分鐘），抵站後等待 08:49 BOB"
         ],
         defense:[
           "🥇 V21.3b 主方案時段大幅提前：08:49 BOB → 目標 11:15-11:45 抵達 Zürich Flughafen",
@@ -2002,13 +2012,13 @@ const DAYS = [
           "08:49 BOB 從格林德瓦發車（暫定；2027 SBB App 確認）",
           "抵 Interlaken Ost 後跟 Bern / Zürich Flughafen 指標換月台",
           "🥇 SBB App 篩選鎖定「via Bern」班次（Grindelwald→Bern 車程約 1.5 小時量級，依 2027 SBB 確認）",
-          "🥇 Bern 同月台對向換車：走 5 步路到對面月台即可上對向 IC（同月台不是 100% 保證，前一晚 SBB App 查）",
+          "🥇 Bern 轉乘是否同月台、實際 Platform／Sector／車廂編組，一律以當日 SBB App／車站電子看板為準，不預設固定值",
           "目標 11:15-11:45 抵達 Zürich Flughafen",
           "備援班次：12:14 抵達（錯過主班時使用）"
         ],
         defense:[
           "只有過夜包 + 推車，兵分兩路壓力極低",
-          "🦖 家庭車廂 FA：Bern → Zürich Flughafen 段的 IC 雙層列車通常編有 FA，二樓兒童遊戲區",
+          "🦖 家庭車廂 FA：部分 IC 雙層列車設有 FA（二樓兒童遊戲區），但不預設一定掛車，以當日實際編組為準",
           "所有具體班次時刻為現行參考；2027 出發前 SBB App / 官網確認實際"
         ],
         critical:[
@@ -2179,6 +2189,432 @@ const SHOPPING = [
   }
 ];
 
+
+// ══════════════════════════════════════════════════════════════════
+// V21.8 · Maps & Navigation（地圖與導航）— MAP_GUIDES
+// ──────────────────────────────────────────────────────────────────
+// 目的：現場回答「我在哪裡／我要往哪裡／下一段交通怎麼搭」。
+// 原則：simplified field-guide 示意（Not to scale），不建 GIS、不做 turn-by-turn、
+//       不發明 2027 timetable／platform／gate；未確認者一律 Pending。
+// type：town（城鎮定位）／route（當日移動鏈）／station（站體）／transfer（轉乘）
+// status：current_reference（現行參考，2027 需重新確認）／pending（未確認）
+// ══════════════════════════════════════════════════════════════════
+const MAP_GUIDES = {
+  // ── P0-1 ─────────────────────────────────────────────
+  luzern_station: {
+    id:"luzern_station", title:"Luzern Bahnhof（琉森車站）· SBB 行李寄送",
+    type:"station", priority:"P0", relatedDays:[1,2,3,4,5],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"Day 3 早上於此辦理 5 件 Station-to-Station 行李寄送（Luzern → Grindelwald）。",
+    diagram:[
+      { node:"KoBi Hirschenplatz（住宿）", note:"步行約 5–10 分鐘至車站" },
+      { node:"Luzern Bahnhof 主入口", note:"湖畔側大門最好認" },
+      { node:"跟 Gepäck / Luggage 指標", note:"指標為德/英雙語" },
+      { node:"SBB 行李櫃台（luggage counter）", note:"現行 08:00 開門後才可辦理" },
+      { node:"辦理 5 件 → Grindelwald", note:"約 08:20–08:30 完成" }
+    ],
+    steps:[
+      "約 07:45 從住宿出發，08:00 櫃台開門後才辦理（不要安排 07:00／07:30 到場等待辦理）",
+      "跟 Gepäck / Luggage 指標走，櫃台不在月台上而在站體服務區",
+      "5 件大行李 Station-to-Station 寄至 Grindelwald，Day 5 抵達後領取",
+      "留存收據；行李內不放乳製品／副食品／證件／貴重物"
+    ],
+    pendingNotes:["2027 實際櫃台營業時間與收費須出發前重新確認（現行 08:00 開門、CHF 60 為 current reference）"],
+    officialLinks:[
+      { label:"SBB Luzern 車站資訊與設施", url:"https://www.sbb.ch/en/travel-information/stations/find-station/luzern-station.html" },
+      { label:"SBB Luzern 行李櫃台位置與營業資訊（Gepäckaufgabe · Galerie 1. Obergeschoss）", url:"https://www.sbb.ch/en/travel-information/stations/find-station/luzern-station/shops/shop-detail.html/geo-gepaeckaufgabe-ea8e" },
+      { label:"SBB Luzern 站內平面圖 PDF（找行李櫃台位置）", url:"https://www.sbb.ch/content/dam/infrastruktur/trafimage/bahnhofplaene/plan-luzern-a4.pdf.sbbdownload.pdf" },
+      { label:"SBB 行李寄送服務（Station-to-Station）", url:"https://www.sbb.ch/en/offers/luggage-services" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Luzern+Bahnhof",
+    schematic:{
+      layout:"station", viewBox:"0 0 320 250",
+      ariaLabel:"Luzern 車站示意圖：主大廳位於中央，行李櫃台在 Galerie 上層，湖與碼頭在一側、舊城與住宿在另一側，月台在大廳後方",
+      zones:[
+        { label:"Galerie / 上層", x:12, y:26, w:296, h:56 },
+        { label:"主大廳 Main Hall（地面層）", x:12, y:96, w:296, h:66 },
+        { label:"月台區 Platforms", x:12, y:176, w:296, h:52 }
+      ],
+      nodes:[
+        { id:"lug", label:"SBB 行李櫃台", x:160, y:54, icon:"🛅", status:"verify", note:"Galerie／上層（2027 verify）" },
+        { id:"lift", label:"電梯／手扶梯", x:62, y:54, icon:"↕️", status:"current" },
+        { id:"hall", label:"主大廳", x:160, y:128, icon:"🏛️", status:"current" },
+        { id:"entry", label:"主入口", x:160, y:166, icon:"🚪", status:"current" },
+        { id:"lake", label:"← 湖／碼頭", x:52, y:128, icon:"⛵", status:"current" },
+        { id:"town", label:"舊城／KoBi →", x:268, y:128, icon:"🏘️", status:"current" },
+        { id:"plat", label:"月台", x:160, y:202, icon:"🚆", status:"verify", note:"月台號＝當日看板" }
+      ],
+      links:[
+        { from:"entry", to:"hall", style:"walk", label:"進站" },
+        { from:"hall", to:"lift", style:"level", label:"往上層" },
+        { from:"lift", to:"lug", style:"walk", label:"跟 Gepäck 指標" },
+        { from:"hall", to:"plat", style:"level", label:"往月台" }
+      ],
+      pendingLabels:["櫃台實際樓層／位置 2027 verify"]
+    }
+  },
+
+  // ── P0-2 ─────────────────────────────────────────────
+  interlaken_ost: {
+    id:"interlaken_ost", title:"Interlaken Ost · Luzern–Interlaken Express → BOB 轉乘",
+    type:"transfer", priority:"P0", relatedDays:[5,6,8,10,11],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"Day 5 由 Luzern 前往 Grindelwald 的關鍵轉乘點；BOB 會分段掛車，看車廂目的地顯示最重要。",
+    diagram:[
+      { node:"Luzern–Interlaken Express 抵達", note:"下車後留在站內" },
+      { node:"看月台電子看板找 BOB", note:"往 Grindelwald / Lauterbrunnen" },
+      { node:"確認車廂外側目的地顯示", note:"⚠️ 同一列車會分向兩地" },
+      { node:"上正確車廂 → Grindelwald", note:"錯車廂會被解聯到別的山谷" }
+    ],
+    steps:[
+      "不預設固定月台：以當日車站電子看板 / SBB App 為準",
+      "BOB 常為一列分段掛車，前後段目的地不同——上車前務必看『車廂外側目的地顯示』",
+      "不預設一定在前段或後段，方向以站方顯示為準",
+      "帶推車者預留多一點上車時間，車門與月台有高差"
+    ],
+    pendingNotes:["實際月台、車廂編組、分段方式依 2027 當日 SBB App／站內看板，不預先鎖定"],
+    officialLinks:[
+      { label:"SBB Interlaken Ost 車站資訊", url:"https://www.sbb.ch/en/travel-information/stations/find-station/station.7492.interlaken-ost.html" },
+      { label:"Jungfrau Interlaken Ost 車站頁（BOB 往 Grindelwald／Lauterbrunnen）", url:"https://www.jungfrau.ch/en-gb/arrival-at-station-car-parks/interlaken-ost-railway-station/" },
+      { label:"Berner Oberland-Bahn（BOB）官方說明：Zweilütschinen 分車", url:"https://www.jungfrau.ch/en-gb/corporate/jungfrau-railways/berner-oberland-bahnen-ag/berner-oberland-bahn/" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Interlaken+Ost+railway+station",
+    schematic:{
+      layout:"transfer", viewBox:"0 0 320 236",
+      ariaLabel:"Interlaken Ost 轉乘示意圖：LIE 抵達區與 BOB 出發區在同一站體，透過站內通道轉乘；BOB 會分段掛車，須確認車廂目的地顯示",
+      zones:[{ label:"Interlaken Ost 站體（同站內轉乘）", x:12, y:26, w:296, h:150 }],
+      nodes:[
+        { id:"lie", label:"LIE 抵達區", x:74, y:64, icon:"🚆", status:"current" },
+        { id:"conc", label:"站內通道\nconcourse", x:160, y:112, icon:"🚶", status:"current" },
+        { id:"bob", label:"BOB 出發區", x:250, y:64, icon:"🚆", status:"verify", note:"月台＝當日 SBB App" },
+        { id:"disp", label:"車廂目的地顯示", x:250, y:150, icon:"🔎", status:"verify", note:"⚠️ 分向 Grindelwald / Lauterbrunnen" }
+      ],
+      links:[
+        { from:"lie", to:"conc", style:"walk", label:"下車後留在站內" },
+        { from:"conc", to:"bob", style:"walk", label:"看電子看板找 BOB" },
+        { from:"bob", to:"disp", style:"level", label:"上車前務必確認" }
+      ],
+      pendingLabels:["Platform ＝ day-of SBB App（不鎖固定號碼）"]
+    }
+  },
+
+  // ── P0-3 ─────────────────────────────────────────────
+  grindelwald_station: {
+    id:"grindelwald_station", title:"Grindelwald Bahnhof · 領行李／寄行李",
+    type:"station", priority:"P0", relatedDays:[5,8,9,10,11],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"Day 5 領取 5 件 SBB 行李；Day 8 於此再寄 5 件至 Zürich Flughafen；Day 11 由此出發。",
+    diagram:[
+      { node:"Grindelwald Bahnhof 月台", note:"BOB 到站" },
+      { node:"站內 Gepäck / Luggage 櫃台", note:"領取／寄送皆在此" },
+      { node:"車站出口（主street 側）", note:"出站即為主street" },
+      { node:"Sans Souci W1 方向", note:"步行約 300m 量級（精確門牌待確認）" },
+      { node:"Firstbahn 方向", note:"與住宿方向不同側，Day 9 使用" }
+    ],
+    steps:[
+      "Day 5：抵達後先於站內 luggage 櫃台領取 5 件（憑收據）",
+      "Day 8：約 07:45 出發，08:00 櫃台開門後辦理寄送至 Zürich Flughafen",
+      "站前為主street，Coop 超市與住宿方向同側；Firstbahn 需另往纜車站方向",
+      "13:00–15:00 之間抵達時，不預設可先進公寓（正式 check-in 15:00 起）"
+    ],
+    pendingNotes:["Grindelwald 站行李櫃台 2027 營業時間須重新確認","Sans Souci W1 精確門牌與 key collection 方式仍為 Pending"],
+    officialLinks:[
+      { label:"SBB Grindelwald 車站資訊", url:"https://www.sbb.ch/en/travel-information/stations/find-station/station.7380.grindelwald.html" },
+      { label:"Jungfrau Grindelwald 車站頁", url:"https://www.jungfrau.ch/en-gb/arrival-at-station-car-parks/grindelwald-railway-station/" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Grindelwald+Bahnhof",
+    schematic:{
+      layout:"station", viewBox:"0 0 320 250",
+      ariaLabel:"Grindelwald 車站示意圖：月台與行李櫃台在站內，出站後為主街，住宿方向與 Firstbahn 方向分屬不同側",
+      zones:[
+        { label:"車站站體", x:12, y:26, w:296, h:92 },
+        { label:"站外・Dorfstrasse 主街軸線", x:12, y:132, w:296, h:96 }
+      ],
+      nodes:[
+        { id:"plat", label:"BOB 月台", x:80, y:54, icon:"🚆", status:"current" },
+        { id:"lug", label:"行李櫃台", x:224, y:54, icon:"🛅", status:"verify", note:"領/寄皆在此・時間 2027 verify" },
+        { id:"exit", label:"車站出口", x:160, y:100, icon:"🚪", status:"current" },
+        { id:"bus", label:"巴士／接駁區", x:62, y:158, icon:"🚌", status:"current" },
+        { id:"sans", label:"Sans Souci W1\n（方向・約 300m）", x:238, y:158, icon:"🏠", status:"pending", note:"精確門牌 Pending" },
+        { id:"first", label:"Firstbahn 方向", x:150, y:206, icon:"🚡", status:"current", note:"與住宿不同側" }
+      ],
+      links:[
+        { from:"plat", to:"lug", style:"walk", label:"站內" },
+        { from:"lug", to:"exit", style:"walk", label:"出站" },
+        { from:"exit", to:"sans", style:"walk", label:"主街方向・步行約 4-5 分" },
+        { from:"exit", to:"first", style:"walk", label:"另一側" }
+      ],
+      pendingLabels:["Sans Souci 精確門牌 Pending（僅示方向，非精準定位）"]
+    }
+  },
+
+  // ── P0-4（拆三張卡）─────────────────────────────────
+  lauterbrunnen_transfer: {
+    id:"lauterbrunnen_transfer", title:"Lauterbrunnen · 上山轉乘（往 Grütschalp / Mürren）",
+    type:"transfer", priority:"P0", relatedDays:[6],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"Day 6 上 Mürren 的起點。轉乘鏈：Lauterbrunnen → aerial cableway（空中纜車）→ Grütschalp → BLM railway（山區鐵道）→ Mürren。兩段交通工具不同，勿混稱。",
+    diagram:[
+      { node:"Lauterbrunnen 車站（BOB 抵達）", note:"出站" },
+      { node:"往 Grütschalp 纜車站", note:"就在車站對面／鄰接" },
+      { node:"Grütschalp", note:"轉 BLM 山區小火車" },
+      { node:"Mürren BLM", note:"抵達 Mürren 村" }
+    ],
+    steps:[
+      "順序固定：Lauterbrunnen →（aerial cableway 空中纜車）→ Grütschalp →（BLM railway 山區鐵道）→ Mürren",
+      "不硬綁固定班次；搭下一班即可，班距依 2027 Jungfrau／SBB timetable",
+      "回程為反向同一順序",
+      "推車可上，但上下車有高差，預留時間"
+    ],
+    pendingNotes:["2027 實際班距與首末班依 Jungfrau／SBB 官方時刻表"],
+    officialLinks:[
+      { label:"SBB Lauterbrunnen 車站資訊", url:"https://www.sbb.ch/en/travel-information/stations/find-station/station.7384.lauterbrunnen.html" },
+      { label:"Jungfrau Lauterbrunnen 車站頁", url:"https://www.jungfrau.ch/en-gb/arrival-at-station-car-parks/lauterbrunnen-railway-station/" },
+      { label:"BLM 空中纜車＋Grütschalp–Mürren 鐵道（官方說明）", url:"https://www.jungfrau.ch/de-ch/unternehmen/jungfraubahnen/jungfraubahn-holding-ag/bergbahn-lauterbrunnen-muerren-ag/" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Lauterbrunnen+station",
+    schematic:{
+      layout:"transfer", viewBox:"0 0 320 200",
+      ariaLabel:"Lauterbrunnen 轉乘示意圖：BOB 車站與空中纜車山谷站相鄰，出站後過馬路即達纜車站",
+      zones:[{ label:"Lauterbrunnen 車站區", x:12, y:34, w:296, h:120 }],
+      nodes:[
+        { id:"bob", label:"BOB 抵達月台", x:74, y:74, icon:"🚆", status:"current" },
+        { id:"exit", label:"站前出口", x:74, y:122, icon:"🚶", status:"current" },
+        { id:"cable", label:"纜車山谷站\n(aerial cableway)", x:236, y:122, icon:"🚡", status:"current" },
+        { id:"gru", label:"→ Grütschalp", x:236, y:66, icon:"⛰️", status:"current" }
+      ],
+      links:[
+        { from:"bob", to:"exit", style:"level", label:"下車出站" },
+        { from:"exit", to:"cable", style:"walk", label:"過馬路・車站正對面" },
+        { from:"cable", to:"gru", style:"transport", label:"空中纜車約 4 分" }
+      ],
+      pendingLabels:["月台號碼＝當日 SBB App"]
+    }
+  },
+  grutschalp_transfer: {
+    id:"grutschalp_transfer", title:"Grütschalp · 纜車 ↔ BLM 月台轉乘",
+    type:"transfer", priority:"P0", relatedDays:[6],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"純轉乘點：纜車與 BLM 小火車在同一站體銜接，不需離站。",
+    diagram:[
+      { node:"纜車抵達 Grütschalp", note:"出車廂即為轉乘層" },
+      { node:"BLM 月台", note:"同站體、步行極短" },
+      { node:"往 Mürren（或回 Lauterbrunnen）", note:"看車頭方向標示" }
+    ],
+    steps:[
+      "同站體轉乘，不需要出站或走遠路",
+      "上行往 Mürren、下行回 Lauterbrunnen，以車頭／月台標示確認方向",
+      "此站僅為轉乘節點，無市鎮設施，不安排停留"
+    ],
+    pendingNotes:["班次銜接依當日實際 timetable"],
+    officialLinks:[
+      { label:"BLM Grütschalp 轉乘（纜車↔鐵道官方說明）", url:"https://www.jungfrau.ch/de-ch/unternehmen/jungfraubahnen/jungfraubahn-holding-ag/bergbahn-lauterbrunnen-muerren-ag/" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Gr%C3%BCtschalp",
+    schematic:{
+      layout:"transfer", viewBox:"0 0 320 176",
+      ariaLabel:"Grütschalp 轉乘示意圖：纜車與 BLM 月台同一站體，步行極短，非村鎮",
+      zones:[{ label:"Grütschalp 同一站體（轉乘節點・無村鎮設施）", x:12, y:30, w:296, h:104 }],
+      nodes:[
+        { id:"cab", label:"纜車抵達", x:78, y:84, icon:"🚡", status:"current" },
+        { id:"blm", label:"BLM 月台", x:232, y:84, icon:"🚆", status:"current" }
+      ],
+      links:[{ from:"cab", to:"blm", style:"walk", label:"同站體・步行極短" }],
+      pendingLabels:["班次銜接＝當日 timetable"]
+    }
+  },
+  murren_orientation: {
+    id:"murren_orientation", title:"Mürren 村 · 定位（BLM ↔ Allmendhubelbahn）",
+    type:"town", priority:"P0", relatedDays:[6],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"無車山村；主要動線為 BLM 站 → 主街 Dorfstrasse → Allmendhubel 纜車站。",
+    diagram:[
+      { node:"Mürren BLM 站", note:"村子一端" },
+      { node:"主街 Dorfstrasse", note:"沿街走即可貫穿村子" },
+      { node:"Allmendhubelbahn 站", note:"村子另一端，往 Flower Park" },
+      { node:"Allmendhubel 山上", note:"Flower Park（家庭核心）" }
+    ],
+    steps:[
+      "村內無車，但非全平坦：部分路段有坡度、不平或碎石，推車依現場調整",
+      "BLM 站與 Allmendhubel 纜車站分居村子兩端，步行約 5–10 分鐘",
+      "回程：funicular 下山後步行約 5–10 分鐘回 BLM 站，搭下一班往 Grütschalp",
+      "Flower Trail 依當日路況與推車狀況決定是否走完整圈，走不完不影響核心體驗"
+    ],
+    pendingNotes:["Allmendhubel 纜車 2027 營運季節與班距依 Schilthorn 官方"],
+    officialLinks:[
+      { label:"Schilthorn 時刻表與票價（含 Mürren–Allmendhubel）", url:"https://schilthorn.ch/en/Infos/Timetable__and__Tariff" },
+      { label:"BLM Lauterbrunnen–Grütschalp–Mürren 官方說明", url:"https://www.jungfrau.ch/de-ch/unternehmen/jungfraubahnen/jungfraubahn-holding-ag/bergbahn-lauterbrunnen-muerren-ag/" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=M%C3%BCrren",
+    schematic:{
+      layout:"town", viewBox:"0 0 320 250",
+      ariaLabel:"Mürren 村定位示意圖：BLM 車站在村子一端，沿主街 Dorfstrasse 貫穿村中心，Allmendhubel 纜車站在另一端，往上為 Flower Park",
+      zones:[{ label:"Mürren 村（無車山村・南北向村軸）", x:12, y:30, w:296, h:196 }],
+      axis:{ label:"Dorfstrasse 主街步行軸線", from:"blm", to:"allm" },
+      nodes:[
+        { id:"blm", label:"Mürren BLM 站", x:70, y:196, icon:"🚆", status:"current", note:"村子一端（下方／downhill）" },
+        { id:"centre", label:"村中心\nDorfstrasse", x:160, y:140, icon:"🏘️", status:"current", note:"商店・餐廳" },
+        { id:"allm", label:"Allmendhubelbahn\n纜車站", x:250, y:88, icon:"🚡", status:"current", note:"村子另一端（上方／uphill）" },
+        { id:"flower", label:"Flower Park\n（山上）", x:250, y:44, icon:"🌼", status:"current" }
+      ],
+      links:[
+        { from:"blm", to:"centre", style:"walk", label:"沿主街・約 5–10 分" },
+        { from:"centre", to:"allm", style:"walk", label:"續行至另一端" },
+        { from:"allm", to:"flower", style:"transport", label:"funicular 上山" }
+      ],
+      pendingLabels:["纜車營運季節／班距依 Schilthorn 官方"]
+    }
+  },
+
+  // ── P0-5 ─────────────────────────────────────────────
+  brienz_boat_brb: {
+    id:"brienz_boat_brb", title:"Brienz · 遊船碼頭 → BRB 齒軌起點",
+    type:"transfer", priority:"P0", relatedDays:[10],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"Day 10 由湖上遊船抵 Brienz 後轉乘 BRB 上 Brienzer Rothorn；重點是不要跑錯碼頭／車站。",
+    diagram:[
+      { node:"遊船抵達 Brienz 碼頭（Schiffstation）", note:"湖畔" },
+      { node:"Brienz 火車站（SBB）", note:"碼頭對面／相鄰" },
+      { node:"BRB 起點站", note:"⚠️ BRB 為獨立站體，緊鄰 SBB 站" },
+      { node:"BRB 上山 → Brienzer Rothorn", note:"蒸汽／柴油齒軌" }
+    ],
+    steps:[
+      "Brienz 有『碼頭 / SBB 車站 / BRB 站』三個節點且彼此很近——認明 BRB 專屬站體再排隊",
+      "BRB 非 SBB 月台，走錯會誤以為班次取消",
+      "下船到 BRB 需要 buffer；船班誤點會直接影響上山班次",
+      "BRB 為 Day 10 主線：木雕村僅為 Optional Bonus，不得壓縮 BRB"
+    ],
+    pendingNotes:["BRB 2027 timetable／營運季節／班次為 Pending，出發前依 brienz-rothorn-bahn.ch 確認"],
+    officialLinks:[
+      { label:"BRB 時刻表與票價（含營運季節）", url:"https://brienz-rothorn-bahn.ch/en/fahrplan-preise/" },
+      { label:"BRB 常見問題（含碼頭／車站相對位置）", url:"https://brienz-rothorn-bahn.ch/en/fragen-und-antworten/" },
+      { label:"BLS 湖上遊船（Brienzersee）", url:"https://www.bls.ch/en/freizeit/schifffahrt/brienzersee" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Brienz+Rothorn+Bahn+station",
+    schematic:{
+      layout:"transfer", viewBox:"0 0 320 220",
+      ariaLabel:"Brienz 轉乘示意圖：湖畔碼頭、SBB 車站與 BRB 車站三者相鄰但為不同站體，BRB 有專屬站體不可誤認為 SBB 月台",
+      zones:[
+        { label:"湖畔側", x:12, y:26, w:296, h:56 },
+        { label:"車站區（三個節點相鄰但不同站體）", x:12, y:96, w:296, h:104 }
+      ],
+      nodes:[
+        { id:"pier", label:"遊船碼頭\nSchiffstation", x:160, y:54, icon:"⛴️", status:"current" },
+        { id:"sbb", label:"Brienz SBB 車站", x:80, y:150, icon:"🚆", status:"current", note:"⚠️ 非 BRB" },
+        { id:"brb", label:"BRB 起點站\n（獨立站體）", x:244, y:150, icon:"🚂", status:"current", note:"⚠️ 認明 BRB 專屬站體" }
+      ],
+      links:[
+        { from:"pier", to:"sbb", style:"walk", label:"下船・步行極短" },
+        { from:"sbb", to:"brb", style:"walk", label:"緊鄰但站體不同" },
+        { from:"pier", to:"brb", style:"walk", label:"直接前往 BRB" }
+      ],
+      pendingLabels:["BRB 2027 timetable／營運季節 Pending・預留下船轉乘 buffer"]
+    }
+  },
+
+  // ── P0-6 ─────────────────────────────────────────────
+  zurich_airport: {
+    id:"zurich_airport", title:"Zürich Flughafen · 領行李 → 報到 → 安檢 → 登機門",
+    type:"station", priority:"P0", relatedDays:[11],
+    status:"pending", offlineAvailable:true, lastVerified:"2026-08",
+    description:"Day 11 離境流程節點順序；櫃台／航廈／Gate 一律不預先鎖定。",
+    diagram:[
+      { node:"Zürich Flughafen 火車站（地下）", note:"列車抵達" },
+      { node:"SBB 行李領取", note:"領回 Day 8 寄出的 5 件" },
+      { node:"Emirates 報到櫃台", note:"櫃台號依當日看板／App" },
+      { node:"護照查驗 / 安檢", note:"T-90 為管理基準" },
+      { node:"登機門 Gate", note:"Gate 依登機證／App／現場" }
+    ],
+    steps:[
+      "順序固定：火車站 → SBB 行李領取 → Emirates 報到 → 護照/安檢 → Gate",
+      "T-90（約 14:00）＝ passport／security 管理基準，非全球統一的實體 bag-drop 硬截止",
+      "T-60（約 14:30）＝ Economy 抵達 Gate 的管理基準",
+      "推車處理方式依當日櫃台指示（可能託運或到 Gate 前交付），不預設固定流程"
+    ],
+    pendingNotes:["Emirates 報到櫃台／航廈／Gate／實際航班時刻皆為 2027 Pending，依 boarding pass、Emirates App 與 ZRH 現場為準"],
+    officialLinks:[
+      { label:"ZRH 互動式機場地圖（現行官方）", url:"https://www.flughafen-zuerich.ch/en/passengers/practical/guidance/interactive-map" },
+      { label:"ZRH 航空公司報到區資訊（Check-in 1/2/3）", url:"https://www.flughafen-zuerich.ch/en/passengers/fly/flightinformation/airlines" },
+      { label:"Emirates 報到與行李規定", url:"https://www.emirates.com/english/before-you-fly/baggage/" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Zurich+Airport",
+    schematic:{
+      layout:"station", viewBox:"0 0 320 288",
+      ariaLabel:"蘇黎世機場離境示意圖：地下火車站往上至機場中心，先領 SBB 行李，再至報到區、護照安檢，最後前往登機門；報到櫃台與登機門為 2027 待確認",
+      zones:[
+        { label:"地下層：火車站", x:12, y:20, w:296, h:44 },
+        { label:"Airport Center / 報到層", x:12, y:78, w:296, h:132 },
+        { label:"管制區：安檢後", x:12, y:224, w:296, h:52 }
+      ],
+      nodes:[
+        { id:"rail", label:"Zürich Flughafen 火車站", x:160, y:42, icon:"🚆", status:"current" },
+        { id:"center", label:"Airport Center", x:160, y:100, icon:"🏛️", status:"current" },
+        { id:"lug", label:"SBB 行李領取", x:74, y:150, icon:"🛅", status:"current", note:"領回 Day 8 寄出 5 件" },
+        { id:"chk", label:"Emirates 報到", x:246, y:150, icon:"🛄", status:"pending", note:"櫃台／航廈 2027 Pending" },
+        { id:"sec", label:"護照查驗／安檢", x:160, y:196, icon:"🛂", status:"current", note:"T-90 管理基準" },
+        { id:"gate", label:"登機門 Gate", x:160, y:250, icon:"✈️", status:"pending", note:"登機門號碼＝2027 Pending（依登機證／App）" }
+      ],
+      links:[
+        { from:"rail", to:"center", style:"level", label:"往上至機場中心" },
+        { from:"center", to:"lug", style:"walk", label:"先領行李" },
+        { from:"center", to:"chk", style:"walk", label:"再報到" },
+        { from:"chk", to:"sec", style:"walk", label:"T-90 前完成" },
+        { from:"sec", to:"gate", style:"walk", label:"T-60 抵 Gate" }
+      ],
+      pendingLabels:["Emirates 櫃台／航廈／Gate／推車處理程序＝2027 Pending"]
+    }
+  },
+
+  // ── Daily Journey Flow（Map Type B）──────────────────
+  day6_flow: {
+    id:"day6_flow", title:"Day 6 移動鏈 · Lauterbrunnen ↔ Mürren ↔ Allmendhubel",
+    type:"route", priority:"P0", relatedDays:[6],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"當日整條移動鏈（去程與回程為同一順序反向）。",
+    diagram:[
+      { node:"Lauterbrunnen" },{ node:"Grütschalp" },{ node:"Mürren BLM" },
+      { node:"Mürren village" },{ node:"Allmendhubel funicular" },{ node:"Flower Park" },
+      { node:"Mürren BLM" },{ node:"Grütschalp" },{ node:"Lauterbrunnen" }
+    ],
+    steps:["核心為 Lauterbrunnen → Mürren → Allmendhubel，不是 Lauterbrunnen 平地行程","回程為同一鏈反向，不硬綁固定班次"],
+    pendingNotes:["各段班距依 2027 Jungfrau／SBB timetable"],
+    officialLinks:[
+      { label:"BLM Lauterbrunnen–Grütschalp–Mürren 官方說明", url:"https://www.jungfrau.ch/de-ch/unternehmen/jungfraubahnen/jungfraubahn-holding-ag/bergbahn-lauterbrunnen-muerren-ag/" },
+      { label:"Schilthorn 時刻表與票價（Mürren–Allmendhubel）", url:"https://schilthorn.ch/en/Infos/Timetable__and__Tariff" }
+    ],
+    externalMap:""
+  },
+  day10_flow: {
+    id:"day10_flow", title:"Day 10 移動鏈 · Brienz 湖船 + BRB",
+    type:"route", priority:"P0", relatedDays:[10],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"當日主線；木雕村為 Optional Bonus，不在主鏈上。",
+    diagram:[
+      { node:"Grindelwald" },{ node:"Interlaken Ost" },{ node:"Boat（湖上遊船）" },
+      { node:"Brienz" },{ node:"BRB" },{ node:"Brienzer Rothorn" },
+      { node:"Brienz" },{ node:"Grindelwald" },{ node:"Barry's" }
+    ],
+    steps:["BRB 為主線，受保護不得被壓縮","木雕村＝Optional Bonus，僅 buffer 充足時執行"],
+    pendingNotes:["BRB 2027 timetable Pending"],
+    officialLinks:[
+      { label:"BRB 時刻表與票價（含營運季節）", url:"https://brienz-rothorn-bahn.ch/en/fahrplan-preise/" },
+      { label:"BLS 湖上遊船（Brienzersee）", url:"https://www.bls.ch/en/freizeit/schifffahrt/brienzersee" }
+    ],
+    externalMap:""
+  }
+};
+
+// Day → map guide id（供 Day 頁「查看轉乘示意」使用）
+const DAY_MAP_LINKS = {
+  3:["luzern_station"],
+  5:["interlaken_ost","grindelwald_station"],
+  6:["day6_flow","lauterbrunnen_transfer","grutschalp_transfer","murren_orientation"],
+  8:["grindelwald_station"],
+  9:["grindelwald_station"],
+  10:["day10_flow","brienz_boat_brb"],
+  11:["grindelwald_station","zurich_airport"]
+};
+
 const BOOKINGS = [
   { when:"✅ 已完成 (出發前確認)", task:"KoBi Hirschenplatz 訂房後確認", how:"✅ 已完成訂房並收到 Booking.com 確認信（Two-Bedroom Apartment with Balcony，130 m²，2027/09/14 入住、09/18 退房共 4 晚）。實際訂房金額（原幣）CHF 2,702.16；NT$ 125,000 為既有預算／規劃基準，非 Booking.com 實際訂單金額。免費取消至 2027/8/30 23:59（Booking 確認）。付款狀態／時間待人工確認。保留憑證 PDF 與紙本。", priority:"🟢 建議" },
   { when:"✅ 已完成 (出發前確認)", task:"Sans Souci W1 by Interhome — 出發前 operational 確認", how:"✅ 已完成訂房（Apartment Sans Souci W1 by Interhome，108 m²，2027/09/18-24 共 6 晚）。實際訂房金額 CHF 2,691.01（原幣）；城市稅 CHF 156 由住宿方現場另收。出發前透過 Booking Messages／Interhome 確認：免費取消條件、付款期限、精確門牌地址、key pickup 領鑰匙、key return 還鑰匙、17:00 後 late check-in、床欄（bed rail）、紗窗（insect screens）。押金／取消／付款期限尚待確認（原 CHF 400／2027/7/20／2027/7/18 為下訂前參考，已不適用）。", priority:"🟡 重要" },
@@ -2186,14 +2622,14 @@ const BOOKINGS = [
   { when:"🔴 機票鎖價（2026/11 雙11、黑五）", task:"🥇 EK 機票搶優惠", how:"目標 NT$ 33,000-38,000/人來回；托運 Weight Concept（依 fare 20-35kg/人）；4 大 + 妞妞 2 歲半兒童座位", priority:"🔴 必做" },
   { when:"🔵 T-3~4 個月 (2027/5-6)", task:"旅遊保險", how:"醫療給付建議 EUR 30,000 以上（風險管理與旅遊保障需求；EUR 30,000 為申根簽證申請人的強制門檻，本團為台灣護照免簽入境不受此強制，但仍強烈建議此額度）", priority:"🔴 必做" },
   { when:"🔵 T-3 個月 (2027/6)", task:"🚂 Pilatus 齒軌線上預約", how:"Day 4 行程主菜，pilatus.ch 線上預約。⚠️ 交通票券與座位預約應分開確認：持有效交通票券仍可能需要另外辦理／購買座位預約；不視為 Golden Round Trip 套票自動含齒軌座位，實際 2027 規則與預約方式於開放後再次確認。旺季週末易爆滿，建議出發前 3 個月鎖定。座位預約費現行約 CHF 5/人。", priority:"🟡 重要" },
-  { when:"🟢 T-2 個月 (2027/7)", task:"🚂 票券方案最終比較與購買（基準：STP 15 天版）", how:"15 天版 STP 為目前基準方案，非唯一方案。待 2027 官方票價與購票開放時程公布後，與 8 天版 STP＋其餘單買、Swiss Half Fare Card＋單買比較總成本後鎖定並購買（sbb.ch / swissrailways.com）。不預設固定天數的官方購買限制。4 大人購買，妞妞 6 歲以下免費。預算暫採 CHF 515/成人（2027 實際售價公布後重算）", priority:"🔴 必做" },
+  { when:"🟢 T-2 個月 (2027/7)", task:"🚂 票券購買（既定主方案：STP 15 天版）", how:"15 天版 STP 為既定主方案。待 2027 官方票價與購票開放時程公布後，僅更新售價／適用範圍／規則並購買，不重新比較票券方案。（歷史比較說明：與 8 天版 STP＋其餘單買、Swiss Half Fare Card＋單買比較總成本後鎖定並購買（sbb.ch / swissrailways.com）。不預設固定天數的官方購買限制。4 大人購買，妞妞 6 歲以下免費。預算暫採 CHF 515/成人（2027 實際售價公布後重算）", priority:"🔴 必做" },
   { when:"🔵 T-2 個月 (2027/7)", task:"🥇 Brienz Rothorn（BRB）班次預約", how:"brienz-rothorn-bahn.ch Webshop。2027 官方時刻表公布後決定；2026 官方班次為 07:36、08:36、09:40、10:45、11:45、12:58、13:58、14:58、16:36（非每小時等距）。STP 半價 CHF 49-50 + 座位保證 CHF 8/人，妞妞 6 歲以下免費不佔位", priority:"🔴 必做" },
   { when:"🟡 T-1.5~2 個月 (2027/7 底)", task:"🥇 Barry's Restaurant 訂位", how:"2027/9/23 (四) 19:00 4 大 1 小，備註 kein Alkohol（若因 BRB 實際班表返家過晚，改 19:30 或延後）", priority:"🔴 必做" },
   { when:"🟡 T-1 個月 (2027/8)", task:"LIE（Luzern-Interlaken Express）座位預約", how:"透過 Zentralbahn 官方指定座位預約系統辦理；2027/9 預約費率待官方公布；STP 涵蓋列車本身，座位預約費另計；未預約仍可持 STP 搭乘但不保證座位（備援）", priority:"🟡 建議" },
   { when:"🟡 T-1 個月 (2027/8)", task:"採購裝備與耗材", how:"妞妞健行鞋、防曬乳、瑞士轉接頭、行動電源", priority:"🟡 重要" },
   { when:"🟡 T-2 週 (2027/8 底)", task:"兒童藥品備齊", how:"退燒、止瀉、止癢、體溫計、防蚊液", priority:"🔴 必做" },
   { when:"⚫ T-2 天 (2027/9/11)", task:"SBB 行李寄送分裝", how:"5 件大行李 Day 3 早上寄琉森車站至 Grindelwald；主方案共 CHF 120（5 件 × CHF 12 × 2 段）", priority:"🟡 重要" },
-  { when:"🔴 旅程中 · Day 3 (9/16)", task:"🛅 SBB 行李寄送 Round 1（琉森→Grindelwald）", how:"07:00 琉森車站 Luggage dispatch，5 件寄至 Grindelwald，現行 CHF 60", priority:"🔴 必做" },
+  { when:"🔴 旅程中 · Day 3 (9/16)", task:"🛅 SBB 行李寄送 Round 1（琉森→Grindelwald）", how:"約 07:45 出發 → 08:00 SBB Luzern luggage counter 開門後辦理，5 件 Station-to-Station 寄至 Grindelwald，約 08:20–08:30 完成，現行 CHF 60（2027 營業時間出發前再確認）", priority:"🔴 必做" },
   { when:"🔴 旅程中 · Day 8 (9/21)", task:"🛅 SBB 行李寄送 Round 2（Grindelwald→ZRH 機場）", how:"上午於 Grindelwald 車站 luggage counter 寄送 5 件至 Zürich Flughafen，現行 CHF 60（CHF 12/件）。⚠️ 該站實際開放時段依 sbb.ch 分站頁為準。今日交件、後天領取（SBB 官方措辭，不是 2 工作天）", priority:"🔴 必做" }
 ];
 

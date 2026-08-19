@@ -52,10 +52,12 @@ console.log("=".repeat(84));
 
 // ── 版本（current V21.7d）─────────────────────────────────
 console.log("\n【版本 · current V21.7d】");
-t("TRIP_META.version 為 V21.7d（基於 V21.4a）", () =>
-  ctx.TRIP_META.version === "V21.7d Web · 基於 V21.4a 行程資料" || ctx.TRIP_META.version);
+t("TRIP_META.version 為 V21.8c（行程資料 V21.4g）", () =>
+  ctx.TRIP_META.version === "V21.8c Web · 行程資料 V21.4g" || ctx.TRIP_META.version);
+t("webAppVersion = V21.8c 且 itineraryVersion = V21.4g（兩條版本線分開）", () =>
+  ctx.TRIP_META.webAppVersion === "V21.8c" && ctx.TRIP_META.itineraryVersion === "V21.4g");
 t("CACHE_NAME 為 v21-7d-final-accsync（current deployment revision）", () =>
-  /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-final-accsync-r2-2027"\s*;/.test(swSrc));
+  /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c-v21-4g-final-residual-seal-2027"\s*;/.test(swSrc));
 t("current CACHE_NAME const 不再是初次 v21-7d（舊 cache 僅存於註解/遷移）", () =>
   !/const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-2027"\s*;/.test(swSrc));
 t("user-facing 不再出現「基於 V21.3b 行程資料」", () =>
@@ -111,13 +113,14 @@ t("Sans Souci BOOKINGS 標示已完成訂房（非待使用者確認）", () => 
 
 // ── STP ─────────────────────────────────────────────────
 console.log("\n【STP】");
-t("STP = baseline（不是唯一方案）", () => {
+// V21.4g（A09）：15-day STP 為既定主方案；2027 僅更新售價／範圍／規則，不重開票券比較
+t("STP = 既定主方案（V21.4g）", () => {
   const p = ctx.PENDING_2027.find(x => x.id === "stp_2027_price");
-  return !!p && /基準方案|baseline/i.test(p.note);
+  return !!p && /既定主方案/.test(p.note);
 });
-t("STP PENDING 保留 2027 最終比較", () => {
+t("STP PENDING 不再要求 2027 重新比較票券方案", () => {
   const p = ctx.PENDING_2027.find(x => x.id === "stp_2027_price");
-  return !!p && /8 天版|Half Fare/.test(p.note) && /比較/.test(p.note);
+  return !!p && /不重新進行票券方案比較/.test(p.note);
 });
 t("user-facing 無「STP 唯一方案」宣稱", () =>
   !/STP\s*(是|為)?\s*唯一方案/.test(allText));
@@ -174,13 +177,81 @@ t("B = bonus tier", () => {
   const b = d8plan.options.find(o => o.key === "B");
   return b.tier === "bonus" || b.tier;
 });
-t("A 含 Alpine Garden + 短版 Swiss Flower & Panorama Trail", () => {
+// ── V21.8b（C01）：Day 8 A 方案已同步 V21.4g；以下取代舊版 stale regression guard ──
+t("A 為家庭版主方案：含 Skywalk／Playground／Naturkino", () => {
   const a = JSON.stringify(d8plan.options.find(o => o.key === "A"));
-  return /Alpine Garden/.test(a) && /短版 Swiss Flower & Panorama Trail/.test(a);
+  return /Skywalk/.test(a) && /Alpine Playground/.test(a) && /Naturkino/.test(a);
 });
-t("A 為 12:30–12:45 收尾、13:00 餐廳午餐", () => {
+t("A：Alpine Garden 為最後 Optional，非家庭主核心", () => {
   const a = d8plan.options.find(o => o.key === "A");
-  return /12:30[-–]12:45/.test(JSON.stringify(a)) && /13:00/.test(a.lunchTime + JSON.stringify(a.lunchSteps));
+  return /Alpine Garden.{0,40}(放最後|Optional)/.test(JSON.stringify(a))
+      && !/^🌸 Alpine Garden ＋ 短版/.test(a.activityTitle);
+});
+t("A：display time = 11:15–下山前，無 stale 11:15–12:45", () => {
+  const a = d8plan.options.find(o => o.key === "A");
+  return a.activityTime === "11:15–下山前" && !/11:15[-–]12:45/.test(JSON.stringify(a));
+});
+t("A：engine time 可被 parser 解析（不破壞 lifecycle）", () => {
+  const a = d8plan.options.find(o => o.key === "A");
+  return /^\d{1,2}:\d{2}\s*[–-]\s*\d{1,2}:\d{2}/.test(a.activityEngineTime || "");
+});
+t("A：無 12:30–12:45 硬性收尾", () => {
+  const a = JSON.stringify(d8plan.options.find(o => o.key === "A"));
+  return !/12:30[-–]12:45/.test(a);
+});
+t("A：SPB 下山班次標為現行參考／2027 待確認（不偽裝已確認）", () => {
+  const a = JSON.stringify(d8plan.options.find(o => o.key === "A"));
+  return /現行參考/.test(a) && /2027/.test(a);
+});
+// ── §9：Day 8 cross-SSoT consistency（DAYS ↔ DAY_PLAN_CHOICES）──
+t("SSoT 一致：DAYS Day 8 與 plan A 皆含 Skywalk／Playground／Naturkino", () => {
+  const day8 = JSON.stringify(ctx.DAYS.find(d => d.day === 8));
+  const a = JSON.stringify(d8plan.options.find(o => o.key === "A"));
+  return ["Skywalk", "Alpine Playground", "Naturkino"].every(k => day8.includes(k) && a.includes(k));
+});
+t("SSoT 一致：兩處 Alpine Garden 皆為最後 Optional", () => {
+  const day8 = JSON.stringify(ctx.DAYS.find(d => d.day === 8));
+  const a = JSON.stringify(d8plan.options.find(o => o.key === "A"));
+  return /Alpine Garden.{0,40}(放最後|Optional)/.test(day8) && /Alpine Garden.{0,40}(放最後|Optional)/.test(a);
+});
+t("SSoT 一致：全檔 runtime 無 stale 11:15–12:45", () => {
+  const all = JSON.stringify(ctx.DAYS) + JSON.stringify(ctx.DAY_PLAN_CHOICES);
+  return !/11:15[-–]12:45/.test(all);
+});
+t("SSoT 一致：全檔 runtime 無「Alpine Garden ＋ 短版 Swiss Flower」主方案敘述", () => {
+  const all = JSON.stringify(ctx.DAYS) + JSON.stringify(ctx.DAY_PLAN_CHOICES);
+  return !/Alpine Garden ＋ 短版 Swiss Flower/.test(all);
+});
+// ══ V21.8c Final Residual guards（R01 / R02）══
+// §4：必須同時檢查 DAYS 與 DAY_PLAN_CHOICES，避免單邊 SSoT 更新
+t("R01：DAYS Day 8 無 stale 12:30–12:45", () =>
+  !/12:30[–-]12:45/.test(JSON.stringify(ctx.DAYS.find(d => d.day === 8))));
+t("R01：DAY_PLAN_CHOICES 無 stale 12:30–12:45", () =>
+  !/12:30[–-]12:45/.test(JSON.stringify(ctx.DAY_PLAN_CHOICES)));
+t("R01：Day 8 保留彈性午餐 12:30–13:00（DAYS 或 plan option）", () => {
+  const both = JSON.stringify(ctx.DAYS.find(d => d.day === 8)) + JSON.stringify(ctx.DAY_PLAN_CHOICES);
+  return /12:30[–-]13:00/.test(both);
+});
+t("R01：Day 8 午餐敘述為彈性、非硬性截止", () => {
+  const both = JSON.stringify(ctx.DAYS.find(d => d.day === 8)) + JSON.stringify(ctx.DAY_PLAN_CHOICES);
+  return /非硬性截止/.test(both) && /彈性/.test(both);
+});
+t("R02：Day 8 無「妞妞回木屋午睡」hard-coded wording", () =>
+  !/妞妞回木屋午睡/.test(JSON.stringify(ctx.DAYS.find(d => d.day === 8))));
+t("R02：Day 8 無「一定／固定回去午睡」式敘述", () => {
+  const d8 = JSON.stringify(ctx.DAYS.find(d => d.day === 8));
+  return !/(一定|固定).{0,6}午睡/.test(d8);
+});
+t("R02：Day 8 午睡改為依當日狀態彈性決定", () => {
+  const d8 = JSON.stringify(ctx.DAYS.find(d => d.day === 8));
+  return /是否午睡/.test(d8) && /(依當日|彈性決定)/.test(d8);
+});
+t("R02：Day 8 town block 以「回公寓休息」為主安排", () =>
+  /回公寓休息/.test(JSON.stringify(ctx.DAYS.find(d => d.day === 8))));
+
+t("SSoT 一致：DAYS Day 8 顯示 11:15–下山前", () => {
+  const day8 = JSON.stringify(ctx.DAYS.find(d => d.day === 8));
+  return /11:15–下山前/.test(day8);
 });
 t("A 推車非無障礙保證", () => {
   const a = JSON.stringify(d8plan.options.find(o => o.key === "A"));
@@ -313,9 +384,19 @@ t("Day 6 保守化：不再宣稱完全平坦 / 固定分鐘走完全村", () =>
   const d6 = JSON.stringify(ctx.DAYS[5]);
   return !/完全平坦/.test(d6) && !/15 分鐘走完/.test(d6);
 });
-t("Day 2 Rigi 推車保守化（不概括宣稱適合推車）", () => {
+// V21.4g（A03/M08）：Kulm→Kaltbad Default＝齒軌火車，步行降為 Optional
+t("Day 2 Rigi：齒軌火車為 Default、步行為 Optional", () => {
   const d2 = JSON.stringify(ctx.DAYS[1]);
-  return /依當日選定步道路線與路況判斷/.test(d2) && !/適合推推車散步/.test(d2);
+  return /Default/.test(d2) && /Optional/.test(d2) && !/走碎石坡/.test(d2) && !/適合推推車散步/.test(d2);
+});
+t("Day 2 Rigi：不再把 2.5km 下坡健行當 Must-do 主行程", () => {
+  const d2 = JSON.stringify(ctx.DAYS[1]);
+  return !/下山第一段：下坡健行/.test(d2);
+});
+t("Day 2：獅子紀念碑已移出 Day 2 回程（正式在 Day 3）", () => {
+  const d2 = JSON.stringify(ctx.DAYS[1].tl);
+  const d3 = JSON.stringify(ctx.DAYS[2].tl);
+  return !/title:"獅子紀念碑/.test(d2) && /Kapellbrücke|卡貝爾木橋/.test(d2) && /獅子紀念碑/.test(d3);
 });
 t("Day 4 Pilatus：交通票券 ≠ seat reservation", () => {
   const p = ctx.PENDING_2027.find(x => x.id === "pilatus_2027");
@@ -501,13 +582,13 @@ console.log("\n【V21.7b · 版本（歷史 regression guard）】");
 t("TRIP_META.version 已前進、非停留 V21.7b", () =>
   ctx.TRIP_META.version !== "V21.7b Web · 基於 V21.4a 行程資料" || ctx.TRIP_META.version);
 t("CACHE_NAME 已離開 v21-7b（現為 v21-7d-final）", () =>
-  !swSrc.includes('"swiss-trip-v21-7b-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-final-accsync-r2-2027"\s*;/.test(swSrc));
+  !swSrc.includes('"swiss-trip-v21-7b-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c-v21-4g-final-residual-seal-2027"\s*;/.test(swSrc));
 
 console.log("\n【V21.7c · 版本（歷史 regression guard）】");
 t("TRIP_META.version 已前進、非停留 V21.7c", () =>
   ctx.TRIP_META.version !== "V21.7c Web · 基於 V21.4a 行程資料" || ctx.TRIP_META.version);
 t("CACHE_NAME 已離開 v21-7c（現為 v21-7d-final）", () =>
-  !swSrc.includes('"swiss-trip-v21-7c-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-final-accsync-r2-2027"\s*;/.test(swSrc));
+  !swSrc.includes('"swiss-trip-v21-7c-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c-v21-4g-final-residual-seal-2027"\s*;/.test(swSrc));
 t("無舊 CACHE swiss-trip-v21-7a / -7b / -7c-2027（current 僅 v21-7d-final）", () =>
   !/swiss-trip-v21-7a-2027|swiss-trip-v21-7b-2027|swiss-trip-v21-7c-2027/.test(swSrc + dataSrc + appSrc));
 

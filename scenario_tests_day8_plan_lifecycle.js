@@ -38,6 +38,7 @@ const setMock = v => { _mockHM = v; };
 
 // ── 抽出真實 app.js 引擎函式 ──────────────────────────────
 eval(appSrc.match(/function planRoleTimeKeys\([\s\S]*?\n}/)[0]);
+eval(appSrc.match(/function planRoleEngineTime\([\s\S]*?\n}/)[0]);   // V21.8b：display/engine time 分離
 eval(appSrc.match(/function parseTimelineTime\([\s\S]*?\n}/)[0]);
 eval(appSrc.match(/function planActivationStartMin\([\s\S]*?\n}/)[0]);
 eval(appSrc.match(/function planActivationEndMin\([\s\S]*?\n}/)[0]);
@@ -180,9 +181,12 @@ const optA = PLAN.options.find(o => o.key === "A");
 
 run("D1 · A · 08:30 → 共同行程正常", "08:30", A, "in_range",
   cn => /行李寄送/.test(cn.current.title) ? true : `實得 ${cn.current.title}`);
-run("D2 · A · 12:00 → activity（Alpine Garden）", "12:00", A, "in_range",
-  cn => cn.current.time === optA.activityTime && /Alpine Garden/.test(cn.current.title)
-        ? true : `應為 ${optA.activityTime}，實得 ${cn.current.time}`);
+// V21.8b：A 方案已同步 V21.4g（家庭版主方案；display=11:15–下山前 / engine=11:15–13:00）
+run("D2 · A · 12:00 → activity（家庭版主方案・非 Alpine Garden 主核心）", "12:00", A, "in_range",
+  cn => cn.current.time === planRoleEngineTime(optA, "activityTime")
+        && /家庭版主方案|Skywalk/.test(cn.current.title)
+        && !/^🌸 Alpine Garden ＋ 短版/.test(cn.current.title)
+        ? true : `應為 ${planRoleEngineTime(optA, "activityTime")}，實得 ${cn.current.time} / ${cn.current.title}`);
 run("D3 · A · 13:30 → lunch（餐廳）", "13:30", A, "in_range",
   cn => cn.current.time === optA.lunchTime ? true : `應為 ${optA.lunchTime}，實得 ${cn.current.time}`);
 run("D4 · A · 15:00 → descent（14:30 下山）", "15:00", A, "in_range",
