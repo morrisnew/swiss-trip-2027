@@ -1063,13 +1063,13 @@ function renderDay() {
 
   // V21.6 · P11：Day 5 LIE 座位預約資訊卡（Day 卡片本身也要有 Current / Pending badge）
   const lieCard = (idx === 4) ? `
-    <div class="card" style="background:linear-gradient(135deg,#EFF6FF,#F8FAFC); border:1px solid #93C5FD; border-left:4px solid var(--jungfrau-blue);">
+    <div class="card lie-reservation-card">
       <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
-        <div style="font-weight:800; font-size:14px; color:var(--jungfrau-blue);">🚂 LIE 座位預約</div>
+        <div class="lie-title" style="font-weight:800; font-size:14px;">🚂 LIE 座位預約</div>
         ${renderStatusBadge("current", "現行官方規則")}
         ${renderStatusBadge("pending", "2027/9 費率待公布")}
       </div>
-      <div style="font-size:12px; color:var(--text); line-height:1.75;">
+      <div class="lie-body" style="font-size:12px; line-height:1.75;">
         <div>• 座位預約用於<strong>確保座位</strong>，不是搭乘的必要條件</div>
         <div>• 持 STP 即可搭乘（Zentralbahn 官方：本線全額包含於 STP）</div>
         <div>• 主方案：透過 <strong>Zentralbahn 官方指定座位預約系統</strong>預約相連座位</div>
@@ -1078,7 +1078,7 @@ function renderDay() {
         <div>• 官方現行預約費參考：2026/5/2–11/1 CHF 16；2027 費率待公布</div>
       </div>
       <a href="${EXT_LINKS.lieOfficial}" target="_blank" rel="noopener noreferrer" data-ext-link
-         style="display:inline-block; margin-top:10px; padding:6px 12px; font-size:11px; font-weight:700; border-radius:6px; background:var(--jungfrau-blue); color:#fff; text-decoration:none;">
+         class="lie-cta" style="display:inline-block; margin-top:10px; padding:6px 12px; font-size:11px; font-weight:700; border-radius:6px; text-decoration:none;">
         🔗 Zentralbahn 官方頁 ↗
       </a>
     </div>
@@ -1609,9 +1609,9 @@ function renderHotels() {
         ${featuresHTML}
         ${sleepHTML}
         ${h.houseRules && h.houseRules.length ? `
-          <div style="margin-top:12px; padding:12px; background:#EFF6FF; border:1px solid #93C5FD; border-radius:10px;">
+          <div class="info-panel-blue" style="margin-top:12px; padding:12px;">
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
-              <div style="font-weight:800; font-size:13px; color:var(--jungfrau-blue);">🔑 入住條件（訂房平台現行資訊）</div>
+              <div class="lie-title" style="font-weight:800; font-size:13px;">🔑 入住條件（訂房平台現行資訊）</div>
               ${renderStatusBadge("current", "訂房平台現行資訊")}
             </div>
             <div style="font-size:12px; color:var(--text); line-height:1.75;">
@@ -1800,17 +1800,41 @@ function svgNode(n) {
     </g>`;
 }
 
+// V21.8c1：link label placement polish
+// 預設依連線方向自動偏移（水平→上方；垂直→側邊；斜向→依方向法線），
+// 並可用 labelDx / labelDy（或 labelPosition）手動 override。文字加 halo 讓線不穿過字。
+function linkLabelOffset(l, a, b) {
+  if (typeof l.labelDx === "number" || typeof l.labelDy === "number") {
+    return { dx: l.labelDx || 0, dy: l.labelDy || 0, anchor: l.labelAnchor || "middle" };
+  }
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const horizontal = Math.abs(dx) >= Math.abs(dy) * 1.8;
+  const vertical   = Math.abs(dy) >= Math.abs(dx) * 1.8;
+  if (l.labelPosition === "above") return { dx: 0, dy: -8, anchor: "middle" };
+  if (l.labelPosition === "below") return { dx: 0, dy: 12, anchor: "middle" };
+  if (horizontal) return { dx: 0, dy: -8, anchor: "middle" };            // 水平線 → 標在上方
+  if (vertical)   return { dx: dy >= 0 ? 8 : -8, dy: 3,                   // 垂直線 → 標在側邊
+                           anchor: dy >= 0 ? "start" : "end" };
+  // 斜向 → 沿法線方向推開，避免壓線
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  return { dx: nx * 9, dy: ny * 9 + 3, anchor: nx >= 0 ? "start" : "end" };
+}
+
 function svgLink(l, byId) {
   const a = byId[l.from], b = byId[l.to];
   if (!a || !b) return "";
   const cfg = SCHEMATIC_LINK[l.style || "walk"] || SCHEMATIC_LINK.walk;
   const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  const off = linkLabelOffset(l, a, b);
   return `
     <g>
       <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"
             stroke="var(--text-muted)" stroke-width="1.4"
             ${cfg.dash ? `stroke-dasharray="${cfg.dash}"` : ""} marker-end="url(#schArrow)"></line>
-      ${l.label ? `<text x="${mx}" y="${my - 3}" text-anchor="middle" font-size="8.5"
+      ${l.label ? `<text x="${(mx + off.dx).toFixed(1)}" y="${(my + off.dy).toFixed(1)}"
+            text-anchor="${off.anchor}" font-size="8.5"
+            paint-order="stroke" stroke="var(--bg-elev)" stroke-width="3" stroke-linejoin="round"
             fill="var(--text-muted)">${escapeHTML(l.label)}</text>` : ""}
     </g>`;
 }
@@ -1933,6 +1957,17 @@ function renderMaps() {
     </div>`;
 }
 
+function buildFingerprintHTML() {
+  const web = TRIP_META.webAppVersion || "";
+  const itin = TRIP_META.itineraryVersion || "";
+  const build = TRIP_META.build || "";
+  return `
+    <div style="margin-top:14px; padding:8px 10px; border-top:1px solid var(--border); font-size:10.5px; color:var(--text-muted); line-height:1.6;">
+      <div>Web ${escapeHTML(web)}　·　Itinerary ${escapeHTML(itin)}</div>
+      <div>Build ${escapeHTML(build)}</div>
+    </div>`;
+}
+
 function renderTools() {
   const groups = [
     {
@@ -1984,6 +2019,7 @@ function renderTools() {
         </div>
       </div>
     `).join("")}
+    ${buildFingerprintHTML()}
   `;
 }
 

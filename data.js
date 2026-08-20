@@ -2,8 +2,9 @@
 const TRIP_META = {
   title: "瑞士旅行 2027",
   subtitle: "4 大 1 小・瑞士親子自由行",
-  version: "V21.8c Web · 行程資料 V21.4g",
-  webAppVersion: "V21.8c",
+  version: "V21.8c1 Web · 行程資料 V21.4g",
+  webAppVersion: "V21.8c1",
+  build: "V21.8c1-20260820",
   itineraryVersion: "V21.4g",
   departure: "2027-09-13",  // 台灣起飛
   arrival: "2027-09-14",    // 蘇黎世抵達
@@ -2247,8 +2248,8 @@ const MAP_GUIDES = {
       links:[
         { from:"entry", to:"hall", style:"walk", label:"進站" },
         { from:"hall", to:"lift", style:"level", label:"往上層" },
-        { from:"lift", to:"lug", style:"walk", label:"跟 Gepäck 指標" },
-        { from:"hall", to:"plat", style:"level", label:"往月台" }
+        { from:"lift", to:"lug", style:"walk", label:"跟 Gepäck 指標", labelDx:0, labelDy:-16 },
+        { from:"hall", to:"plat", style:"level", label:"往月台", labelDx:-46, labelDy:3, labelAnchor:"end" }
       ],
       pendingLabels:["櫃台實際樓層／位置 2027 verify"]
     }
@@ -2291,7 +2292,7 @@ const MAP_GUIDES = {
       ],
       links:[
         { from:"lie", to:"conc", style:"walk", label:"下車後留在站內" },
-        { from:"conc", to:"bob", style:"walk", label:"看電子看板找 BOB" },
+        { from:"conc", to:"bob", style:"walk", label:"看電子看板找 BOB", labelDx:-14, labelDy:6, labelAnchor:"end" },
         { from:"bob", to:"disp", style:"level", label:"上車前務必確認" }
       ],
       pendingLabels:["Platform ＝ day-of SBB App（不鎖固定號碼）"]
@@ -2558,7 +2559,7 @@ const MAP_GUIDES = {
         { from:"rail", to:"center", style:"level", label:"往上至機場中心" },
         { from:"center", to:"lug", style:"walk", label:"先領行李" },
         { from:"center", to:"chk", style:"walk", label:"再報到" },
-        { from:"chk", to:"sec", style:"walk", label:"T-90 前完成" },
+        { from:"chk", to:"sec", style:"walk", label:"T-90 前完成", labelDx:16, labelDy:8, labelAnchor:"start" },
         { from:"sec", to:"gate", style:"walk", label:"T-60 抵 Gate" }
       ],
       pendingLabels:["Emirates 櫃台／航廈／Gate／推車處理程序＝2027 Pending"]

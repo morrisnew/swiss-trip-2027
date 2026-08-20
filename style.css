@@ -42,6 +42,28 @@
   --accent: var(--jungfrau-blue);
 }
 
+/* V21.8c1 · LIE 座位預約卡 / 資訊面板：theme-aware（不再用固定淺色 inline gradient） */
+.lie-reservation-card {
+  background: linear-gradient(135deg, #EFF6FF, #F8FAFC);
+  border: 1px solid #93C5FD;
+  border-left: 4px solid var(--jungfrau-blue);
+  color: var(--text);
+}
+.info-panel-blue {
+  background: #EFF6FF;
+  border: 1px solid #93C5FD;
+  border-radius: 10px;
+  color: var(--text);
+}
+.lie-reservation-card .lie-title,
+.info-panel-blue .lie-title { color: var(--jungfrau-blue); }
+.lie-reservation-card .lie-body,
+.info-panel-blue .lie-body { color: var(--text); }
+.lie-reservation-card .lie-cta {
+  background: var(--jungfrau-blue);
+  color: #fff;
+}
+
 /* 深色模式 */
 @media (prefers-color-scheme: dark) {
   :root {
@@ -61,6 +83,24 @@
     /* V21.8b：深色模式的 elevated surface（與 --text #F1F5F9 對比充足） */
     --bg-elev: #141821;
     --accent: var(--jungfrau-blue);
+  }
+  /* V21.8c1：LIE / 資訊面板深色模式 — elevated surface + 淺色文字 + 藍色 accent */
+  .lie-reservation-card {
+    background: linear-gradient(135deg, #17233A, #141821);
+    border: 1px solid #2F4C7A;
+    border-left: 4px solid var(--jungfrau-blue-light, #7FB3F0);
+    color: var(--text);
+  }
+  .info-panel-blue {
+    background: #17233A;
+    border: 1px solid #2F4C7A;
+    color: var(--text);
+  }
+  .lie-reservation-card .lie-title,
+  .info-panel-blue .lie-title { color: var(--jungfrau-blue-light, #7FB3F0); }
+  .lie-reservation-card .lie-cta {
+    background: var(--jungfrau-blue-light, #7FB3F0);
+    color: #0B1220;
   }
 }
 

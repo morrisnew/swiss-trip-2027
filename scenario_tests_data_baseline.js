@@ -52,12 +52,12 @@ console.log("=".repeat(84));
 
 // ── 版本（current V21.7d）─────────────────────────────────
 console.log("\n【版本 · current V21.7d】");
-t("TRIP_META.version 為 V21.8c（行程資料 V21.4g）", () =>
-  ctx.TRIP_META.version === "V21.8c Web · 行程資料 V21.4g" || ctx.TRIP_META.version);
-t("webAppVersion = V21.8c 且 itineraryVersion = V21.4g（兩條版本線分開）", () =>
-  ctx.TRIP_META.webAppVersion === "V21.8c" && ctx.TRIP_META.itineraryVersion === "V21.4g");
+t("TRIP_META.version 為 V21.8c1（行程資料 V21.4g）", () =>
+  ctx.TRIP_META.version === "V21.8c1 Web · 行程資料 V21.4g" || ctx.TRIP_META.version);
+t("webAppVersion = V21.8c1 且 itineraryVersion = V21.4g（兩條版本線分開）", () =>
+  ctx.TRIP_META.webAppVersion === "V21.8c1" && ctx.TRIP_META.itineraryVersion === "V21.4g");
 t("CACHE_NAME 為 v21-7d-final-accsync（current deployment revision）", () =>
-  /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c-v21-4g-final-residual-seal-2027"\s*;/.test(swSrc));
+  /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c1-v21-4g-ui-cache-hotfix-2027"\s*;/.test(swSrc));
 t("current CACHE_NAME const 不再是初次 v21-7d（舊 cache 僅存於註解/遷移）", () =>
   !/const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-2027"\s*;/.test(swSrc));
 t("user-facing 不再出現「基於 V21.3b 行程資料」", () =>
@@ -222,6 +222,25 @@ t("SSoT 一致：全檔 runtime 無「Alpine Garden ＋ 短版 Swiss Flower」�
   const all = JSON.stringify(ctx.DAYS) + JSON.stringify(ctx.DAY_PLAN_CHOICES);
   return !/Alpine Garden ＋ 短版 Swiss Flower/.test(all);
 });
+// ══ V21.8c1 · Accommodation production guard（§29：檢查 runtime objects，不做全 source 字串零出現）══
+t("HOTELS.grindelwald = Apartment Sans Souci W1 by Interhome", () =>
+  ctx.HOTELS.grindelwald.name === "Apartment Sans Souci W1 by Interhome");
+t("runtime accommodation objects 無 Atlanta / GRIWA legacy", () => {
+  const runtime = JSON.stringify([ctx.HOTELS, ctx.BOOKINGS, ctx.DAYS, ctx.QUICK_NUMBERS, ctx.PENDING_2027]);
+  return !/Atlanta|GRIWA|Grundstrasse 19|3,?274\.8/i.test(runtime);
+});
+t("Grindelwald 住宿核心事實維持 V21.4g（6 晚／15:00–17:00／10:00 前）", () => {
+  const g = ctx.HOTELS.grindelwald;
+  return g.nights === 6 && /15:00/.test(g.checkInWindow || "") && /10:00/.test(g.checkOutBy || "");
+});
+t("Luzern 住宿未受影響（KoBi）", () => /KoBi/.test(ctx.HOTELS.luzern.name));
+t("Sans Souci Pending wording 仍在（門牌／key 未被誤標 confirmed）", () => {
+  const items = ctx.HOTELS.grindelwald.pendingItems || [];
+  return items.some(x => /門牌|address/i.test(x)) && items.some(x => /key|鑰匙/i.test(x));
+});
+t("build fingerprint 存在且與 webAppVersion 一致", () =>
+  typeof ctx.TRIP_META.build === "string" && ctx.TRIP_META.build.indexOf(ctx.TRIP_META.webAppVersion) === 0);
+
 // ══ V21.8c Final Residual guards（R01 / R02）══
 // §4：必須同時檢查 DAYS 與 DAY_PLAN_CHOICES，避免單邊 SSoT 更新
 t("R01：DAYS Day 8 無 stale 12:30–12:45", () =>
@@ -582,13 +601,13 @@ console.log("\n【V21.7b · 版本（歷史 regression guard）】");
 t("TRIP_META.version 已前進、非停留 V21.7b", () =>
   ctx.TRIP_META.version !== "V21.7b Web · 基於 V21.4a 行程資料" || ctx.TRIP_META.version);
 t("CACHE_NAME 已離開 v21-7b（現為 v21-7d-final）", () =>
-  !swSrc.includes('"swiss-trip-v21-7b-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c-v21-4g-final-residual-seal-2027"\s*;/.test(swSrc));
+  !swSrc.includes('"swiss-trip-v21-7b-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c1-v21-4g-ui-cache-hotfix-2027"\s*;/.test(swSrc));
 
 console.log("\n【V21.7c · 版本（歷史 regression guard）】");
 t("TRIP_META.version 已前進、非停留 V21.7c", () =>
   ctx.TRIP_META.version !== "V21.7c Web · 基於 V21.4a 行程資料" || ctx.TRIP_META.version);
 t("CACHE_NAME 已離開 v21-7c（現為 v21-7d-final）", () =>
-  !swSrc.includes('"swiss-trip-v21-7c-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c-v21-4g-final-residual-seal-2027"\s*;/.test(swSrc));
+  !swSrc.includes('"swiss-trip-v21-7c-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c1-v21-4g-ui-cache-hotfix-2027"\s*;/.test(swSrc));
 t("無舊 CACHE swiss-trip-v21-7a / -7b / -7c-2027（current 僅 v21-7d-final）", () =>
   !/swiss-trip-v21-7a-2027|swiss-trip-v21-7b-2027|swiss-trip-v21-7c-2027/.test(swSrc + dataSrc + appSrc));
 

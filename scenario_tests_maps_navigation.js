@@ -35,10 +35,10 @@ console.log("=".repeat(72));
 
 // ══════════════════════════════════════════════════════════
 section("1. 版本線分離（§21）");
-t("webAppVersion = V21.8c", () => ctx.TRIP_META.webAppVersion === "V21.8c");
+t("webAppVersion = V21.8c1", () => ctx.TRIP_META.webAppVersion === "V21.8c1");
 t("itineraryVersion = V21.4g", () => ctx.TRIP_META.itineraryVersion === "V21.4g");
 t("version 字串同時顯示 Web 版與行程資料版", () =>
-  /V21\.8c/.test(ctx.TRIP_META.version) && /V21\.4g/.test(ctx.TRIP_META.version));
+  /V21\.8c1/.test(ctx.TRIP_META.version) && /V21\.4g/.test(ctx.TRIP_META.version));
 t("不再宣稱基於 V21.4a／V21.4b", () => !/V21\.4a|V21\.4b/.test(ctx.TRIP_META.version));
 
 // ══════════════════════════════════════════════════════════
@@ -369,6 +369,80 @@ t("ZRH Pending 狀態保持（報到／Gate）", () => {
 });
 
 // ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+section("7g. V21.8c1 · LIE card Light/Dark contrast（§13）");
+t("LIE card 不再以 inline fixed light gradient 控制正式背景", () =>
+  !/background:linear-gradient\(135deg,#EFF6FF,#F8FAFC\)/.test(appSrc) && !/background:#EFF6FF/.test(appSrc));
+t("LIE card 改用正式 CSS class", () =>
+  /class="card lie-reservation-card"/.test(appSrc) && /\.lie-reservation-card\s*\{/.test(cssSrc));
+t("住宿頁 info panel 亦改用 theme-aware class（同型 bug）", () =>
+  /class="info-panel-blue"/.test(appSrc) && /\.info-panel-blue\s*\{/.test(cssSrc));
+t("Dark Mode 另有 .lie-reservation-card 覆寫", () =>
+  /prefers-color-scheme:\s*dark[\s\S]*?\.lie-reservation-card\s*\{/.test(cssSrc));
+t("Light Mode：LIE 背景 #EFF6FF vs 文字 --text #1E293B 對比 ≥4.5:1", () =>
+  contrast("eff6ff", "1e293b") >= 4.5);
+t("Dark Mode：LIE 背景 #17233A vs 文字 --text #F1F5F9 對比 ≥4.5:1", () =>
+  contrast("17233a", "f1f5f9") >= 4.5);
+t("Light Mode：標題色 jungfrau-blue 於淺底可讀（≥4.5:1）", () =>
+  contrast("eff6ff", "2b6cb0") >= 4.5);
+t("Dark Mode：標題色 #7FB3F0 於深底可讀（≥4.5:1）", () =>
+  contrast("17233a", "7fb3f0") >= 4.5);
+t("Dark Mode CTA：#7FB3F0 底 + #0B1220 字可讀（≥4.5:1）", () =>
+  contrast("7fb3f0", "0b1220") >= 4.5);
+
+// ══════════════════════════════════════════════════════════
+section("7h. V21.8c1 · Schematic label placement（§17-19, §24）");
+t("svgLink 不再固定 y = my - 3", () => !/y="\$\{my - 3\}"/.test(appSrc));
+t("具方向性 label offset 函式", () => /function linkLabelOffset/.test(appSrc));
+t("支援 labelDx / labelDy / labelPosition override", () =>
+  /labelDx/.test(appSrc) && /labelDy/.test(appSrc) && /labelPosition/.test(appSrc));
+t("label 使用 text halo（paint-order stroke，線不穿字）", () =>
+  /paint-order="stroke"/.test(appSrc) && /stroke="var\(--bg-elev\)"/.test(appSrc));
+// label bounding box vs node box collision
+function nodeBox2(n){
+  const lines=String(n.label).split("\n");
+  const w=Math.max(56,Math.min(120,Math.max.apply(null,lines.map(l=>l.length))*7+16));
+  const h=20+(lines.length-1)*11;
+  return { x1:n.x-w/2, y1:n.y-h/2, x2:n.x+w/2, y2:n.y+h/2 };
+}
+function labelBox(l, a, b){
+  if(!l.label) return null;
+  const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+  const dx=b.x-a.x, dy=b.y-a.y;
+  const horizontal=Math.abs(dx)>=Math.abs(dy)*1.8, vertical=Math.abs(dy)>=Math.abs(dx)*1.8;
+  let o;
+  if(typeof l.labelDx==="number"||typeof l.labelDy==="number") o={dx:l.labelDx||0,dy:l.labelDy||0,anchor:l.labelAnchor||"middle"};
+  else if(l.labelPosition==="above") o={dx:0,dy:-8,anchor:"middle"};
+  else if(l.labelPosition==="below") o={dx:0,dy:12,anchor:"middle"};
+  else if(horizontal) o={dx:0,dy:-8,anchor:"middle"};
+  else if(vertical) o={dx:dy>=0?8:-8,dy:3,anchor:dy>=0?"start":"end"};
+  else { const len=Math.hypot(dx,dy)||1, nx=-dy/len, ny=dx/len; o={dx:nx*9,dy:ny*9+3,anchor:nx>=0?"start":"end"}; }
+  const w=l.label.length*4.6, h=9;
+  const cx=mx+o.dx, cy=my+o.dy;
+  const x1 = o.anchor==="start" ? cx : o.anchor==="end" ? cx-w : cx-w/2;
+  return { x1, y1:cy-h, x2:x1+w, y2:cy+2 };
+}
+const ovl=(a,b)=>!(a.x2<=b.x1||b.x2<=a.x1||a.y2<=b.y1||b.y2<=a.y1);
+["luzern_station","interlaken_ost","grindelwald_station","lauterbrunnen_transfer",
+ "grutschalp_transfer","murren_orientation","brienz_boat_brb","zurich_airport"].forEach(id => {
+  t(`${id}：link label ↔ node box 無重疊`, () => {
+    const sc=G[id].schematic, byId={}; sc.nodes.forEach(n=>byId[n.id]=n);
+    const nb=sc.nodes.map(nodeBox2);
+    return sc.links.every(l => {
+      const lb=labelBox(l, byId[l.from], byId[l.to]);
+      return !lb || !nb.some(b => ovl(lb,b));
+    });
+  });
+});
+t("所有 schematic：link label ↔ link label 無重疊", () =>
+  ["luzern_station","interlaken_ost","grindelwald_station","lauterbrunnen_transfer",
+   "grutschalp_transfer","murren_orientation","brienz_boat_brb","zurich_airport"].every(id => {
+    const sc=G[id].schematic, byId={}; sc.nodes.forEach(n=>byId[n.id]=n);
+    const lbs=sc.links.map(l=>labelBox(l,byId[l.from],byId[l.to])).filter(Boolean);
+    for(let i=0;i<lbs.length;i++) for(let j=i+1;j<lbs.length;j++) if(ovl(lbs[i],lbs[j])) return false;
+    return true;
+  }));
+
 section("8. 既有功能不被破壞（§23）");
 t("renderMaps 已註冊於 renderPage dispatcher", () => /p === "maps"\)\s*return renderMaps\(\)/.test(appSrc));
 t("Today Engine 函式仍存在", () =>
