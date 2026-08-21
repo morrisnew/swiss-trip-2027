@@ -23,6 +23,9 @@
   --alert-red-bg: #FEF2F2;
   --alert-red-border: #FECACA;
   --warn-orange: #EA580C;
+  /* V21.8c1：action 背景專用（白字需 ≥4.5:1），不改 warning semantic */
+  --warn-orange-action: #9A3412;
+  --safe-green-action: #046C51;
   --warn-orange-bg: #FFF7ED;
   --warn-orange-border: #FED7AA;
   --gold: #D97706;
@@ -40,9 +43,19 @@
   /* V21.8b：Maps schematic 專用 — 正式 theme variable，不再依賴 renderer fallback */
   --bg-elev: var(--surface);
   --accent: var(--jungfrau-blue);
+  /* V21.8c1：文字專用 accent（與「當背景用」的品牌色分開，Dark 可獨立提亮） */
+  --text-blue: var(--jungfrau-blue);
+  --text-red: var(--alert-red);
+  --text-green: var(--alpine-green);
+  /* 警示／金色／安全綠：文字用較深版本，確保於自身淺色底達 4.5:1 */
+  --text-warn: #9A3412;
+  --text-critical: #B91C1C;
+  --text-gold: #92400E;
+  --text-safe: #047857;
 }
 
 /* V21.8c1 · LIE 座位預約卡 / 資訊面板：theme-aware（不再用固定淺色 inline gradient） */
+.card.lie-reservation-card,
 .lie-reservation-card {
   background: linear-gradient(135deg, #EFF6FF, #F8FAFC);
   border: 1px solid #93C5FD;
@@ -56,12 +69,96 @@
   color: var(--text);
 }
 .lie-reservation-card .lie-title,
-.info-panel-blue .lie-title { color: var(--jungfrau-blue); }
+.info-panel-blue .lie-title { color: var(--text-blue); }
 .lie-reservation-card .lie-body,
 .info-panel-blue .lie-body { color: var(--text); }
 .lie-reservation-card .lie-cta {
   background: var(--jungfrau-blue);
   color: #fff;
+}
+
+/* ══ V21.8c1 · Final Dark Mode UI Seal — theme-aware panels ══
+   取代 renderer inline 的 background:white / 固定淺色 gradient，
+   避免 Dark Mode 形成「淺底 + 淺字」。Light 保留原視覺，Dark 使用 elevated surface。 */
+
+/* 一般折疊區（非 critical warning）：中性色，不用 alert-red */
+.section-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.section-toggle:hover,
+.section-toggle:focus-visible { color: var(--text-blue); outline-offset: 2px; }
+
+/* 卡片內的次層區塊（原 background:white） */
+.panel-soft {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+}
+
+/* 天氣：核心原則 */
+.card.weather-principles-card,
+.weather-principles-card {
+  background: linear-gradient(135deg, #F0F9FF, #F1F5F9);
+  border: 1px solid var(--jungfrau-blue);
+  color: var(--text);
+}
+.weather-principle-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+}
+
+/* 緊急：優先撥打卡 */
+.card.emergency-priority-card,
+.emergency-priority-card {
+  background: linear-gradient(135deg, #FEF2F2, #FEE2E2);
+  border: 2px solid var(--swiss-red);
+  color: var(--text);
+}
+.emergency-call-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+}
+
+/* 航班：資訊面板 */
+.card.panel-blue,
+.panel-blue {
+  background: linear-gradient(135deg, #E9F2FF, #F1F5F9);
+  border: 1px solid var(--jungfrau-blue);
+  border-left: 4px solid var(--jungfrau-blue);
+  color: var(--text);
+}
+/* 警示型面板（橘/紅漸層） */
+.card.panel-warn,
+.panel-warn {
+  background: linear-gradient(135deg, #FFF7ED, #FEF2F2);
+  border: 1px solid var(--warn-orange-border);
+  border-left: 4px solid var(--warn-orange);
+  color: var(--text);
+}
+/* 等寬數值標籤（原 background:white） */
+.value-chip {
+  background: var(--surface);
+  border: 1px solid var(--gold-border);
+  border-radius: 8px;
+  color: var(--text);
 }
 
 /* 深色模式 */
@@ -83,8 +180,49 @@
     /* V21.8b：深色模式的 elevated surface（與 --text #F1F5F9 對比充足） */
     --bg-elev: #141821;
     --accent: var(--jungfrau-blue);
+    /* Dark：文字 accent 提亮至 4.5:1 以上；背景用的品牌色維持飽和不動 */
+    --text-blue: #7FB3F0;
+    --text-red: #FF8A93;
+    --text-green: #6EE7B7;
+    --text-warn: #FFA657;
+    --text-critical: #FF8A93;
+    --text-gold: #F0C14B;
+    --text-safe: #6EE7B7;
   }
+  /* V21.8c1 Final Dark Mode UI Seal：淺色面板改為 elevated dark surface */
+  .card.weather-principles-card,
+  .weather-principles-card {
+    background: linear-gradient(135deg, #17233A, #141821);
+    border: 1px solid #2F4C7A;
+  }
+  .weather-principle-item,
+  .panel-soft,
+  .emergency-call-card,
+  .value-chip {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+  }
+  .value-chip { border-color: #6B5A1F; }
+  .card.emergency-priority-card,
+  .emergency-priority-card {
+    background: linear-gradient(135deg, #2A1417, #1A1013);
+    border: 2px solid var(--swiss-red);
+  }
+  .card.panel-blue,
+  .panel-blue {
+    background: linear-gradient(135deg, #17233A, #141821);
+    border: 1px solid #2F4C7A;
+    border-left: 4px solid var(--jungfrau-blue-light, #7FB3F0);
+  }
+  .card.panel-warn,
+  .panel-warn {
+    background: linear-gradient(135deg, #2A1D10, #1A140D);
+    border: 1px solid #6B4A22;
+    border-left: 4px solid var(--warn-orange);
+  }
+
   /* V21.8c1：LIE / 資訊面板深色模式 — elevated surface + 淺色文字 + 藍色 accent */
+  .card.lie-reservation-card,
   .lie-reservation-card {
     background: linear-gradient(135deg, #17233A, #141821);
     border: 1px solid #2F4C7A;
@@ -203,7 +341,7 @@ body {
   transition: color 0.15s, background 0.15s;
 }
 .nav-btn .em { font-size: 22px; line-height: 1; }
-.nav-btn.active { color: var(--alpine-green); }
+.nav-btn.active { color: var(--text-green); }
 .nav-btn:active { background: var(--slate-100); }
 
 /* 卡片 */
@@ -300,7 +438,7 @@ body {
   flex-shrink: 0;
   width: 44px; height: 44px;
   background: var(--glacier);
-  color: var(--alpine-green);
+  color: var(--text-green);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -428,7 +566,7 @@ body {
   width: 100%;
   background: var(--warn-orange-bg);
   border: 2px dashed var(--warn-orange-border);
-  color: var(--warn-orange);
+  color: var(--text-warn);
   padding: 14px;
   border-radius: 14px;
   font-family: inherit;
@@ -443,9 +581,9 @@ body {
 }
 .backup-toggle:active { transform: scale(0.98); }
 .backup-toggle.active {
-  background: var(--warn-orange);
+  background: var(--warn-orange-action);
   color: #fff;
-  border-color: var(--warn-orange);
+  border-color: var(--text-warn);
 }
 .backup-panel {
   background: var(--warn-orange-bg);
@@ -457,7 +595,7 @@ body {
 .backup-panel .trigger {
   font-size: 13px;
   background: rgba(234,88,12,0.15);
-  color: var(--warn-orange);
+  color: var(--text-warn);
   padding: 8px 10px;
   border-radius: 8px;
   margin-bottom: 12px;
@@ -483,7 +621,7 @@ body {
 .timeblock-time {
   font-size: 18px;
   font-weight: 800;
-  color: var(--alpine-green);
+  color: var(--text-green);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }
@@ -509,9 +647,9 @@ body {
   background: var(--jungfrau-blue);
   color: #fff;
 }
-.badge-stp-free   { background: var(--safe-green-bg); color: var(--safe-green); border: 1px solid var(--safe-green-border); }
-.badge-stp-half   { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-border); }
-.badge-stp-paid   { background: var(--alert-red-bg); color: var(--alert-red); border: 1px solid var(--alert-red-border); }
+.badge-stp-free   { background: var(--safe-green-bg); color: var(--text-safe); border: 1px solid var(--safe-green-border); }
+.badge-stp-half   { background: var(--gold-bg); color: var(--text-gold); border: 1px solid var(--gold-border); }
+.badge-stp-paid   { background: var(--alert-red-bg); color: var(--text-red); border: 1px solid var(--alert-red-border); }
 .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 
 /* 執行步驟 */
@@ -558,7 +696,7 @@ body {
 .defense-list h4 {
   font-size: 12px;
   font-weight: 700;
-  color: var(--alpine-green);
+  color: var(--text-green);
   letter-spacing: 0.08em;
   margin-bottom: 8px;
 }
@@ -593,7 +731,7 @@ body {
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  color: var(--alert-red);
+  color: var(--text-critical);
   cursor: pointer;
   text-align: left;
   display: flex;
@@ -612,7 +750,7 @@ body {
   position: relative;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--alert-red);
+  color: var(--text-critical);
 }
 .critical-content li::before {
   content: "🚨";
@@ -672,7 +810,7 @@ body {
 }
 .checklist-item.checked .cb {
   background: var(--safe-green);
-  border-color: var(--safe-green);
+  border-color: var(--text-safe);
   color: #fff;
 }
 .checklist-item .text { flex: 1; font-size: 14px; line-height: 1.55; }
@@ -681,7 +819,7 @@ body {
   background: var(--warn-orange-bg);
   border-left: 3px solid var(--warn-orange);
 }
-.checklist-item.warning .text { color: var(--alert-red); font-weight: 600; }
+.checklist-item.warning .text { color: var(--text-red); font-weight: 600; }
 
 /* 景點卡片 */
 .sight-card {
@@ -693,7 +831,7 @@ body {
 }
 .sight-card .region {
   font-size: 11px;
-  color: var(--jungfrau-blue);
+  color: var(--text-blue);
   font-weight: 600;
   letter-spacing: 0.05em;
 }
@@ -727,7 +865,7 @@ body {
 .contact-card .cat {
   font-size: 13px;
   font-weight: 700;
-  color: var(--alpine-green);
+  color: var(--text-green);
   margin-bottom: 10px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border);
@@ -744,7 +882,7 @@ body {
 .contact-row .label { font-size: 14px; font-weight: 600; }
 .contact-row .note { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 .tel-btn {
-  background: var(--safe-green);
+  background: var(--safe-green-action);
   color: #fff;
   border: none;
   padding: 8px 14px;
@@ -833,7 +971,7 @@ body {
   padding: 10px 12px;
   border-radius: 10px;
   font-size: 12px;
-  color: var(--gold);
+  color: var(--text-gold);
   margin-bottom: 12px;
   line-height: 1.5;
 }
@@ -852,3 +990,22 @@ body {
 .text-center { text-align: center; }
 .mt-8 { margin-top: 8px; }
 .mt-16 { margin-top: 16px; }
+
+
+/* V21.8c1：淺色面板內的次要文字加深至 ≥4.5:1（僅 Light Mode；Dark 由 elevated surface 處理） */
+@media (prefers-color-scheme: light), (prefers-color-scheme: no-preference) {
+  .card.panel-warn,
+  .panel-warn,
+  .card.panel-blue,
+  .panel-blue,
+  .card.weather-principles-card,
+  .weather-principles-card,
+  .card.emergency-priority-card,
+  .emergency-priority-card { --text-muted: #475569; }
+}
+
+/* V21.8c1：紅色漸層底上的紅色標題需更深，確保 Light Mode ≥4.5:1 */
+@media (prefers-color-scheme: light), (prefers-color-scheme: no-preference) {
+  .card.emergency-priority-card,
+  .emergency-priority-card { --text-red: #991B1B; --text-critical: #991B1B; }
+}

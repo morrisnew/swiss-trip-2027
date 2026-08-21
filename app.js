@@ -713,6 +713,9 @@ function renderPage() {
   if (p === "weather")   return renderWeather();
   if (p === "luggage")   return renderLuggage();
   if (p === "maps")      return renderMaps();
+  if (p === "budget")    return renderBudget();
+  if (p === "food")      return renderRestaurants();
+  if (p === "refs")      return renderTravelRefs();
   return renderHome();
 }
 
@@ -956,7 +959,8 @@ function renderHome() {
 function renderDaysList() {
   return `
     <div class="page-title">📅 完整行程</div>
-    <div class="page-sub">4 大 1 小 · 琉森 4 晚 + 格林德瓦 6 晚</div>
+    <div class="page-sub">Day 0 出發 · 瑞士境內 Day 1–11 · Day 12 抵台</div>
+    ${renderBoundaryCard("day0")}
     ${DAYS.map((d, idx) => `
       <div class="day-list-item" data-nav-day="${idx}">
         <div class="num">${d.day}</div>
@@ -970,7 +974,30 @@ function renderDaysList() {
         <span class="arrow">›</span>
       </div>
     `).join("")}
+    ${renderBoundaryCard("day12")}
   `;
+}
+
+// V21.8c1 · 旅行邊界日卡（Day 0 / Day 12）：僅資訊卡，不參與 Today Engine 與 Day index
+function renderBoundaryCard(which) {
+  if (typeof TRAVEL_BOUNDARY === "undefined" || !TRAVEL_BOUNDARY[which]) return "";
+  const b = TRAVEL_BOUNDARY[which];
+  const key = `boundary_${which}`;
+  const open = isChecked(key);
+  return `
+    <div class="card" style="margin-bottom:10px;">
+      <button class="section-toggle" data-toggle-check="${key}" style="width:100%; text-align:left;">
+        <span style="display:flex; flex-direction:column; gap:2px;">
+          <span style="font-weight:800; font-size:13.5px;">✈️ ${escapeHTML(b.label)} · ${escapeHTML(b.title)}</span>
+          <span style="font-size:11.5px; color:var(--text-muted);">${escapeHTML(b.date)}　·　台灣端移動（不列入瑞士境內 Day 1–11）</span>
+        </span>
+        <span>${open ? "▲" : "▼"}</span>
+      </button>
+      ${open ? `
+        <ul style="margin:8px 0 0; padding-left:18px; font-size:12.5px; line-height:1.8;">
+          ${b.steps.map(x => `<li>${escapeHTML(x)}</li>`).join("")}
+        </ul>` : ""}
+    </div>`;
 }
 
 // ──────────── 單日詳細 ────────────
@@ -1025,17 +1052,17 @@ function renderDay() {
   const brbScheduleCard = (idx === 9 && typeof BRB_SCHEDULE !== "undefined") ? `
     <div class="card" style="background: linear-gradient(135deg, #FEF3C7, #FFFBEB); border: 1px solid var(--gold-border); border-left: 4px solid var(--gold);">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
-        <div style="font-weight:800; font-size:14px; color:var(--gold);">🚂 BRB 班次表</div>
+        <div style="font-weight:800; font-size:14px; color:var(--text-gold);">🚂 BRB 班次表</div>
         ${renderStatusBadge("current", "2026 現行官方資料")}
         ${renderStatusBadge("pending", "2027 待官方公布")}
       </div>
       <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">${escapeHTML(BRB_SCHEDULE.season)}</div>
       <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
         ${BRB_SCHEDULE.departures.map(t => `
-          <span style="padding:6px 10px; background:white; border:1px solid var(--gold-border); border-radius:8px; font-family:ui-monospace,monospace; font-weight:700; color:var(--text); font-size:13px;">${escapeHTML(t)}</span>
+          <span class="value-chip" style="padding:6px 10px; font-family:ui-monospace,monospace; font-weight:700; color:var(--text); font-size:13px;">${escapeHTML(t)}</span>
         `).join("")}
       </div>
-      <div style="font-size:12px; color:var(--text); line-height:1.6; padding:10px; background:white; border-radius:8px;">
+      <div class="panel-soft" style="font-size:12px; line-height:1.6; padding:10px;">
         <div style="margin-bottom:4px;">⏰ ${escapeHTML(BRB_SCHEDULE.buffer)}</div>
         <div style="margin-bottom:4px;">🎫 ${escapeHTML(BRB_SCHEDULE.note)}</div>
         <div style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--gold-border); color:var(--text-muted); font-size:11px;">${escapeHTML(BRB_SCHEDULE.simulation2026)}</div>
@@ -1045,8 +1072,8 @@ function renderDay() {
 
   // V21.3b：Day 11 Emirates 時間規則 card
   const day11EmiratesTime = (idx === 10 && typeof EMIRATES_RULES !== "undefined" && EMIRATES_RULES.timeRules) ? `
-    <div class="card" style="background: linear-gradient(135deg, #FFF7ED, #FEF2F2); border: 1px solid var(--warn-orange-border); border-left: 4px solid var(--warn-orange);">
-      <div style="font-weight:800; font-size:14px; color:var(--warn-orange); margin-bottom:8px;">⏰ Emirates 時間規則（現行參考）</div>
+    <div class="card panel-warn" style="border-left: 4px solid var(--warn-orange);">
+      <div style="font-weight:800; font-size:14px; color:var(--text-warn); margin-bottom:8px;">⏰ Emirates 時間規則（現行參考）</div>
       <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px; line-height:1.5;">${escapeHTML(EMIRATES_RULES.timeRules.baseFlight)}</div>
       ${EMIRATES_RULES.timeRules.points.map(p => `
         <div style="display:flex; gap:10px; padding:8px 0; border-top:1px solid rgba(0,0,0,0.06); font-size:12px;">
@@ -1054,7 +1081,7 @@ function renderDay() {
             <div style="font-weight:600; color:var(--text);">${escapeHTML(p.label)}</div>
             ${p.note ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px; line-height:1.5;">${escapeHTML(p.note)}</div>` : ''}
           </div>
-          <div style="font-family:ui-monospace,monospace; font-weight:800; color:var(--warn-orange); white-space:nowrap;">${escapeHTML(p.value)}</div>
+          <div style="font-family:ui-monospace,monospace; font-weight:800; color:var(--text-warn); white-space:nowrap;">${escapeHTML(p.value)}</div>
         </div>
       `).join("")}
       <div style="font-size:11px; color:var(--text-muted); margin-top:10px; padding-top:10px; border-top:1px dashed var(--warn-orange-border); line-height:1.5;">${escapeHTML(EMIRATES_RULES.timeRules.note)}</div>
@@ -1099,7 +1126,7 @@ function renderDay() {
               : renderStatusBadge("pending", "尚未選定")}
           </div>
           <div style="font-size:12px; color:var(--text-muted); line-height:1.6; margin-bottom:6px;">${escapeHTML(def.note)}</div>
-          ${def.decisionHint ? `<div style="font-size:12px; font-weight:700; color:var(--jungfrau-blue); margin-bottom:6px;">📌 ${escapeHTML(def.decisionHint)}</div>` : ""}
+          ${def.decisionHint ? `<div style="font-size:12px; font-weight:700; color:var(--text-blue); margin-bottom:6px;">📌 ${escapeHTML(def.decisionHint)}</div>` : ""}
           ${def.planActivation && def.planActivation.boundaryNote ? `<div style="font-size:11px; color:var(--text-muted); margin-bottom:10px; padding:8px 10px; background:var(--slate-50); border-radius:8px;">⏱️ ${escapeHTML(def.planActivation.boundaryNote)}</div>` : ""}
           <div style="display:flex; flex-direction:column; gap:8px;">
             ${def.options.map(o => {
@@ -1121,7 +1148,7 @@ function renderDay() {
               </button>
             `;}).join("")}
           </div>
-          ${!chosen ? `<div style="margin-top:10px; font-size:11px; color:var(--warn-orange);">⚠️ 未選定前，Today 不會推算本日方案相關時間</div>` : ""}
+          ${!chosen ? `<div style="margin-top:10px; font-size:11px; color:var(--text-warn);">⚠️ 未選定前，Today 不會推算本日方案相關時間</div>` : ""}
         </div>
       `;
     });
@@ -1148,7 +1175,7 @@ function renderDay() {
     ${backupHTML}
 
     ${isBackupView ? `
-      <div style="margin: 8px 0 12px; padding: 10px 14px; background: var(--warn-orange-bg); border-left: 4px solid var(--warn-orange); border-radius: 8px; font-size: 12px; color: var(--warn-orange); font-weight: 600;">
+      <div style="margin: 8px 0 12px; padding: 10px 14px; background: var(--warn-orange-bg); border-left: 4px solid var(--warn-orange); border-radius: 8px; font-size: 12px; color: var(--text-warn); font-weight: 600;">
         🔀 目前顯示：備案時間軸（${timeline.length} 個時段）· 主行程已隱藏
       </div>
       <div style="border: 2px dashed var(--warn-orange-border); border-radius: 14px; padding: 12px; background: rgba(234,88,12,0.03);">
@@ -1169,7 +1196,7 @@ function renderBackupPanel(backup) {
   return `
     <div class="backup-panel">
       <div class="trigger">⚠️ ${escapeHTML(backup.trigger)}</div>
-      <div style="font-weight:700; margin-bottom:6px; color: var(--warn-orange); font-size:15px;">📖 ${escapeHTML(backup.title)}</div>
+      <div style="font-weight:700; margin-bottom:6px; color: var(--text-warn); font-size:15px;">📖 ${escapeHTML(backup.title)}</div>
       <div style="font-size:12px; color:var(--text-muted); line-height:1.55;">
         以下時間軸將替換原本的主行程。若之後恢復晴天，可點上方按鈕切回主行程。
       </div>
@@ -1299,7 +1326,7 @@ function renderBookings() {
   const linkifyHow = (str) => {
     return escapeHTML(str).replace(urlPattern, (match) => {
       const url = match.startsWith("http") ? match : `https://${match}`;
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--jungfrau-blue); text-decoration:underline; font-weight:600;" data-ext-link>${match} ↗</a>`;
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--text-blue); text-decoration:underline; font-weight:600;" data-ext-link>${match} ↗</a>`;
     });
   };
 
@@ -1391,7 +1418,7 @@ function renderPacking() {
 
   const laundryWarn = `
     <div class="card" style="background:var(--warn-orange-bg); border-color:var(--warn-orange-border); border-left:4px solid var(--warn-orange);">
-      <div style="font-weight:800; font-size:15px; color:var(--warn-orange); margin-bottom:8px;">⚠️ 洗衣膠囊包裝提醒</div>
+      <div style="font-weight:800; font-size:15px; color:var(--text-warn); margin-bottom:8px;">⚠️ 洗衣膠囊包裝提醒</div>
       <ul style="padding-left:18px; font-size:13px; color:var(--text); line-height:1.7;">
         <li>建議放入託運行李、避免放隨身登機包（依當年度隨身液體/凝膠限制與各機場安檢實務為準）</li>
         <li>建議裝入「硬殼保鮮盒」中再放入託運行李</li>
@@ -1478,18 +1505,18 @@ function renderEmergency() {
     { icon:"🆘", label:"駐瑞士代表處急難手機", tel:CONSULATE_CONTACT.emergency, desc:"重大急難救助（車禍/搶劫/生命安危）" }
   ];
   const priorityHTML = `
-    <div class="card" style="background:linear-gradient(135deg, #FEF2F2, #FEE2E2); border:2px solid var(--swiss-red); border-radius:14px; padding:14px; margin-bottom:16px;">
-      <div style="font-weight:800; font-size:14px; color:var(--swiss-red); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+    <div class="card emergency-priority-card" style="border-radius:14px; padding:14px; margin-bottom:16px;">
+      <div style="font-weight:800; font-size:14px; color:var(--text-red); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
         🚨 現場急難 · 一鍵撥號
       </div>
       ${priorityCalls.map(p => `
-        <a href="tel:${p.tel.replace(/[^+\d]/g,'')}" style="display:flex; align-items:center; gap:10px; padding:12px; background:white; border-radius:10px; margin-bottom:8px; text-decoration:none; color:var(--text); border:1px solid rgba(220,0,24,0.15);">
+        <a href="tel:${p.tel.replace(/[^+\d]/g,'')}" class="emergency-call-card" style="display:flex; align-items:center; gap:10px; padding:12px; margin-bottom:8px; text-decoration:none; color:var(--text); border:1px solid rgba(220,0,24,0.15);">
           <span style="font-size:22px;">${p.icon}</span>
           <div style="flex:1;">
-            <div style="font-weight:800; font-size:14px; color:var(--swiss-red);">${escapeHTML(p.label)}</div>
+            <div style="font-weight:800; font-size:14px; color:var(--text-red);">${escapeHTML(p.label)}</div>
             <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${escapeHTML(p.desc)}</div>
           </div>
-          <span style="font-family:ui-monospace,monospace; font-weight:800; color:var(--swiss-red); font-size:15px;">${escapeHTML(p.tel)}</span>
+          <span style="font-family:ui-monospace,monospace; font-weight:800; color:var(--text-red); font-size:15px;">${escapeHTML(p.tel)}</span>
         </a>
       `).join("")}
     </div>
@@ -1561,16 +1588,16 @@ function renderHotels() {
 
       const sleepHTML = sleepPlans.length ? `
         <div style="margin-top:12px; padding:14px; background: linear-gradient(135deg, #FEF3C7, #FFFBEB); border:1px solid var(--gold-border); border-radius:12px;">
-          <div style="font-weight:700; color:var(--gold); margin-bottom:8px; font-size:13px; display:flex; align-items:center; gap:6px;">
+          <div style="font-weight:700; color:var(--text-gold); margin-bottom:8px; font-size:13px; display:flex; align-items:center; gap:6px;">
             🛌 睡眠配置方案
           </div>
           ${sleepPlans.map(p => `
             <div style="margin-bottom:8px; font-size:13px; line-height:1.65; color:var(--text);">
-              <strong style="color:var(--gold); display:inline-block; min-width:22px;">${p.key}．</strong>${escapeHTML(p.text)}
+              <strong style="color:var(--text-gold); display:inline-block; min-width:22px;">${p.key}．</strong>${escapeHTML(p.text)}
             </div>
           `).join("")}
           ${h.sleepNote ? `
-            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--gold-border); font-size:12px; color:var(--alert-red); font-weight:600; line-height:1.6;">
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--gold-border); font-size:12px; color:var(--text-red); font-weight:600; line-height:1.6;">
               ⚠️ ${escapeHTML(h.sleepNote)}
             </div>
           ` : ""}
@@ -1586,7 +1613,7 @@ function renderHotels() {
         ` : ''}
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
           <div style="flex:1;">
-            <div style="font-size:11px; color:var(--jungfrau-blue); font-weight:600;">${escapeHTML(h.city)}</div>
+            <div style="font-size:11px; color:var(--text-blue); font-weight:600;">${escapeHTML(h.city)}</div>
             <div style="font-size:17px; font-weight:700; margin:4px 0;">${escapeHTML(h.name)}</div>
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:6px;">
               ${renderStatusBadge("confirmed", "已預訂")}
@@ -1598,7 +1625,7 @@ function renderHotels() {
           <div>📅 ${h.checkIn} → ${h.checkOut} · ${h.nights} 晚</div>
           <div>📍 ${escapeHTML(h.address)}</div>
           ${h.office ? `<div>🏢 ${escapeHTML(h.office)}</div>` : ''}
-          ${h.phone ? `<div>📞 <a href="tel:${h.phone.replace(/[^+\d]/g,'')}" style="color:var(--jungfrau-blue);">${escapeHTML(h.phone)}</a></div>` : ''}
+          ${h.phone ? `<div>📞 <a href="tel:${h.phone.replace(/[^+\d]/g,'')}" style="color:var(--text-blue);">${escapeHTML(h.phone)}</a></div>` : ''}
           ${h.priceTWD ? `<div>💰 約 NT$ ${h.priceTWD.toLocaleString()}</div>` : ''}
           ${h.priceCHF ? `<div>💰 ${h.priceIsReferenceQuote ? '約 ' : ''}CHF ${h.priceCHF.toLocaleString()}</div>` : ''}
           ${h.priceNote ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">ℹ️ ${escapeHTML(h.priceNote)}</div>` : ''}
@@ -1622,7 +1649,7 @@ function renderHotels() {
         ${h.pendingItems && h.pendingItems.length ? `
           <div style="margin-top:10px; padding:12px; background:var(--gold-bg); border:1px solid var(--gold-border); border-radius:10px;">
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
-              <div style="font-weight:800; font-size:13px; color:var(--gold);">🟡 住宿待確認事項</div>
+              <div style="font-weight:800; font-size:13px; color:var(--text-gold);">🟡 住宿待確認事項</div>
               ${renderStatusBadge("pending", "出發前確認")}
             </div>
             <div style="font-size:12px; color:var(--text); line-height:1.75;">
@@ -1647,7 +1674,7 @@ function renderFlights() {
   const render1 = (f, title) => `
     <div class="card">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-        <span style="font-size:12px; color:var(--jungfrau-blue); font-weight:700;">${title}</span>
+        <span style="font-size:12px; color:var(--text-blue); font-weight:700;">${title}</span>
         ${renderStatusBadge("current", "現行參考")}
         ${renderStatusBadge("pending", "2027 訂票時實際為準")}
       </div>
@@ -1663,39 +1690,39 @@ function renderFlights() {
 
   // Emirates 完整規則 card
   const rulesHTML = (typeof EMIRATES_RULES !== "undefined") ? `
-    <div class="card" style="background: linear-gradient(135deg, #E9F2FF, #F1F5F9); border: 1px solid var(--jungfrau-blue); border-left: 4px solid var(--jungfrau-blue);">
-      <div style="font-weight:800; font-size:15px; color:var(--jungfrau-blue); margin-bottom:10px;">📋 Emirates 完整規則</div>
+    <div class="card panel-blue" style="border-left: 4px solid var(--jungfrau-blue);">
+      <div style="font-weight:800; font-size:15px; color:var(--text-blue); margin-bottom:10px;">📋 Emirates 完整規則</div>
 
-      <div style="margin-top:12px; padding:10px; background:white; border-radius:8px;">
+      <div class="panel-soft" style="margin-top:12px; padding:10px;">
         <div style="font-weight:700; font-size:13px; margin-bottom:6px;">🧳 托運額度：Weight Concept 總重量制</div>
         <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">${escapeHTML(EMIRATES_RULES.baggage.concept)}</div>
         <ul style="padding-left:18px; font-size:12px; line-height:1.7;">
           ${EMIRATES_RULES.baggage.tiers.map(t => `<li><strong>${escapeHTML(t.fare)}</strong>：${escapeHTML(t.weight)}</li>`).join("")}
         </ul>
-        <div style="font-size:11px; color:var(--alert-red); margin-top:6px;">${escapeHTML(EMIRATES_RULES.baggage.warning)}</div>
+        <div style="font-size:11px; color:var(--text-red); margin-top:6px;">${escapeHTML(EMIRATES_RULES.baggage.warning)}</div>
       </div>
 
-      <div style="margin-top:10px; padding:10px; background:white; border-radius:8px;">
+      <div class="panel-soft" style="margin-top:10px; padding:10px;">
         <div style="font-weight:700; font-size:13px; margin-bottom:6px;">🍽️ 兒童餐代碼：${escapeHTML(EMIRATES_RULES.childMeal.code)}</div>
         <div style="font-size:12px; color:var(--text-muted);">${escapeHTML(EMIRATES_RULES.childMeal.note)}</div>
-        <div style="font-size:11px; color:var(--alert-red); margin-top:4px;">${escapeHTML(EMIRATES_RULES.childMeal.warning)}</div>
+        <div style="font-size:11px; color:var(--text-red); margin-top:4px;">${escapeHTML(EMIRATES_RULES.childMeal.warning)}</div>
       </div>
 
-      <div style="margin-top:10px; padding:10px; background:white; border-radius:8px;">
+      <div class="panel-soft" style="margin-top:10px; padding:10px;">
         <div style="font-weight:700; font-size:13px; margin-bottom:6px;">💺 座位配置</div>
         <div style="font-size:12px; color:var(--text-muted);">${escapeHTML(EMIRATES_RULES.seatingPolicy.note)}</div>
         <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${escapeHTML(EMIRATES_RULES.seatingPolicy.request)}</div>
       </div>
 
-      <div style="margin-top:10px; padding:10px; background:white; border-radius:8px;">
+      <div class="panel-soft" style="margin-top:10px; padding:10px;">
         <div style="font-weight:700; font-size:13px; margin-bottom:6px;">🏨 Dubai Connect</div>
         <div style="font-size:12px; color:var(--text-muted);">${escapeHTML(EMIRATES_RULES.dubaiConnect.hours)}</div>
         <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${escapeHTML(EMIRATES_RULES.dubaiConnect.perks)}</div>
-        <div style="font-size:11px; color:var(--alert-red); margin-top:4px;">${escapeHTML(EMIRATES_RULES.dubaiConnect.warning)}</div>
+        <div style="font-size:11px; color:var(--text-red); margin-top:4px;">${escapeHTML(EMIRATES_RULES.dubaiConnect.warning)}</div>
       </div>
 
-      <div style="margin-top:10px; padding:10px; background: linear-gradient(135deg, #FFF7ED, #FEF2F2); border-radius:8px; border: 1px solid var(--warn-orange-border);">
-        <div style="font-weight:800; font-size:13px; color:var(--warn-orange); margin-bottom:6px;">⏰ Emirates 時間規則（現行參考）</div>
+      <div class="panel-warn" style="margin-top:10px; padding:10px; border-radius:8px; border: 1px solid var(--warn-orange-border);">
+        <div style="font-weight:800; font-size:13px; color:var(--text-warn); margin-bottom:6px;">⏰ Emirates 時間規則（現行參考）</div>
         <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.5;">${escapeHTML(EMIRATES_RULES.timeRules.baseFlight)}</div>
         ${EMIRATES_RULES.timeRules.points.map(p => `
           <div style="display:flex; gap:8px; padding:6px 0; border-top:1px solid rgba(0,0,0,0.06); font-size:12px;">
@@ -1703,7 +1730,7 @@ function renderFlights() {
               <div style="font-weight:600; color:var(--text);">${escapeHTML(p.label)}</div>
               ${p.note ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${escapeHTML(p.note)}</div>` : ''}
             </div>
-            <div style="font-family:ui-monospace,monospace; font-weight:700; color:var(--warn-orange);">${escapeHTML(p.value)}</div>
+            <div style="font-family:ui-monospace,monospace; font-weight:700; color:var(--text-warn);">${escapeHTML(p.value)}</div>
           </div>
         `).join("")}
         <div style="font-size:11px; color:var(--text-muted); margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.06); line-height:1.5;">${escapeHTML(EMIRATES_RULES.timeRules.note)}</div>
@@ -1862,7 +1889,7 @@ function renderSchematicSVG(sc, kindLabel) {
         ${(sc.nodes || []).map(svgNode).join("")}
       </svg>
       ${schematicLegend(sc)}
-      ${(sc.pendingLabels || []).length ? `<div style="font-size:10.5px; color:var(--gold); margin-top:5px;">🟡 ${(sc.pendingLabels).map(escapeHTML).join("　")}</div>` : ""}
+      ${(sc.pendingLabels || []).length ? `<div style="font-size:10.5px; color:var(--text-gold); margin-top:5px;">🟡 ${(sc.pendingLabels).map(escapeHTML).join("　")}</div>` : ""}
       ${schematicTextFallback(sc)}
     </div>`;
 }
@@ -1908,7 +1935,7 @@ function renderMapCard(g, opts) {
   const meta = MAP_TYPE_META[g.type] || { em:"🗺️", label:g.type };
   return `
     <div class="card" style="margin-bottom:12px;">
-      <button class="critical-toggle" data-toggle-check="mapopen_${g.id}" style="width:100%; text-align:left;">
+      <button class="section-toggle" data-toggle-check="mapopen_${g.id}" style="width:100%; text-align:left;">
         <span style="display:flex; flex-direction:column; gap:2px;">
           <span style="font-weight:800; font-size:14px;">${meta.em} ${escapeHTML(g.title)}</span>
           <span style="font-size:11px; color:var(--text-muted);">${escapeHTML(meta.label)}${g.relatedDays && g.relatedDays.length ? "・Day " + g.relatedDays.join("/") : ""}${g.offlineAvailable ? "・離線可看" : ""}</span>
@@ -1996,7 +2023,10 @@ function renderTools() {
         { nav:"hotels",  em:"🏨", label:"住宿",       sub:"Luzern · Grindelwald" },
         { nav:"flights", em:"✈️", label:"航班 + Emirates 規則", sub:`${FLIGHT_CODES.outbound} / ${FLIGHT_CODES.return}` },
         { nav:"sights",  em:"📍", label:"景點導覽",   sub:`${SIGHTS.length} 個景點` },
-        { nav:"maps",    em:"🗺️", label:"地圖與導航", sub:`${Object.keys(MAP_GUIDES).length} 張現場指引` }
+        { nav:"maps",    em:"🗺️", label:"地圖與導航", sub:`${Object.keys(MAP_GUIDES).length} 張現場指引` },
+        { nav:"budget",  em:"💰", label:"預算總覽",   sub:BUDGET.summary.grandTotal },
+        { nav:"food",    em:"🍽️", label:"餐廳與訂位", sub:`${RESTAURANTS.length} 間` },
+        { nav:"refs",    em:"🔐", label:"旅行備忘",   sub:"訂位／票號（本機）" }
       ]
     }
   ];
@@ -2105,10 +2135,10 @@ function renderWeather() {
     <div class="page-title">🌦️ 天氣 / 行程調整</div>
     <div class="page-sub">4 項核心原則 + 官方 Webcam / 氣象</div>
 
-    <div class="card" style="background:linear-gradient(135deg,#F0F9FF,#F1F5F9); border:1px solid var(--jungfrau-blue);">
-      <div style="font-weight:800; color:var(--jungfrau-blue); margin-bottom:10px;">📖 4 項核心原則</div>
+    <div class="card weather-principles-card">
+      <div style="font-weight:800; color:var(--text-blue); margin-bottom:10px;">📖 4 項核心原則</div>
       ${WEATHER_DECISION.principles.map(p => `
-        <div style="padding:12px; background:white; border-radius:10px; margin-bottom:8px;">
+        <div class="weather-principle-item" style="padding:12px; margin-bottom:8px;">
           <div style="font-size:14px; font-weight:700; margin-bottom:6px;">${p.icon} ${escapeHTML(p.label)}</div>
           <div style="font-size:12px; color:var(--text-muted); line-height:1.65;">${escapeHTML(p.detail)}</div>
         </div>
@@ -2127,12 +2157,147 @@ function renderWeather() {
               <div style="font-weight:700; font-size:14px;">${escapeHTML(l.label)}</div>
               <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${escapeHTML(l.note)}</div>
             </div>
-            <span style="color:var(--jungfrau-blue); font-size:14px; font-weight:600;">開啟 ↗</span>
+            <span style="color:var(--text-blue); font-size:14px; font-weight:600;">開啟 ↗</span>
           </div>
         </a>
       `;
     }).join("")}
+    ${renderRainPlansSection()}
   `;
+}
+
+// ──────────── V21.8c1 · 雨天備案（RAIN_PLANS render）────────────
+function renderRainPlansSection() {
+  if (typeof RAIN_PLANS === "undefined" || !RAIN_PLANS.length) return "";
+  const order = ["琉森", "格林德瓦", "Interlaken", "伯恩", "布里恩茨", "圖恩湖"];
+  const bases = [...new Set(RAIN_PLANS.map(r => r.base))]
+    .sort((a, b) => (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b)));
+  return `
+    <div class="section-title" style="margin:18px 0 8px;">☔ 雨天 / 白牆備案</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+      依基地分類；高山白牆時轉低海拔活動，不勉強。連續白牆才啟動遠程備案。
+    </div>
+    ${bases.map(base => {
+      const items = RAIN_PLANS.filter(r => r.base === base);
+      const key = `rain_${base}`;
+      const open = isChecked(key);
+      return `
+        <div class="card" style="margin-bottom:10px;">
+          <button class="section-toggle" data-toggle-check="${key}" style="width:100%; text-align:left;">
+            <span style="font-weight:800; font-size:13px;">📍 ${escapeHTML(base)}　<span style="font-weight:400; color:var(--text-muted);">${items.length} 個備案</span></span>
+            <span>${open ? "▲" : "▼"}</span>
+          </button>
+          ${open ? items.map(r => `
+            <div style="padding:8px 2px; border-top:1px solid var(--border);">
+              <div style="font-weight:700; font-size:13px;">${escapeHTML(r.place)}</div>
+              ${r.pros ? `<div style="font-size:12px; margin-top:2px;">${escapeHTML(r.pros)}</div>` : ""}
+              ${r.ticket ? `<div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">🎫 ${escapeHTML(r.ticket)}</div>` : ""}
+              ${r.note ? `<div style="font-size:11.5px; color:var(--text-muted);">💡 ${escapeHTML(r.note)}</div>` : ""}
+            </div>`).join("") : ""}
+        </div>`;
+    }).join("")}
+    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+      門票／車程為現行參考，2027 實際票價、班次與營運季節仍須出發前確認。
+    </div>`;
+}
+
+// ──────────── V21.8c1 · 預算總覽 ────────────
+function budgetStatusBadge(st) {
+  const map = { booked:["confirmed", "已訂／已確認"], current:["pending", "現行參考"],
+                estimate:["pending", "規劃估算"], pending:["pending", "2027 待公布"] };
+  const m = map[st] || map.estimate;
+  return renderStatusBadge(m[0], m[1]);
+}
+function renderBudget() {
+  if (typeof BUDGET === "undefined") return `<div class="page-title">💰 預算總覽</div><div>資料未載入</div>`;
+  return `
+    <div class="page-title">💰 預算總覽</div>
+    <div class="page-sub">Excel V21.4g 摘要 · 已訂／現行參考／估算／2027 待公布 分開標示</div>
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-size:12px; color:var(--text-muted);">${escapeHTML(BUDGET.basis)}</div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-weight:800; font-size:15px;">🏁 全團總預算　${escapeHTML(BUDGET.summary.grandTotal)}</div>
+      <div style="font-size:12.5px; color:var(--text-muted); margin-top:4px;">${escapeHTML(BUDGET.summary.perAdult)}</div>
+      <ul style="margin:8px 0 0; padding-left:18px; font-size:12px; line-height:1.7;">
+        ${BUDGET.summary.notes.map(n => `<li>${escapeHTML(n)}</li>`).join("")}
+      </ul>
+    </div>
+    ${BUDGET.groups.map((g, gi) => {
+      const key = `budget_g${gi}`;
+      const open = isChecked(key);
+      return `
+        <div class="card" style="margin-bottom:10px;">
+          <button class="section-toggle" data-toggle-check="${key}" style="width:100%; text-align:left;">
+            <span style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font-weight:800; font-size:13.5px;">${escapeHTML(g.title)}</span>
+              <span style="font-size:11.5px; color:var(--text-muted);">小計 ${escapeHTML(g.subtotal)}　·　${g.items.length} 項</span>
+            </span>
+            <span>${open ? "▲" : "▼"}</span>
+          </button>
+          ${open ? g.items.map(it => `
+            <div style="padding:8px 2px; border-top:1px solid var(--border);">
+              <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
+                <div style="font-weight:700; font-size:12.5px; flex:1 1 auto;">${escapeHTML(it.name)}</div>
+                <div style="font-weight:800; font-size:12.5px; white-space:nowrap;">${escapeHTML(it.total)}</div>
+              </div>
+              <div style="margin-top:4px;">${budgetStatusBadge(it.status)}</div>
+              ${it.note ? `<div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">${escapeHTML(it.note)}</div>` : ""}
+            </div>`).join("") : ""}
+        </div>`;
+    }).join("")}`;
+}
+
+// ──────────── V21.8c1 · 餐廳與訂位 ────────────
+function renderRestaurants() {
+  if (typeof RESTAURANTS === "undefined") return `<div class="page-title">🍽️ 餐廳與訂位</div><div>資料未載入</div>`;
+  const areas = [...new Set(RESTAURANTS.map(r => r.area))];
+  return `
+    <div class="page-title">🍽️ 餐廳與訂位</div>
+    <div class="page-sub">${RESTAURANTS.length} 間 · 依區域分類 · 含建議訂位時機</div>
+    ${areas.map(area => `
+      <div style="margin-bottom:14px;">
+        <div class="section-title" style="margin-bottom:6px;">📍 ${escapeHTML(area)}</div>
+        ${RESTAURANTS.filter(r => r.area === area).map(r => `
+          <div class="card" style="margin-bottom:8px;">
+            <div style="font-weight:800; font-size:13.5px;">${escapeHTML(r.name)}</div>
+            ${r.plan ? `<div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">🗓️ ${escapeHTML(r.plan)}</div>` : ""}
+            <div style="font-size:12px; line-height:1.7; margin-top:5px;">
+              ${r.spec ? `<div>✨ ${escapeHTML(r.spec)}</div>` : ""}
+              ${r.must ? `<div>🍴 推薦：${escapeHTML(r.must)}</div>` : ""}
+              ${r.price ? `<div>💰 ${escapeHTML(r.price)}</div>` : ""}
+              ${r.book ? `<div>📞 訂位：${escapeHTML(r.book)}</div>` : ""}
+              ${r.alt ? `<div style="color:var(--text-muted);">🔁 ${escapeHTML(r.alt)}</div>` : ""}
+            </div>
+          </div>`).join("")}
+      </div>`).join("")}
+    <div style="font-size:11px; color:var(--text-muted);">價格為現行參考，2027 實際價格與營業時間仍須現場／出發前確認。</div>`;
+}
+
+// ──────────── V21.8c1 · Travel References（本機儲存，不寫入原始碼）────────────
+function travelRefKey(id) { return `travelref_${id}`; }
+function getTravelRef(id) { return safeStorageGet(travelRefKey(id), ""); }
+function setTravelRef(id, value) { return safeStorageSet(travelRefKey(id), value == null ? "" : value); }
+function renderTravelRefs() {
+  if (typeof TRAVEL_REF_FIELDS === "undefined") return "";
+  return `
+    <div class="page-title">🔐 旅行備忘 Travel References</div>
+    <div class="page-sub">訂位／票號等由你自行填寫，僅存在這支裝置的瀏覽器內</div>
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-size:12px; line-height:1.75;">
+        🔒 這些欄位<strong>不會寫進網站程式碼、不會上傳</strong>，只存在本機瀏覽器儲存空間；
+        清除瀏覽器資料或換裝置就會消失。<strong>請另外保留紙本／PDF 備份。</strong>
+      </div>
+    </div>
+    ${TRAVEL_REF_FIELDS.map(f => `
+      <div class="card" style="margin-bottom:8px;">
+        <div style="font-weight:700; font-size:12.5px;">${escapeHTML(f.label)}</div>
+        ${f.hint ? `<div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">${escapeHTML(f.hint)}</div>` : ""}
+        <input type="text" data-travel-ref="${escapeHTML(f.id)}" value="${escapeHTML(getTravelRef(f.id))}"
+               placeholder="尚未填寫"
+               style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:13px; font-family:inherit;
+                      border:1px solid var(--border); border-radius:8px; background:var(--bg-elev); color:var(--text);">
+      </div>`).join("")}`;
 }
 
 // ──────────── SBB 行李追蹤 ────────────
@@ -2168,7 +2333,7 @@ function renderLuggage() {
     </div>
 
     <div class="card" style="background:var(--gold-bg); border-color:var(--gold-border);">
-      <div style="font-size:12px; color:var(--gold); font-weight:700; margin-bottom:6px;">💡 使用說明</div>
+      <div style="font-size:12px; color:var(--text-gold); font-weight:700; margin-bottom:6px;">💡 使用說明</div>
       <ul style="padding-left:18px; font-size:12px; line-height:1.7; color:var(--text);">
         <li>每一節點勾選「5 件已寄出／領取」</li>
         <li>可填入寄物編號或收據編號，僅存本機</li>
@@ -2307,6 +2472,12 @@ function attachHandlers() {
       const id = el.dataset.luggageReceipt;
       setLuggageReceipt(`luggage_receipt_${id}`, el.value);
     });
+    el.addEventListener("click", (e) => e.stopPropagation());
+  });
+
+  // V21.8c1：Travel References 輸入（沿用同一 safe storage 架構；例外不中斷、key 隔離）
+  document.querySelectorAll("[data-travel-ref]").forEach(el => {
+    el.addEventListener("input", () => { setTravelRef(el.dataset.travelRef, el.value); });
     el.addEventListener("click", (e) => e.stopPropagation());
   });
 }

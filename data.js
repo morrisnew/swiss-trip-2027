@@ -1285,7 +1285,9 @@ const DAYS = [
         steps:[
           "Mürren 主街 Dorfstrasse 漫遊（無車村；村內核心區步行相對輕鬆，仍可能有坡度）",
           "傳統瑞士 chalet + 花圃陽台，正對艾格北壁 + 僧侶峰 + 少女峰",
-          "村內有小型 Coop 可補給；午餐可野餐或於村內餐廳用餐",
+          "村內有小型 Coop 可補給",
+          "🍽️ 12:15 主街午餐（5 人 = 4 大 + 1 小）｜首選 Restaurant Stägerstübli（傳統瑞士菜、家庭友善、CHF 25-35/人）｜備選 Hotel Eiger 露台餐廳（正對艾格景、CHF 30-40/人）、La Grotte（義式）",
+          "📞 Stägerstübli 週末常滿：出發前 2-3 天先電話訂 12:15 五人位；可請 Interhome 住宿方協助訂位。若無位改備選或現場彈性處理",
           "用餐後散步到 Allmendhubel funicular 站（主街中段，步行 3-5 分鐘）"
         ],
         defense:[
@@ -1468,7 +1470,7 @@ const DAYS = [
           "寄送單填：起點 Grindelwald、終點 Zürich Flughafen、預計領取 9/24 (五) 中午",
           "現行 CHF 12 × 5 件 = CHF 60（2027 出發前確認）",
           "保留收據與寄物編號",
-          "家人（Emily/皮皮/Milo+妞妞）09:00 出門直接在車站集合",
+          "家人（Emily + 皮皮 + 妞妞）09:00 出門直接在車站集合",
           "暫定 09:38 BOB → 抵 Wilderswil → SPB 上山（若接 10:25 SPB 只有 10 分鐘轉車過緊，建議退到 11:05 SPB 更從容）",
           "均為暫定班次；2027 出發前 SBB App 確認"
         ],
@@ -2084,6 +2086,17 @@ const DAYS = [
 ];
 
 const SIGHTS = [
+  { name:"Mürren 無車山村", day:"Day 6", area:"Bernese Oberland",
+    why:"懸崖上的無車山村，主街 Dorfstrasse 正對艾格北壁＋僧侶峰＋少女峰三峰全景，傳統 chalet 與花圃陽台為經典攝影點",
+    kid:"整體為無車、相對適合親子步行的山村，但部分路段仍有坡度、不平或碎石，推車依現場路況調整；多數路段幼兒可下推車自己走",
+    tip:"純步行穿越主街約 15-20 分鐘，帶幼兒走走停停抓 30 分鐘以上；村內有小型 Coop 可補給。核心價值是氛圍＋懸崖景＋拍照，60-90 分鐘剛好",
+    stp:"BLM 段依 STP 適用範圍；實際依 2027 官方" },
+  { name:"Allmendhubel（Flower Park）", day:"Day 6", area:"Bernese Oberland",
+    why:"自 Mürren 搭 funicular 上山（1907m），山上 Flower Park 為家庭核心：高山遊樂場＋花園步道＋全景",
+    kid:"幼兒放電主場、家庭友善度高；Flower Trail 官方標示為 wide path、suitable for children\'s strollers，惟仍依當日路面與推車狀況決定是否走完整圈，走不完不影響核心體驗",
+    tip:"funicular 約 4 分鐘；回程出站後步行約 5-10 分鐘至 Mürren BLM 站搭下一班",
+    stp:"Allmendhubel funicular STP 半價（現行約 CHF 12/人）",
+    pending:"2027 營運季節、班距與開放狀態仍須出發前依 Schilthorn 官方確認" },
   { region:"瑞士中部", city:"琉森", name:"卡貝爾木橋與舊城", stp:"100% 免費", family:"⭐⭐⭐⭐⭐ 極高：全程平地", note:"歐洲最古老有頂木橋，橋身種滿鮮花" },
   { region:"瑞士中部", city:"琉森", name:"獅子紀念碑", stp:"100% 免費", family:"⭐⭐⭐⭐ 高：公園平緩", note:"馬克吐溫譽為世界上最悲傷的石頭" },
   { region:"瑞士中部", city:"琉森", name:"瑞士交通博物館", stp:"50% 折扣", family:"⭐⭐⭐⭐⭐ 極高：全室內無障礙，雨天首選", note:"全歐最豐富交通博物館，大量幼兒互動區" },
@@ -2102,7 +2115,84 @@ const SIGHTS = [
   { region:"伯恩高地", city:"因特拉肯", name:"Höheweg 大道 + Höhematte 草坪", stp:"100% 免費", family:"⭐⭐⭐⭐⭐ 極高：平地大道", note:"三峰最後合照黃金地點" }
 ];
 
+// ══════════════════════════════════════════════════════════════════
+// V21.8c1 · 預算總覽（依 Excel V21.4g「2027 完整預算」摘要，非計算底稿）
+// status：booked=已訂/已確認金額｜current=現行參考價｜estimate=規劃估算｜pending=2027 待公布
+// ══════════════════════════════════════════════════════════════════
+const BUDGET = {
+  basis:"4 大人 + 1 幼童（2 歲）｜09/13 出發、09/25 返台｜匯率假設 1 CHF ≈ NT$ 40、1 EUR ≈ NT$ 35（Excel V21.4g）",
+  statusLabels:{ booked:"已訂／已確認", current:"現行參考", estimate:"規劃估算", pending:"2027 待公布" },
+  groups:[
+    { title:"🅰️ 台幣計價（出發前於台灣支付）", currency:"NT$", items:[
+      { name:"國際機票（成人 ×4）", total:"NT$ 180,000", status:"estimate", note:"EK TPE↔DXB↔ZRH，參考價每位 NT$ 45,000；實際依訂票時票價" },
+      { name:"國際機票（幼童佔位）", total:"NT$ 36,000", status:"estimate", note:"約成人票 75-80%；2 歲需佔位購票" },
+      { name:"Swiss Travel Pass 15 天 ×4", total:"NT$ 82,400", status:"pending", note:"既定主方案；2027 推估 CHF 515／人，官方售價待公布" },
+      { name:"申根旅遊保險", total:"NT$ 12,700", status:"estimate", note:"含 3 萬歐元醫療＋直升機救援；幼童另計約 NT$ 1,500" },
+      { name:"ETIAS 授權（若正式上路）", total:"NT$ 2,800", status:"pending", note:"EUR 20／成人；未滿 18 歲免申請費但仍需申請。2027 啟用狀態待確認" },
+      { name:"住宿一：琉森 KoBi 4 晚", total:"NT$ 125,000", status:"booked", note:"已完成訂房；實際訂單原幣 CHF 2,702.16。NT$ 125,000 為既有預算／規劃基準，非平台實際扣款金額" },
+      { name:"住宿二：格林德瓦 Sans Souci W1 6 晚", total:"NT$ 107,640.4", status:"booked", note:"已完成訂房；訂單金額 CHF 2,691.01（平台台幣估算）。城市稅另收，見下" },
+      { name:"機場接送（台灣端）", total:"NT$ 6,200", status:"estimate", note:"台中↔桃園來回包車；視交通安排決定是否採用" }
+    ], subtotal:"NT$ 552,740.4" },
+    { title:"🅱️ 瑞士法郎計價（現場支付）", currency:"CHF", items:[
+      { name:"皮拉圖斯金色環遊（Day 4）", total:"CHF 260", status:"current", note:"STP 半價組合票；2027 預估 CHF 60-68／人，取高標" },
+      { name:"皮拉圖斯齒軌預約費", total:"CHF 20", status:"current", note:"線上預約保證座位" },
+      { name:"曼利申纜車（Day 7）", total:"CHF 68", status:"current", note:"GGM Express 單程，半價後約 CHF 17／人" },
+      { name:"施尼格普拉特齒軌（Day 8）", total:"CHF 140", status:"current", note:"Wilderswil ↔ Schynige Platte 來回，STP 半價" },
+      { name:"First 纜車（Day 9）", total:"CHF 140", status:"current", note:"Grindelwald ↔ First 來回，STP 半價" },
+      { name:"Day 7 WAB 補票（KS→Grindelwald）", total:"CHF 72", status:"current", note:"STP 對此段僅 25% 折扣、非免費，需補差價" },
+      { name:"Brienz Rothorn 蒸汽齒軌（Day 10）", total:"CHF 232", status:"pending", note:"含座位保證費；須出發前 2-3 個月線上預約，2027 班表／費率待公布" },
+      { name:"SBB Station-to-Station 行李寄送（兩段共 10 件次）", total:"CHF 120", status:"current", note:"現行 CHF 12／件（官方公告）" },
+      { name:"特色餐廳外食（約 6-7 頓）", total:"CHF 1,240", status:"estimate", note:"每頓約 CHF 50／人；含 Rathaus、Pfistern、Grindelwaldblick、Barry\'s、Mürren Stägerstübli 等" },
+      { name:"超市食材採買（8 晚自炊）", total:"CHF 320", status:"estimate", note:"約 CHF 40／晚／全團" },
+      { name:"雜項支出", total:"CHF 552", status:"estimate", note:"含 Allmendhubel funicular（STP 半價約 CHF 12／人）、小費、洗手間、臨時交通等" },
+      { name:"格林德瓦城市稅", total:"CHF 156", status:"booked", note:"住宿方現場收取，CHF 5.20／人／晚 × 5 人 × 6 晚；未含於住宿費" }
+    ], subtotal:"CHF 3,320（約 NT$ 132,800）" }
+  ],
+  summary:{
+    grandTotal:"NT$ 685,540.4",
+    perAdult:"約 NT$ 171,385.1／成人（4 位成人分攤；幼童費用由成人分攤）",
+    notes:[
+      "幼童（2 歲）瑞士境內支出近零：STP 100% 免費、6 歲以下絕大多數門票免費",
+      "匯率為假設值（1 CHF ≈ NT$ 40），實際依付款當日匯率",
+      "已訂項目僅 KoBi、Sans Souci（含城市稅）；其餘為現行參考／規劃估算／2027 待公布",
+      "本頁為摘要，非 Excel 計算底稿；細節以 Excel V21.4g「2027 完整預算」為準"
+    ]
+  }
+};
+
+// V21.8c1 · Travel References（僅定義欄位，實際內容由使用者於裝置本機填寫，不寫入原始碼）
+const TRAVEL_REF_FIELDS = [
+  { id:"emirates_pnr",    label:"Emirates PNR（訂位代號）", hint:"EK87 / EK88" },
+  { id:"eticket_no",      label:"E-ticket / 機票號碼",       hint:"176-..." },
+  { id:"insurance_policy",label:"旅遊保險保單號碼",           hint:"含急難救助電話" },
+  { id:"kobi_booking",    label:"KoBi 訂房確認號碼",          hint:"Booking.com" },
+  { id:"interhome_booking",label:"Interhome / Sans Souci 訂房號碼", hint:"Booking.com" },
+  { id:"stp_no",          label:"Swiss Travel Pass 編號",     hint:"購票後填入" },
+  { id:"brb_reservation", label:"BRB 座位保證預約編號",       hint:"Day 10" },
+  { id:"lie_reservation", label:"LIE 座位預約編號",           hint:"Day 5" },
+  { id:"sbb_luggage_ref", label:"SBB 行李寄送收據／參考號",   hint:"Day 3 / Day 8" }
+];
+
+// V21.8c1 · 旅行邊界日（Day 0 出發／Day 12 抵台）— 不進 DAYS、不進 Today Engine
+const TRAVEL_BOUNDARY = {
+  day0:{ label:"Day 0", date:"2027-09-13 (一)", title:"台灣出發", steps:[
+    "台中 → 桃園機場（機場接送／自行前往，視當時交通安排）",
+    "EK 桃園 → 杜拜轉機 → 蘇黎世",
+    "隨身行李：證件、妞妞用品、常用藥、貴重物品",
+    "詳細航班時刻見「航班」頁（2027 實際時刻待確認）"
+  ] },
+  day12:{ label:"Day 12", date:"2027-09-25 (六)", title:"抵達台灣", steps:[
+    "蘇黎世 → 杜拜轉機 → 桃園機場",
+    "入境後領取 5 件託運行李",
+    "桃園 → 台中（機場接送／自行前往）"
+  ] }
+};
+
 const RESTAURANTS = [
+  { area:"Mürren", name:"Restaurant Stägerstübli（首選）", plan:"Day 6 午餐 · 約 12:15 · 5 人（4 大 1 小）",
+    spec:"傳統瑞士家常菜、家庭友善", must:"瑞士家常菜", price:"CHF 25-35",
+    book:"出發前 2-3 天電話訂位（週末常滿；可請 Interhome 協助）",
+    alt:"備選：Hotel Eiger 露台餐廳（正對艾格景、CHF 30-40）／La Grotte（義式）" },
   { area:"琉森", name:"Rathaus Brauerei", plan:"Day 1 或 3 晚餐", spec:"百年地窖鮮釀黑啤", must:"脆皮烤豬腳、Luzerner Chügelipastete", price:"CHF 35-45", book:"提前 1-2 週" },
   { area:"琉森", name:"Restaurant Pfistern", plan:"Day 1 或 3 晚餐", spec:"卡貝爾橋第一排河畔景觀", must:"蘇黎世小牛肉附 Rösti", price:"CHF 45-60", book:"提前 1-2 週，備註二樓陽台" },
   { area:"皮拉圖斯", name:"Pilatus Kulm Restaurant", plan:"Day 4 主線午餐備案", spec:"海拔 2,073m 山頂景觀", must:"高山牛肉湯、Rösti", price:"CHF 30-45", book:"原則可現場用餐；2027 出發前確認營運與是否建議訂位" },
@@ -2120,7 +2210,10 @@ const RAIN_PLANS = [
   { base:"格林德瓦", place:"Sportzentrum 室內泳池", pros:"適合幼兒戲水", ticket:"CHF 8-12", note:"整下午消磨" },
   { base:"格林德瓦", place:"Pfingstegg 山頂木屋", pros:"陰天看艾格北壁神秘氛圍", ticket:"STP 50% (CHF 18)", note:"風雨大不建議" },
   { base:"格林德瓦", place:"Interlaken 購物商場", pros:"Höhematte 商業區品牌店", ticket:"BOB 35 分鐘 STP 免費", note:"半天行程" },
-  { base:"格林德瓦", place:"🥇 伯恩舊城 (整日雨天)", pros:"UNESCO 世界遺產，6 公里拱廊街", ticket:"車程 35 分 STP 免費", note:"拱廊全程遮雨" }
+  { base:"伯恩", place:"🥇 伯恩舊城 (整日雨天)", pros:"UNESCO 世界遺產，6 公里拱廊街；鐘樓、熊公園、玫瑰園", ticket:"STP 100% 免費；交通約 1.5 小時量級（需於 Interlaken Ost 轉乘，非 IC 直達；實際班次與車程依 2027 SBB 確認）", note:"拱廊全程遮雨，推車極友善｜連續陰雨 B 級備案" },
+  { base:"布里恩茨", place:"Ballenberg 戶外博物館", pros:"100+ 棟瑞士傳統木屋實景重建、農場動物、傳統工藝；9 月仍開放（至 10 月底）", ticket:"交通約 1.5 小時（BOB + IC + 公車）；門票另計", note:"陰天非豪雨可行（C 級）；戶外但低海拔，動物與木屋對幼兒吸引力高" },
+  { base:"圖恩湖", place:"Spiez + 圖恩湖遊船", pros:"湖畔城堡 Schloss Spiez（步行可達）+ 遊船賞景", ticket:"遊船 STP 100% 免費；從格林德瓦約 2 小時", note:"格林德瓦專屬 D 級備案；坐船對幼兒極友善，較不受天氣影響" },
+  { base:"琉森", place:"瑞士交通博物館（連續白牆 A 級）", pros:"豪雨／暴風雪等級備案：室內可玩 6+ 小時，不需出戶外", ticket:"STP 50%（約 CHF 19）；自格林德瓦車程約 2 小時（IC 經 Bern）", note:"僅在 Day 7-9 連續白牆時啟動；若當日已在琉森基地則直接前往" }
 ];
 
 const SHOPPING = [
@@ -2617,6 +2710,9 @@ const DAY_MAP_LINKS = {
 };
 
 const BOOKINGS = [
+  { when:"🟡 出發前 2-3 天", task:"🍽️ Day 6 Mürren 主街午餐訂位／確認",
+    how:"Restaurant Stägerstübli 為首選，訂 Day 6（週日）約 12:15、5 人（4 大 + 1 小）。旺季／週末常滿，出發前 2-3 天先電話確認；可請 Interhome 住宿方協助訂位。若無位則改備選 Hotel Eiger 露台餐廳或 La Grotte，或現場彈性處理（Mürren 主街步行可達）。",
+    priority:"🟡 重要" },
   { when:"✅ 已完成 (出發前確認)", task:"KoBi Hirschenplatz 訂房後確認", how:"✅ 已完成訂房並收到 Booking.com 確認信（Two-Bedroom Apartment with Balcony，130 m²，2027/09/14 入住、09/18 退房共 4 晚）。實際訂房金額（原幣）CHF 2,702.16；NT$ 125,000 為既有預算／規劃基準，非 Booking.com 實際訂單金額。免費取消至 2027/8/30 23:59（Booking 確認）。付款狀態／時間待人工確認。保留憑證 PDF 與紙本。", priority:"🟢 建議" },
   { when:"✅ 已完成 (出發前確認)", task:"Sans Souci W1 by Interhome — 出發前 operational 確認", how:"✅ 已完成訂房（Apartment Sans Souci W1 by Interhome，108 m²，2027/09/18-24 共 6 晚）。實際訂房金額 CHF 2,691.01（原幣）；城市稅 CHF 156 由住宿方現場另收。出發前透過 Booking Messages／Interhome 確認：免費取消條件、付款期限、精確門牌地址、key pickup 領鑰匙、key return 還鑰匙、17:00 後 late check-in、床欄（bed rail）、紗窗（insect screens）。押金／取消／付款期限尚待確認（原 CHF 400／2027/7/20／2027/7/18 為下訂前參考，已不適用）。", priority:"🟡 重要" },
   { when:"🟠 T-11~13 個月 (2026/8-10)", task:"📱 ETIAS 動向追蹤（4 大 1 小全員）", how:"ETIAS 官方預計 2026 Q4 啟用；目前不需採取行動。2027 出發前 6 個月確認實際上線及強制執行日期。⚠️ 若 2027 已正式適用：4 大 1 小【全員】均依規定取得 ETIAS travel authorisation；4 位成人支付申請費（EU 執委會 2025-07-17 公告 EUR 20/人），妞妞未滿 18 歲免申請費——但【免申請費 ≠ 不需申請】，妞妞仍須取得自己的授權。網址：travel-europe.europa.eu/etias_en", priority:"🔴 必做" },
@@ -2658,7 +2754,7 @@ const PACKING = [
     "妞妞專屬平板 + 兒童耳機（下載 5-10 集卡通）"
   ], where:"🎒 隨身行李（絕不寄送）"},
   { cat:"👕 服裝", items:[
-    "💡 KoBi + Sans Souci W1 都有洗衣機（KoBi 還有烘乾機），衣物按 4-5 天備即可",
+    "💡 KoBi + Sans Souci W1 均有洗衣／烘衣設備，衣物按 4-5 天備即可",
     "防風防水外套 × 1（必）",
     "薄羽絨 × 1、長袖上衣 × 5、長褲 × 3-4",
     "健行褲 × 1、內衣褲 × 7、厚襪 × 5",

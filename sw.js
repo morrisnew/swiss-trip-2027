@@ -1,13 +1,16 @@
 
-/* Swiss Trip PWA Service Worker · V21.8c1 (Itinerary V21.4g + UI/Cache Hotfix) */
+/* Swiss Trip PWA Service Worker · V21.8c1 (Itinerary V21.4g + Final Dark Mode UI Seal) */
 /* Web App version: V21.8c1；Itinerary data version: V21.4g（兩條版本線分開）。
-   V21.8c1：Production UI / Cache Hotfix（build fingerprint、LIE Light/Dark、schematic label placement）。
-   cache 由 swiss-trip-v21-8c-v21-4g-final-residual-seal-2027 改為 swiss-trip-v21-8c1-v21-4g-ui-cache-hotfix-2027，
+   V21.8c1 Final Dark Mode UI Seal：app.js／style.css 因 Dark Mode contrast 修正而變更。
+   已實測驗證：若 CACHE_NAME 不變，既有已安裝 PWA 會因 same-origin cache-first 持續取得舊 app.js，
+   Dark Mode 修正將無法送達；故做一次 deployment cache revision（**≠ Web version bump**，
+   Web 版本仍為 V21.8c1、行程資料仍為 V21.4g）。
+   cache 由 swiss-trip-v21-8c1-v21-4g-ui-cache-hotfix-2027 改為 swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027，
    確保既有 PWA 重新 precache 最新 data.js（住宿＝Apartment Sans Souci W1 by Interhome），
    以觸發既有 PWA 重新 install/precache。install/activate/fetch 架構未變更。
    Maps 的簡化示意圖與說明文字內建於 app.js／data.js，隨核心資產一併 precache → 離線可看；
    Google Maps／官方即時連結需要網路，已於 UI 明示。 */
-const CACHE_NAME = "swiss-trip-v21-8c1-v21-4g-ui-cache-hotfix-2027";
+const CACHE_NAME = "swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027";
 const ASSETS = [
   "./",
   "./index.html",
