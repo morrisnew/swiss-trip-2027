@@ -1753,6 +1753,7 @@ const MAP_TYPE_META = {
   town:     { em:"🏘️", label:"城鎮定位" },
   route:    { em:"🧭", label:"當日移動鏈" },
   station:  { em:"🚉", label:"站體指引" },
+  region:   { em:"🗺️", label:"區域方位圖" },
   transfer: { em:"🔀", label:"轉乘指引" }
 };
 
@@ -1883,11 +1884,12 @@ function renderSchematicSVG(sc, kindLabel) {
           <g>
             <rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="8"
                   fill="none" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 3"></rect>
-            <text x="${z.x + 8}" y="${z.y + 13}" font-size="9" fill="var(--text-muted)">${escapeHTML(z.label)}</text>
+            ${z.label ? `<text x="${z.x + 8}" y="${z.y + 13}" font-size="9" fill="var(--text-muted)">${escapeHTML(z.label)}</text>` : ""}
           </g>`).join("")}
         ${(sc.links || []).map(l => svgLink(l, byId)).join("")}
         ${(sc.nodes || []).map(svgNode).join("")}
       </svg>
+      ${sc.caption ? `<div style="font-size:11px; color:var(--text-muted); margin-top:6px; line-height:1.6;">${escapeHTML(sc.caption)}</div>` : ""}
       ${schematicLegend(sc)}
       ${(sc.pendingLabels || []).length ? `<div style="font-size:10.5px; color:var(--text-gold); margin-top:5px;">🟡 ${(sc.pendingLabels).map(escapeHTML).join("　")}</div>` : ""}
       ${schematicTextFallback(sc)}
@@ -1895,6 +1897,7 @@ function renderSchematicSVG(sc, kindLabel) {
 }
 
 function renderStationSchematic(sc)  { return renderSchematicSVG(sc, "站體平面示意（相對位置）"); }
+function renderRegionSchematic(sc)   { return renderSchematicSVG(sc, "區域方位示意（谷地與上山側）"); }
 function renderTownSchematic(sc)     { return renderSchematicSVG(sc, "城鎮定位示意（村軸與方向）"); }
 function renderTransferSchematic(sc) { return renderSchematicSVG(sc, "轉乘空間示意（相對位置）"); }
 
@@ -1922,6 +1925,7 @@ function renderGuideSpatial(g) {
   if (sc && Array.isArray(sc.nodes) && sc.nodes.length) {
     switch (g.type) {
       case "station":  return renderStationSchematic(sc);
+      case "region":   return renderRegionSchematic(sc);
       case "town":     return renderTownSchematic(sc);
       case "transfer": return renderTransferSchematic(sc);
     }
@@ -1968,7 +1972,7 @@ function renderMapCard(g, opts) {
 
 function renderMaps() {
   const guides = Object.values(MAP_GUIDES);
-  const order = ["station", "transfer", "route", "town"];
+  const order = ["region", "station", "transfer", "route", "town"];
   const groups = order.map(t => ({ t, items: guides.filter(g => g.type === t) })).filter(g => g.items.length);
   return `
     <div class="page-title">🗺️ 地圖與導航</div>

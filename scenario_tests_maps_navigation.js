@@ -133,7 +133,7 @@ t("MAP_GUIDES 存在且非空", () => Object.keys(G).length > 0);
 t("每個 guide 具備必要欄位（id/title/type/status/steps）", () =>
   Object.values(G).every(g => g.id && g.title && g.type && g.status && Array.isArray(g.steps)));
 t("type 僅使用 town/route/station/transfer", () =>
-  Object.values(G).every(g => ["town", "route", "station", "transfer"].includes(g.type)));
+  Object.values(G).every(g => ["town", "route", "station", "transfer", "region"].includes(g.type)));
 t("station/transfer/town guide 至少 3 個現場重點（§13：3–5 點）", () =>
   Object.values(G).filter(g => g.type !== "route").every(g => g.steps.length >= 3));
 t("route（移動鏈）guide 至少 1 個重點", () =>
@@ -175,9 +175,9 @@ t("所有外部連結為 https", () => links.every(u => /^https:\/\//.test(u)));
 t("無 placeholder / example / TODO 連結", () => !links.some(u => /example\.com|TODO|placeholder|#$/i.test(u)));
 t("每個 official link 有 label", () =>
   Object.values(G).every(g => (g.officialLinks || []).every(l => !!l.label && !!l.url)));
-t("使用官方來源（sbb/jungfrau/schilthorn/brienz-rothorn/flughafen-zuerich/emirates/bls）", () =>
+t("使用官方來源（sbb/jungfrau/schilthorn/brienz-rothorn/flughafen-zuerich/emirates/bls/lakelucerne/rigi/pilatus）", () =>
   Object.values(G).every(g => (g.officialLinks || []).every(l =>
-    /sbb\.ch|jungfrau\.ch|schilthorn\.ch|brienz-rothorn-bahn\.ch|flughafen-zuerich\.ch|emirates\.com|bls\.ch/i.test(l.url))));
+    /sbb\.ch|jungfrau\.ch|jungfrauregion\.swiss|schilthorn\.ch|brienz-rothorn-bahn\.ch|flughafen-zuerich\.ch|emirates\.com|bls\.ch|lakelucerne\.ch|rigi\.ch|pilatus\.ch/i.test(l.url))));
 t("Google Maps 僅作 externalMap fallback，非 officialLinks", () =>
   Object.values(G).every(g => (g.officialLinks || []).every(l => !/google\./i.test(l.url))));
 
@@ -424,7 +424,7 @@ function labelBox(l, a, b){
 }
 const ovl=(a,b)=>!(a.x2<=b.x1||b.x2<=a.x1||a.y2<=b.y1||b.y2<=a.y1);
 ["luzern_station","interlaken_ost","grindelwald_station","lauterbrunnen_transfer",
- "grutschalp_transfer","murren_orientation","brienz_boat_brb","zurich_airport"].forEach(id => {
+ "grutschalp_transfer","murren_orientation","brienz_boat_brb","zurich_airport","jungfrau_region"].forEach(id => {
   t(`${id}：link label ↔ node box 無重疊`, () => {
     const sc=G[id].schematic, byId={}; sc.nodes.forEach(n=>byId[n.id]=n);
     const nb=sc.nodes.map(nodeBox2);
@@ -434,9 +434,45 @@ const ovl=(a,b)=>!(a.x2<=b.x1||b.x2<=a.x1||a.y2<=b.y1||b.y2<=a.y1);
     });
   });
 });
+t("link 連線不得穿過非端點的 node box（視覺可讀性）", () => {
+  const segRect=(p1,p2,r)=>{
+    const inside=p=>p.x>=r.x1&&p.x<=r.x2&&p.y>=r.y1&&p.y<=r.y2;
+    if(inside(p1)||inside(p2))return true;
+    const sg=(a,b,cc,d)=>{const s=(p,q,z)=>Math.sign((q.x-p.x)*(z.y-p.y)-(q.y-p.y)*(z.x-p.x));
+      return s(a,b,cc)!==s(a,b,d)&&s(cc,d,a)!==s(cc,d,b);};
+    const cs=[{x:r.x1,y:r.y1},{x:r.x2,y:r.y1},{x:r.x2,y:r.y2},{x:r.x1,y:r.y2}];
+    for(let i=0;i<4;i++) if(sg(p1,p2,cs[i],cs[(i+1)%4])) return true;
+    return false;};
+  return Object.values(G).filter(g=>g.schematic).every(g=>{
+    const sc=g.schematic, byId={}; sc.nodes.forEach(n=>byId[n.id]=n);
+    const boxes=sc.nodes.map(n=>Object.assign({id:n.id}, nodeBox2(n)));
+    return sc.links.every(l=>{const a=byId[l.from],b=byId[l.to];
+      return boxes.every(bx=> bx.id===l.from||bx.id===l.to ||
+        !segRect({x:a.x,y:a.y},{x:b.x,y:b.y},bx));});});
+});
+t("zone label（若有文字）不與 node box 重疊", () =>
+  Object.values(G).filter(g=>g.schematic).every(g => {
+    const sc=g.schematic, nb=sc.nodes.map(nodeBox2);
+    return (sc.zones||[]).filter(z=>z.label).every(z=>{
+      const w=z.label.length*5, lb={x1:z.x+8, y1:z.y+4, x2:z.x+8+w, y2:z.y+16};
+      return !nb.some(b=>ovl(lb,b));
+    });
+  }));
+t("zone label（若有文字）不與 link label 重疊", () =>
+  Object.values(G).filter(g=>g.schematic).every(g => {
+    const sc=g.schematic, byId={}; sc.nodes.forEach(n=>byId[n.id]=n);
+    const lbs=sc.links.map(l=>labelBox(l,byId[l.from],byId[l.to])).filter(Boolean);
+    return (sc.zones||[]).filter(z=>z.label).every(z=>{
+      const w=z.label.length*5, zb={x1:z.x+8, y1:z.y+4, x2:z.x+8+w, y2:z.y+16};
+      return !lbs.some(b=>ovl(zb,b));
+    });
+  }));
+t("region 圖以 caption 說明分區（避免 zone 文字擠壓）", () =>
+  !!G.jungfrau_region.schematic.caption && /Lauterbrunnen 谷/.test(G.jungfrau_region.schematic.caption));
+
 t("所有 schematic：link label ↔ link label 無重疊", () =>
   ["luzern_station","interlaken_ost","grindelwald_station","lauterbrunnen_transfer",
-   "grutschalp_transfer","murren_orientation","brienz_boat_brb","zurich_airport"].every(id => {
+   "grutschalp_transfer","murren_orientation","brienz_boat_brb","zurich_airport","jungfrau_region"].every(id => {
     const sc=G[id].schematic, byId={}; sc.nodes.forEach(n=>byId[n.id]=n);
     const lbs=sc.links.map(l=>labelBox(l,byId[l.from],byId[l.to])).filter(Boolean);
     for(let i=0;i<lbs.length;i++) for(let j=i+1;j<lbs.length;j++) if(ovl(lbs[i],lbs[j])) return false;

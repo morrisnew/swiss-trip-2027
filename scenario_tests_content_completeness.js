@@ -154,6 +154,50 @@ t("Web 使用正確 General +41 31 382 2927", () =>
   /\+41 31 382 2927/.test(JSON.stringify(ctx.CONSULATE_CONTACT || ctx.EMERGENCY || {}) + dataSrc));
 t("Web 無舊號碼 +41 31 382 21 36", () => !/382\s*21\s*36/.test(dataSrc));
 
+section("N. 外部查證後之事實修正（Pilatus A2 等）");
+t("A2：不得再宣稱買 Golden Round Trip「會重複計價」（無官方依據）", () => {
+  const all = JSON.stringify(ctx.DAYS) + JSON.stringify(ctx.BUDGET);
+  return !/重複計價/.test(all);
+});
+t("A2：保留官方直接支持的敘述（船與 Bus 免費、只需另購上下山折扣票）", () => {
+  const d4 = JSON.stringify(ctx.DAYS.find(d => d.day === 4));
+  return /只需另購上下山的折扣票/.test(d4) && /船與 Bus 免費/.test(d4);
+});
+t("A2：標明折扣僅適用 Kriens／Alpnachstad–Pilatus 區間", () =>
+  /折扣僅適用 Kriens／Alpnachstad–Pilatus 區間/.test(JSON.stringify(ctx.DAYS.find(d => d.day === 4))));
+t("A2：不預設套票一定較貴（保留現場比價）", () =>
+  /不預設套票一定較貴|現場比價/.test(JSON.stringify(ctx.DAYS.find(d => d.day === 4))));
+t("BUDGET：Pilatus note 不再用「半價組合票」易誤解措辭", () => {
+  const it = ctx.BUDGET.groups.flatMap(g => g.items).find(i => /皮拉圖斯/.test(i.name));
+  return !!it && !/半價組合票/.test(it.note) && /山區段 STP 50%/.test(it.note);
+});
+t("BUDGET：總額未因用詞修正而改變（NT$ 685,540.4）", () =>
+  /685,540\.4/.test(ctx.BUDGET.summary.grandTotal));
+t("Day 10：BLS 湖船不可劃位（官方 free seating）已載明", () =>
+  /free seating/.test(JSON.stringify(ctx.DAYS.find(d => d.day === 10))));
+t("Day 4：Luzern 船班碼頭 pier 2（官方）已載明", () =>
+  /pier number 2/.test(JSON.stringify(ctx.DAYS.find(d => d.day === 4))));
+
+t("資料層不得殘留 markdown 粗體標記（會直接顯示成星號）", () => {
+  const all = JSON.stringify([ctx.DAYS, ctx.SIGHTS, ctx.RAIN_PLANS, ctx.RESTAURANTS,
+                              ctx.BOOKINGS, ctx.BUDGET, ctx.PACKING, ctx.PENDING_2027]);
+  return !/\*\*/.test(all);
+});
+
+section("X. Excel ↔ Web 一致性（A2 修正後）");
+t("Web 端無『重複計價』錯誤敘述", () => {
+  const all = JSON.stringify([ctx.DAYS, ctx.BUDGET, ctx.BOOKINGS, ctx.PENDING_2027]);
+  return !/重複計價/.test(all);
+});
+t("Web 端保留官方措辭（船與 Bus 免費／只需另購上下山折扣票）", () => {
+  const d4 = JSON.stringify(ctx.DAYS.find(d => d.day === 4));
+  return /船與 Bus 免費/.test(d4) && /只需另購上下山的折扣票/.test(d4);
+});
+t("Web 端標明折扣區間限制與不預設套票較貴", () => {
+  const d4 = JSON.stringify(ctx.DAYS.find(d => d.day === 4));
+  return /Kriens／Alpnachstad–Pilatus 區間/.test(d4) && /不預設套票一定較貴/.test(d4);
+});
+
 section("版本");
 t("Web App 維持 V21.8c1", () => ctx.TRIP_META.webAppVersion === "V21.8c1");
 t("Itinerary 維持 V21.4g", () => ctx.TRIP_META.itineraryVersion === "V21.4g");

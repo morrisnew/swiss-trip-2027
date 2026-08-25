@@ -3,7 +3,7 @@
  * 執行：node scenario_tests_service_worker_revision.js
  *
  * 定位（§7）：驗證 sw.js 的 deployment cache revision 與既有 PWA 升級路徑。
- *   - Static revision：CACHE_NAME = swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027；不接受舊 cache 為 current；ASSETS 完整
+ *   - Static revision：CACHE_NAME = swiss-trip-v21-8c1-v21-4g-maps-expansion-2027；不接受舊 cache 為 current；ASSETS 完整
  *   - Install：caches.open(new) → cache.addAll(ASSETS)；成功 install 完成、失敗 install reject（不吞錯）
  *   - Activate：caches.keys() → 刪除所有非 current 舊 cache（含初次 v21-7d、v21-7c）、保留新 final、clients.claim()
  *   - Fetch：GET-only、跨域不攔截、同源 cache-first、成功 fetch put 進新 cache、navigate 離線 fallback index、非 document 離線 503
@@ -16,8 +16,8 @@ const path = require("path");
 const swSrc = fs.readFileSync(path.join(__dirname, "sw.js"), "utf-8");
 const appSrc = fs.readFileSync(path.join(__dirname, "app.js"), "utf-8");
 
-const NEW_CACHE = "swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027";
-const PREV_FINAL = "swiss-trip-v21-8c1-v21-4g-ui-cache-hotfix-2027";
+const NEW_CACHE = "swiss-trip-v21-8c1-v21-4g-maps-expansion-2027";
+const PREV_FINAL = "swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027";
 const OLD_CACHE = "swiss-trip-v21-7d-2027";
 
 // ── 測試框架 ──────────────────────────────────────────────────────
@@ -125,7 +125,7 @@ const flush = () => new Promise((r) => setTimeout(r, 0));
     const ev = makeEvent();
     sw.handlers.install(ev);
     await checkA("install 呼叫 skipWaiting", async () => sw.log.skipWaiting === 1);
-    await checkA("install 開啟新 cache（swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027）", async () => { await ev._waited; return sw.log.opened.indexOf(NEW_CACHE) !== -1; });
+    await checkA("install 開啟新 cache（swiss-trip-v21-8c1-v21-4g-maps-expansion-2027）", async () => { await ev._waited; return sw.log.opened.indexOf(NEW_CACHE) !== -1; });
     await checkA("install 呼叫 cache.addAll(ASSETS)（6 項）", async () => { await ev._waited; return sw.log.addAll.length === 1 && sw.log.addAll[0].assets.length === 6; });
     await checkA("addAll 含 ./app.js", async () => { await ev._waited; return sw.log.addAll[0].assets.indexOf("./app.js") !== -1; });
     await checkA("addAll 成功 → install promise resolve", async () => { try { await ev._waited; return true; } catch (e) { return false; } });
@@ -153,7 +153,7 @@ const flush = () => new Promise((r) => setTimeout(r, 0));
     check("保留新 final cache（未刪除）", sw.log.deleted.indexOf(NEW_CACHE) === -1);
     check("刪除初次 V21.7d 舊 cache（swiss-trip-v21-7d-2027）", sw.log.deleted.indexOf(OLD_CACHE) !== -1);
     check("刪除更舊 cache（swiss-trip-v21-7c-2027）", sw.log.deleted.indexOf("swiss-trip-v21-7c-2027") !== -1);
-    check("刪除前一版 cache（swiss-trip-v21-8c1-v21-4g-ui-cache-hotfix-2027）", sw.log.deleted.indexOf(PREV_FINAL) !== -1);
+    check("刪除前一版 cache（swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027）", sw.log.deleted.indexOf(PREV_FINAL) !== -1);
     check("刪除 V21.8b cache（swiss-trip-v21-8b-v21-4g-corrective-2027）", sw.log.deleted.indexOf(PREV_8B) !== -1);
     check("恰好刪除 4 個舊 cache（8c／8b／初次 7d／7c）", sw.log.deleted.length === 4);
     check("升級後僅保留 V21.8c1 cache", sw.log.deleted.indexOf(NEW_CACHE) === -1);
@@ -180,7 +180,7 @@ const flush = () => new Promise((r) => setTimeout(r, 0));
     const ev = makeEvent({ request: req("https://swiss.example.com/new.js") });
     sw.handlers.fetch(ev);
     await checkA("同源 cache miss → fetch 並回傳 response", async () => { const r = await ev._response; return ev._responded === true && r && r.status === 200; });
-    await checkA("成功 fetch（200 basic）→ put 進新 cache（swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027）", async () => { await flush(); return sw.log.put.length === 1 && sw.log.put[0].name === NEW_CACHE; });
+    await checkA("成功 fetch（200 basic）→ put 進新 cache（swiss-trip-v21-8c1-v21-4g-maps-expansion-2027）", async () => { await flush(); return sw.log.put.length === 1 && sw.log.put[0].name === NEW_CACHE; });
   }
   // 5c. 跨域 → 不攔截
   {

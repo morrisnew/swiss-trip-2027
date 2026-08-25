@@ -4,7 +4,7 @@ const TRIP_META = {
   subtitle: "4 大 1 小・瑞士親子自由行",
   version: "V21.8c1 Web · 行程資料 V21.4g",
   webAppVersion: "V21.8c1",
-  build: "V21.8c1-20260820",
+  build: "V21.8c1-20260826",
   itineraryVersion: "V21.4g",
   departure: "2027-09-13",  // 台灣起飛
   arrival: "2027-09-14",    // 蘇黎世抵達
@@ -539,7 +539,7 @@ const DAY_PLAN_CHOICES = {
         descentTitle: "🚂 SPB 下山（方案 A・現行參考班次，2027 待確認）",
         descentSteps: [
           "SPB 下山 → 轉 BOB Wilderswil → 抵 Grindelwald",
-          "⚠️ 現行參考：14:30 發車、約 15:20 抵 Wilderswil、15:34 轉 BOB、約 16:07 抵 Grindelwald——**2027 SPB／BOB 班表尚未公布，出發前以 SBB App／jungfrau.ch 為準，不視為已確認班次**",
+          "⚠️ 現行參考：14:30 發車、約 15:20 抵 Wilderswil、15:34 轉 BOB、約 16:07 抵 Grindelwald——2027 SPB／BOB 班表尚未公布，出發前以 SBB App／jungfrau.ch 為準，不視為已確認班次",
           "🥇 下山改坐右側，換另一邊視角俯瞰湖區"
         ],
         townTime: "16:30–18:30",
@@ -994,7 +994,8 @@ const DAYS = [
           "⏱️ 本段 11:10–11:50 為【購票／上車 → 齒軌上山 → 抵達下車轉場】的整段緩衝，不是純搭車時間",
           "🚞 純齒軌乘車時間：現行參考約 30 分鐘（Alpnachstad → Pilatus Kulm）；2027 正式時刻 🟡 PENDING",
           "下船後至售票處",
-          "⭐ STP 分段購買原則：不要買整段 Golden Round Trip 套票（船 + Bus 對持 STP 者已 100% 免費會重複計價）",
+          "🚢 Luzern 往 Alpnachstad 的船於車站正對面碼頭搭乘（pilatus.ch 官方：pier number 2）",
+          "⭐ STP 購票原則：持 STP 不需要買整段 Golden Round Trip 套票。pilatus.ch 官方明載「持 Swiss Travel Pass 者，船與 Bus 免費，只需另購上下山的折扣票」，上下山山區段為 STP 50%（折扣僅適用 Kriens／Alpnachstad–Pilatus 區間）。⚠️ 官方仍有可套用優惠資格的套票產品，何者較划算請出發前於 pilatus.ch 現場比價，不預設套票一定較貴",
           "  · 船段：STP 100% 免費（已完成）",
           "  · 齒軌上山：出示 STP 購 50% 半價票",
           "  · 空中纜車下山：出示 STP 購 50% 半價票",
@@ -1884,6 +1885,7 @@ const DAYS = [
         ],
         defense:[
           "🥇 Brienz 木雕品質遠勝格林德瓦觀光區，價格較合理",
+          "🚢 BLS 湖船不可劃位（官方：free seating、reservations not possible），帶推車與幼兒請提早到碼頭排隊上船搶位",
           "🚨 Optional Bonus：僅在 BRB 順利／下山準時／妞妞狀態佳／回程 buffer 充足時才執行；不得壓縮 BRB、回 Grindelwald 銜接、Barry's 晚餐與休息。時間偏緊直接整段跳過",
           "5 件大行李已寄送機場，紀念品裝過夜包或請店家國際寄送",
           `🟡 ${BRB_DAY_PLAN.statusLabel}`
@@ -2134,7 +2136,7 @@ const BUDGET = {
       { name:"機場接送（台灣端）", total:"NT$ 6,200", status:"estimate", note:"台中↔桃園來回包車；視交通安排決定是否採用" }
     ], subtotal:"NT$ 552,740.4" },
     { title:"🅱️ 瑞士法郎計價（現場支付）", currency:"CHF", items:[
-      { name:"皮拉圖斯金色環遊（Day 4）", total:"CHF 260", status:"current", note:"STP 半價組合票；2027 預估 CHF 60-68／人，取高標" },
+      { name:"皮拉圖斯金色環遊（Day 4）", total:"CHF 260", status:"current", note:"上下山山區段 STP 50%（船與 Bus 對 STP 免費，不需買整套 Golden Round Trip）；2027 預估 CHF 60-68／人，取高標（保守估）" },
       { name:"皮拉圖斯齒軌預約費", total:"CHF 20", status:"current", note:"線上預約保證座位" },
       { name:"曼利申纜車（Day 7）", total:"CHF 68", status:"current", note:"GGM Express 單程，半價後約 CHF 17／人" },
       { name:"施尼格普拉特齒軌（Day 8）", total:"CHF 140", status:"current", note:"Wilderswil ↔ Schynige Platte 來回，STP 半價" },
@@ -2333,7 +2335,7 @@ const MAP_GUIDES = {
         { id:"lug", label:"SBB 行李櫃台", x:160, y:54, icon:"🛅", status:"verify", note:"Galerie／上層（2027 verify）" },
         { id:"lift", label:"電梯／手扶梯", x:62, y:54, icon:"↕️", status:"current" },
         { id:"hall", label:"主大廳", x:160, y:128, icon:"🏛️", status:"current" },
-        { id:"entry", label:"主入口", x:160, y:166, icon:"🚪", status:"current" },
+        { id:"entry", label:"主入口", x:238, y:166, icon:"🚪", status:"current" },
         { id:"lake", label:"← 湖／碼頭", x:52, y:128, icon:"⛵", status:"current" },
         { id:"town", label:"舊城／KoBi →", x:268, y:128, icon:"🏘️", status:"current" },
         { id:"plat", label:"月台", x:160, y:202, icon:"🚆", status:"verify", note:"月台號＝當日看板" }
@@ -2587,10 +2589,11 @@ const MAP_GUIDES = {
     externalMap:"https://www.google.com/maps/search/?api=1&query=Brienz+Rothorn+Bahn+station",
     schematic:{
       layout:"transfer", viewBox:"0 0 320 220",
+      caption:"碼頭、SBB 車站、BRB 站三者相鄰但為不同站體——BRB 有獨立站體，別在 SBB 月台等車。",
       ariaLabel:"Brienz 轉乘示意圖：湖畔碼頭、SBB 車站與 BRB 車站三者相鄰但為不同站體，BRB 有專屬站體不可誤認為 SBB 月台",
       zones:[
         { label:"湖畔側", x:12, y:26, w:296, h:56 },
-        { label:"車站區（三個節點相鄰但不同站體）", x:12, y:96, w:296, h:104 }
+        { label:"車站區", x:12, y:96, w:296, h:104 }
       ],
       nodes:[
         { id:"pier", label:"遊船碼頭\nSchiffstation", x:160, y:54, icon:"⛴️", status:"current" },
@@ -2634,10 +2637,11 @@ const MAP_GUIDES = {
     externalMap:"https://www.google.com/maps/search/?api=1&query=Zurich+Airport",
     schematic:{
       layout:"station", viewBox:"0 0 320 288",
+      caption:"上：地下火車站｜中：Airport Center 報到層（左＝SBB 行李領取、右＝Emirates 報到）｜下：安檢後管制區。",
       ariaLabel:"蘇黎世機場離境示意圖：地下火車站往上至機場中心，先領 SBB 行李，再至報到區、護照安檢，最後前往登機門；報到櫃台與登機門為 2027 待確認",
       zones:[
         { label:"地下層：火車站", x:12, y:20, w:296, h:44 },
-        { label:"Airport Center / 報到層", x:12, y:78, w:296, h:132 },
+        { label:"報到層", x:12, y:78, w:296, h:132 },
         { label:"管制區：安檢後", x:12, y:224, w:296, h:52 }
       ],
       nodes:[
@@ -2656,6 +2660,286 @@ const MAP_GUIDES = {
         { from:"sec", to:"gate", style:"walk", label:"T-60 抵 Gate" }
       ],
       pendingLabels:["Emirates 櫃台／航廈／Gate／推車處理程序＝2027 Pending"]
+    }
+  },
+
+  // ── 區域地圖（Map Type: region）─────────────────────
+  jungfrau_region: {
+    id:"jungfrau_region", title:"少女峰地區 · 全域方位圖", 
+    type:"region", priority:"P0", relatedDays:[5,6,7,8,9,10,11],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"少女峰地區＝Interlaken 以南的兩條平行山谷（Lauterbrunnen 谷／Grindelwald 谷），中間隔著 Männlichen–Kleine Scheidegg 高地。看懂這張，就知道每天是往哪一谷、上哪一側。",
+    steps:[
+      "兩谷在 Zweilütschinen 分岔：BOB 連掛列車在此分車，前後段分往 Lauterbrunnen 與 Grindelwald——上車前務必看車廂目的地顯示",
+      "我們住 Grindelwald（東谷）：Day 6 要跨到西谷（Lauterbrunnen→Mürren），其餘高山日都在東谷或高地",
+      "Kleine Scheidegg 是兩谷唯一的鐵路連通點；WAB 分兩支（Lauterbrunnen–Wengen–KS／Grindelwald–KS），往來兩谷必須在 KS 換車",
+      "Mürren 在西谷「西側」懸崖（經 Grütschalp）；Wengen 在西谷「東側」懸崖（本行程不去，僅作方位參考）",
+      "First 在 Grindelwald 北側；Männlichen 在兩谷之間的高地，可自 Grindelwald Terminal（GGM）或 Wengen 兩側上山"
+    ],
+    pendingNotes:["各段 2027 班次、營運季節與末班車依官方；SPB（Schynige Platte）為季節性營運"],
+    officialLinks:[
+      { label:"Jungfrau 地區交通與時刻表", url:"https://www.jungfrau.ch/en-gb/corporate/timetables/" },
+      { label:"Jungfrau Region 各村地圖下載", url:"https://jungfrauregion.swiss/en/service/maps/local-maps.html" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Jungfrau+Region+Switzerland",
+    schematic:{
+      layout:"region", viewBox:"0 0 320 392",
+      ariaLabel:"少女峰地區方位示意圖：Interlaken Ost 在最北，往南經 Wilderswil 至 Zweilütschinen 分岔為西側 Lauterbrunnen 谷與東側 Grindelwald 谷；Mürren 在西谷西側懸崖，Wengen 在西谷東側懸崖，Männlichen 與 Kleine Scheidegg 位於兩谷之間高地，First 在 Grindelwald 北側",
+      caption:"虛線框：左＝Lauterbrunnen 谷（西）｜右＝Grindelwald 谷（東・住宿基地）｜下中＝兩谷之間的高地（Männlichen／Kleine Scheidegg）",
+      zones:[
+        { label:"", x:12, y:158, w:132, h:146 },
+        { label:"", x:206, y:104, w:102, h:120 },
+        { label:"", x:120, y:258, w:104, h:104 }
+      ],
+      nodes:[
+        { id:"io",    label:"Interlaken Ost", x:160, y:30,  icon:"🚉", status:"current", note:"對外門戶・轉乘樞紐" },
+        { id:"wil",   label:"Wilderswil",     x:160, y:82,  icon:"🚆", status:"current", note:"Day 8 轉 SPB" },
+        { id:"sp",    label:"Schynige\nPlatte", x:56, y:48, icon:"🌸", status:"verify", note:"Day 8・季節性營運" },
+        { id:"zw",    label:"Zweilütschinen", x:160, y:132, icon:"🔀", status:"current", note:"⚠️ BOB 分車點" },
+        { id:"lb",    label:"Lauterbrunnen",  x:74,  y:184, icon:"🚆", status:"current", note:"西谷谷底" },
+        { id:"gr",    label:"Grindelwald",    x:254, y:184, icon:"🏠", status:"current", note:"東谷・住宿基地" },
+        { id:"gt",    label:"Grütschalp",     x:34,  y:232, icon:"🚡", status:"current" },
+        { id:"mu",    label:"Mürren",         x:34,  y:282, icon:"🏘️", status:"current", note:"Day 6・西側懸崖" },
+        { id:"we",    label:"Wengen",         x:112, y:246, icon:"🏘️", status:"current", note:"東側懸崖・本行程不去" },
+        { id:"ma",    label:"Männlichen",     x:150, y:290, icon:"⛰️", status:"current", note:"Day 7" },
+        { id:"ks",    label:"Kleine\nScheidegg", x:172, y:342, icon:"🏔️", status:"current", note:"Day 7・兩谷唯一鐵路連通點" },
+        { id:"fi",    label:"First",          x:280, y:126, icon:"🚡", status:"current", note:"Day 9・Grindelwald 北側" }
+      ],
+      links:[
+        { from:"io", to:"wil", style:"transport", label:"BOB", labelDx:10, labelDy:4, labelAnchor:"start" },
+        { from:"wil", to:"sp", style:"transport", label:"SPB 齒軌", labelDx:-30, labelDy:22, labelAnchor:"middle" },
+        { from:"wil", to:"zw", style:"transport", label:"BOB", labelDx:10, labelDy:4, labelAnchor:"start" },
+        { from:"zw", to:"lb", style:"transport", label:"分車·前/後段", labelDx:-26, labelDy:14, labelAnchor:"end" },
+        { from:"zw", to:"gr", style:"transport", label:"分車·前/後段", labelDx:26, labelDy:14, labelAnchor:"start" },
+        { from:"lb", to:"gt", style:"transport", label:"空中纜車", labelDx:-8, labelDy:0, labelAnchor:"end" },
+        { from:"gt", to:"mu", style:"transport", label:"BLM 鐵道", labelDx:8, labelDy:4, labelAnchor:"start" },
+        { from:"lb", to:"we", style:"transport", label:"WAB", labelDx:6, labelDy:-4, labelAnchor:"start" },
+        { from:"we", to:"ma", style:"transport", label:"纜車", labelDx:-16, labelDy:2, labelAnchor:"end" },
+        { from:"gr", to:"ma", style:"transport", label:"GGM（Terminal 出發）", labelDx:8, labelDy:6, labelAnchor:"start" },
+        { from:"ma", to:"ks", style:"walk", label:"Day 7 健行", labelDx:10, labelDy:4, labelAnchor:"start" },
+        { from:"ks", to:"gr", style:"transport", label:"WAB（STP 25%）", labelDx:10, labelDy:0, labelAnchor:"start" },
+        { from:"gr", to:"fi", style:"transport", label:"Firstbahn", labelDx:8, labelDy:0, labelAnchor:"start" }
+      ],
+      pendingLabels:["2027 班次／營運季節依官方；SPB 為季節性"]
+    }
+  },
+
+  luzern_region: {
+    id:"luzern_region", title:"琉森地區 · 全域方位圖（Rigi／Pilatus）",
+    type:"region", priority:"P0", relatedDays:[1,2,3,4,5],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"兩座山、四個接駁點：Rigi 走東北岸（Vitznau 上／Weggis 下），Pilatus 走西南岸（Alpnachstad 上／Kriens 下）。上下山不同側是刻意的，不走回頭路。",
+    steps:[
+      "⚠️ 琉森碼頭就在車站正對面，但分不同 Pier：Pier 1＝Weggis／Vitznau（Rigi）、Pier 2＝Alpnachstad（Pilatus）（SGV 官方）——排錯隊會上錯船",
+      "Day 2 Rigi：船→Vitznau→齒軌上 Kulm→（齒軌）Kaltbad→纜車下 Weggis→船回琉森；STP 全程 100% 免費",
+      "Day 4 Pilatus：船→Alpnachstad→齒軌上 Kulm→纜車下 Kriens→1 號公車回琉森；船與公車免費，但山上兩段各為 STP 50%",
+      "兩山方向相反：Rigi 在湖的東北、Pilatus 在西南；同一天不會兩座都去",
+      "SGV 船班不可訂位（官方：reservations neither required nor possible），帶推車請提早到碼頭"
+    ],
+    pendingNotes:["2027 船班與登山鐵道班次、營運季節依 lakelucerne.ch／rigi.ch／pilatus.ch 官方"],
+    officialLinks:[
+      { label:"SGV 琉森湖船班與碼頭資訊", url:"https://www.lakelucerne.ch/en/information/timetable/" },
+      { label:"琉森碼頭 Pier 分佈說明", url:"https://help.lakelucerne.ch/hc/en-us/articles/24059769159314-Overview-of-our-boat-piers-in-Lucerne" },
+      { label:"Rigi 官方票價與折扣", url:"https://www.rigi.ch/en/inform/prices/discounts-for-individuals" },
+      { label:"Pilatus 官方票價（STP 50%）", url:"https://pilatus.ch/en/railway-cableways/prices" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Lake+Lucerne+Switzerland",
+    schematic:{
+      layout:"region", viewBox:"0 0 320 372",
+      caption:"虛線框：右上＝Rigi（東北岸・Day 2）｜左下＝Pilatus（西南・Day 4）｜中央＝琉森湖。上下山刻意走不同側，不走回頭路。",
+      ariaLabel:"琉森地區方位示意圖：琉森車站與碼頭在中央北側，Pier 1 往東北岸的 Weggis 與 Vitznau 通往 Rigi，Pier 2 往西南的 Alpnachstad 通往 Pilatus，Pilatus 另一側經 Kriens 以 1 號公車回琉森",
+      zones:[
+        { label:"", x:186, y:96, w:122, h:136 },
+        { label:"", x:14,  y:210, w:132, h:126 }
+      ],
+      nodes:[
+        { id:"lz",   label:"琉森 車站＋碼頭", x:158, y:36,  icon:"🚉", status:"current", note:"碼頭在車站正對面" },
+        { id:"p1",   label:"Pier 1", x:236, y:84, icon:"⛴️", status:"current", note:"Rigi 方向" },
+        { id:"p2",   label:"Pier 2", x:82,  y:84, icon:"⛴️", status:"current", note:"Pilatus 方向" },
+        { id:"weg",  label:"Weggis", x:216, y:136, icon:"🏘️", status:"current", note:"Day 2 下山端" },
+        { id:"vit",  label:"Vitznau", x:274, y:172, icon:"🏘️", status:"current", note:"Day 2 上山端" },
+        { id:"kal",  label:"Rigi Kaltbad", x:200, y:200, icon:"⛰️", status:"current" },
+        { id:"kul",  label:"Rigi Kulm", x:250, y:246, icon:"🏔️", status:"current", note:"Day 2・STP 全免費" },
+        { id:"alp",  label:"Alpnachstad", x:70,  y:170, icon:"⛴️", status:"current", note:"Day 4 上山端" },
+        { id:"pil",  label:"Pilatus Kulm", x:70,  y:250, icon:"🏔️", status:"current", note:"Day 4・山上段 STP 50%" },
+        { id:"kri",  label:"Kriens", x:120, y:322, icon:"🚡", status:"current", note:"Day 4 下山端" }
+      ],
+      links:[
+        { from:"lz", to:"p1", style:"walk", label:"站前", labelDx:6, labelDy:-6, labelAnchor:"start" },
+        { from:"lz", to:"p2", style:"walk", label:"站前", labelDx:-6, labelDy:-6, labelAnchor:"end" },
+        { from:"p1", to:"vit", style:"transport", label:"船 · 免費", labelDx:14, labelDy:-2, labelAnchor:"start" },
+        { from:"vit", to:"kul", style:"transport", label:"齒軌 · 免費", labelDx:14, labelDy:6, labelAnchor:"start" },
+        { from:"kul", to:"kal", style:"transport", label:"齒軌 · 免費", labelDx:-8, labelDy:8, labelAnchor:"end" },
+        { from:"kal", to:"weg", style:"transport", label:"纜車 · 免費", labelDx:-10, labelDy:2, labelAnchor:"end" },
+        { from:"weg", to:"p1", style:"transport", label:"船 · 免費", labelDx:-12, labelDy:2, labelAnchor:"end" },
+        { from:"p2", to:"alp", style:"transport", label:"船 · 免費", labelDx:-12, labelDy:-2, labelAnchor:"end" },
+        { from:"alp", to:"pil", style:"transport", label:"齒軌 · STP 50%", labelDx:-8, labelDy:4, labelAnchor:"end" },
+        { from:"pil", to:"kri", style:"transport", label:"纜車 · STP 50%", labelDx:-8, labelDy:4, labelAnchor:"end" },
+        { from:"kri", to:"lz", style:"transport", label:"1 號公車 · 免費", labelDx:-30, labelDy:44, labelAnchor:"middle" }
+      ],
+      pendingLabels:["2027 船班／登山鐵道班次與營運季節依官方"]
+    }
+  },
+
+  luzern_town: {
+    id:"luzern_town", title:"琉森市區 · 步行動線圖",
+    type:"town", priority:"P0", relatedDays:[1,2,3,4,5],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"羅伊斯河（Reuss）把琉森切成兩岸：南岸＝車站＋KKL＋碼頭；北岸＝舊城（住宿在此）。東側是獅子紀念碑／冰河公園／Hofkirche。全部步行可達。",
+    steps:[
+      "住宿 KoBi 在北岸舊城 Hirschenplatz 廣場群；車站與碼頭在南岸，靠卡貝爾木橋（Kapellbrücke）連通，步行約 5 分鐘",
+      "碼頭就在車站正對面：Pier 1＝Weggis／Vitznau（Rigi）、Pier 2＝Alpnachstad（Pilatus）",
+      "獅子紀念碑與冰河公園相鄰（同在東側 Löwenplatz 一帶），可一次走完；Hofkirche 在其南、靠湖畔",
+      "交通博物館在市區東側湖畔，Day 3 搭船至 Verkehrshaus-Lido，回程搭公車",
+      "舊城多為石板路，推車會顛；卡貝爾木橋兩端有階梯，推推車需繞行或抬"
+    ],
+    pendingNotes:["KoBi 實際 check-in 入口／門牌待住宿方確認（Hirschenplatz 12 與 Werchlaubengässli 5 為同一街廓）"],
+    officialLinks:[
+      { label:"SGV 琉森碼頭 Pier 分佈", url:"https://help.lakelucerne.ch/hc/en-us/articles/24059769159314-Overview-of-our-boat-piers-in-Lucerne" },
+      { label:"SBB Luzern 車站資訊與設施", url:"https://www.sbb.ch/en/travel-information/stations/find-station/luzern-station.html" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Hirschenplatz+Luzern",
+    schematic:{
+      layout:"town", viewBox:"0 0 320 356",
+      caption:"虛線框：上＝北岸舊城（住宿）｜下＝南岸車站區（車站・KKL・碼頭）｜右＝東側景點群。中間橫線為羅伊斯河。",
+      ariaLabel:"琉森市區步行動線示意圖：羅伊斯河橫分南北，北岸為舊城與 KoBi 住宿，南岸為車站、KKL 與碼頭，兩岸以卡貝爾木橋連通；東側為獅子紀念碑、冰河公園與 Hofkirche；交通博物館在東側湖畔",
+      zones:[
+        { label:"", x:14,  y:36,  w:172, h:120 },
+        { label:"", x:196, y:36,  w:110, h:150 },
+        { label:"", x:14,  y:238, w:196, h:104 }
+      ],
+      nodes:[
+        { id:"museg", label:"Musegg 城牆", x:78,  y:58,  icon:"🏰", status:"current", note:"舊城北緣" },
+        { id:"kobi",  label:"KoBi 住宿\n(Hirschenplatz)", x:78, y:112, icon:"🏠", status:"verify", note:"入口門牌待確認" },
+        { id:"altst", label:"舊城廣場／餐廳", x:170, y:112, icon:"🍽️", status:"current", note:"Rathaus Brauerei・Pfistern" },
+        { id:"lion",  label:"獅子紀念碑", x:250, y:64,  icon:"🦁", status:"current", note:"Day 3" },
+        { id:"glac",  label:"冰河公園", x:250, y:112, icon:"🧊", status:"current", note:"與獅子紀念碑相鄰" },
+        { id:"hof",   label:"Hofkirche", x:250, y:160, icon:"⛪", status:"current", note:"靠湖畔" },
+        { id:"kapel", label:"卡貝爾木橋", x:150, y:200, icon:"🌉", status:"current", note:"兩端有階梯" },
+        { id:"stn",   label:"琉森車站", x:74,  y:268, icon:"🚉", status:"current", note:"Day 3 行李櫃台在 Galerie 上層" },
+        { id:"pier",  label:"碼頭 Pier 1／2", x:170, y:250, icon:"⛴️", status:"current", note:"站前・對岸" },
+        { id:"kkl",   label:"KKL", x:120, y:318, icon:"🎼", status:"current", note:"雨備" },
+        { id:"vh",    label:"交通博物館", x:264, y:262, icon:"🚂", status:"current", note:"Day 3・湖畔東側" }
+      ],
+      links:[
+        { from:"kobi", to:"museg", style:"walk", label:"往北", labelDx:-10, labelDy:2, labelAnchor:"end" },
+        { from:"kobi", to:"altst", style:"walk", label:"舊城內", labelDx:0, labelDy:-18 },
+        { from:"kobi", to:"lion", style:"walk", label:"約 10 分", labelDx:0, labelDy:-10 },
+        { from:"lion", to:"glac", style:"walk", label:"相鄰", labelDx:12, labelDy:4, labelAnchor:"start" },
+        { from:"glac", to:"hof", style:"walk", label:"往湖畔", labelDx:12, labelDy:4, labelAnchor:"start" },
+        { from:"kobi", to:"kapel", style:"walk", label:"下到河邊", labelDx:-12, labelDy:6, labelAnchor:"end" },
+        { from:"kapel", to:"stn", style:"walk", label:"過橋約 5 分", labelDx:-14, labelDy:6, labelAnchor:"end" },
+        { from:"stn", to:"pier", style:"walk", label:"站前", labelDx:0, labelDy:14 },
+        { from:"stn", to:"kkl", style:"walk", label:"站旁", labelDx:-8, labelDy:8, labelAnchor:"end" },
+        { from:"pier", to:"vh", style:"transport", label:"Day 3 船", labelDx:16, labelDy:-14, labelAnchor:"start" },
+        { from:"vh", to:"stn", style:"transport", label:"回程公車", labelDx:0, labelDy:26, labelAnchor:"middle" }
+      ],
+      pendingLabels:["KoBi 入口門牌待確認；館舍營業時間依官方"]
+    }
+  },
+
+  grindelwald_town: {
+    id:"grindelwald_town", title:"格林德瓦村 · 生活與上山動線圖",
+    type:"town", priority:"P0", relatedDays:[5,6,7,8,9,10,11],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"住宿基地的日常動線：村站與主街在中間，住宿生活圈（Coop／泳池）在一側，上山有「兩個不同車站」——村站往 First，Terminal 往 Männlichen 與艾格冰川。",
+    steps:[
+      "⚠️ 村站與 Grindelwald Terminal 是兩個不同車站：Firstbahn 從村站走／搭接駁；GGM（Männlichen）與 Eiger Express 都在 Terminal（Grundstrasse 54，村外下谷側），村站搭 BOB 一站可到",
+      "Sans Souci W1 距主車站約 300m（步行 4-5 分）、位於 cul-de-sac 死巷；距 Coop 超市約 50m、室內泳池與兒童遊樂場約 100m",
+      "Day 9 First：在村站下車，走或搭接駁巴士到 Firstbahn 山谷站（不是 Terminal）",
+      "Day 7 Männlichen：從村站搭 BOB 一站到 Terminal，跟 Männlichen（黃綠色標示）指標進站——別上 Eiger Express（紅黑、26 人座、往艾格冰川）",
+      "雨天備案在村東側：冰河峽谷、Pfingstegg 纜車；Sportzentrum 室內泳池就在住宿旁"
+    ],
+    pendingNotes:["Sans Souci 精確門牌與 key collection 方式仍為 Pending，圖上僅示方向；接駁巴士班次與各纜車營運季節依 2027 官方"],
+    officialLinks:[
+      { label:"Jungfrau Grindelwald Terminal 官方頁", url:"https://www.jungfrau.ch/en-gb/grindelwald-terminal/" },
+      { label:"Jungfrau Grindelwald 車站頁", url:"https://www.jungfrau.ch/en-gb/arrival-at-station-car-parks/grindelwald-railway-station/" },
+      { label:"SBB Grindelwald 車站資訊", url:"https://www.sbb.ch/en/travel-information/stations/find-station/station.7380.grindelwald.html" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Grindelwald+Terminal",
+    schematic:{
+      layout:"town", viewBox:"0 0 320 384",
+      caption:"虛線框：左＝住宿生活圈（Sans Souci／Coop／泳池）｜中＝村站與主街｜下＝Grindelwald Terminal（兩條纜車在此）｜右＝村東雨備。",
+      ariaLabel:"格林德瓦村動線示意圖：村站與主街在中央，住宿與 Coop 超市、室內泳池在西側，Firstbahn 山谷站在北側，Grindelwald Terminal 在村外下谷側並含 GGM 往 Männlichen 與 Eiger Express 往艾格冰川兩條纜車，村東側為冰河峽谷與 Pfingstegg 雨備",
+      zones:[
+        { label:"", x:14,  y:140, w:104, h:150 },
+        { label:"", x:14,  y:274, w:292, h:96 },
+        { label:"", x:196, y:76,  w:110, h:118 }
+      ],
+      nodes:[
+        { id:"firstv", label:"Firstbahn 山谷站", x:150, y:40,  icon:"🚡", status:"current", note:"Day 9・自村站走或搭接駁" },
+        { id:"stn",    label:"Grindelwald 村站", x:150, y:108, icon:"🚉", status:"current", note:"行李櫃台在站內" },
+        { id:"street", label:"主街 Dorfstrasse", x:246, y:226, icon:"🏘️", status:"current" },
+        { id:"sans",   label:"Sans Souci W1", x:62,  y:168, icon:"🏠", status:"pending", note:"約 300m・死巷・門牌 Pending" },
+        { id:"coop",   label:"Coop 超市", x:62,  y:216, icon:"🛒", status:"current", note:"距住宿約 50m" },
+        { id:"sport",  label:"Sportzentrum 泳池", x:62,  y:262, icon:"🏊", status:"current", note:"約 100m・雨備" },
+        { id:"barry",  label:"Barry's 餐廳", x:252, y:168, icon:"🍽️", status:"current" },
+        { id:"east",   label:"冰河峽谷／Pfingstegg", x:250, y:110, icon:"🧊", status:"current", note:"村東・雨備" },
+        { id:"term",   label:"Grindelwald Terminal", x:150, y:304, icon:"🚉", status:"current", note:"獨立車站・村站搭 BOB 一站" },
+        { id:"ggm",    label:"GGM → Männlichen", x:60,  y:352, icon:"🚡", status:"current", note:"Day 7・黃綠 10 人座" },
+        { id:"eiger",  label:"Eiger Express", x:246, y:352, icon:"🚠", status:"current", note:"紅黑 26 人座・往艾格冰川" }
+      ],
+      links:[
+        { from:"stn", to:"firstv", style:"walk", label:"走／接駁巴士", labelDx:10, labelDy:2, labelAnchor:"start" },
+        { from:"stn", to:"street", style:"walk", label:"出站", labelDx:-10, labelDy:6, labelAnchor:"end" },
+        { from:"street", to:"sans", style:"walk", label:"約 300m", labelDx:0, labelDy:-8 },
+        { from:"sans", to:"coop", style:"walk", label:"50m", labelDx:-10, labelDy:2, labelAnchor:"end" },
+        { from:"coop", to:"sport", style:"walk", label:"100m", labelDx:-10, labelDy:2, labelAnchor:"end" },
+        { from:"street", to:"barry", style:"walk", label:"主街上", labelDx:10, labelDy:2, labelAnchor:"start" },
+        { from:"stn", to:"east", style:"transport", label:"巴士・雨備", labelDx:-6, labelDy:-14, labelAnchor:"end" },
+        { from:"stn", to:"term", style:"transport", label:"BOB 一站", labelDx:10, labelDy:0, labelAnchor:"start" },
+        { from:"term", to:"ggm", style:"walk", label:"站內", labelDx:-6, labelDy:-4, labelAnchor:"end" },
+        { from:"term", to:"eiger", style:"walk", label:"站內", labelDx:6, labelDy:-4, labelAnchor:"start" }
+      ],
+      pendingLabels:["住宿門牌 Pending；接駁與纜車營運季節依 2027 官方"]
+    }
+  },
+
+  brienz_region: {
+    id:"brienz_region", title:"布里恩茨湖一帶 · Day 10 方位圖",
+    type:"region", priority:"P0", relatedDays:[10],
+    status:"current_reference", offlineAvailable:true, lastVerified:"2026-08",
+    description:"Day 10 是一條「去程搭船、回程搭火車」的環線：Grindelwald→Interlaken Ost→湖船→Brienz→BRB 上 Rothorn→原路下山→SBB 回 Interlaken Ost→BOB 回 Grindelwald。",
+    steps:[
+      "去程與回程走不同交通工具：去程湖船（風景，STP 免費、不可劃位），回程 SBB 火車（快，約 16 分鐘）",
+      "Brienz 三個節點緊鄰但各自獨立：遊船碼頭、SBB 車站、BRB 蒸汽齒軌站——BRB 有專屬站體，別在 SBB 月台等",
+      "BRB 為本日主線且受保護：木雕村只是 Optional Bonus，時間偏緊就整段跳過",
+      "船班誤點會直接吃掉 BRB 上山班次的 buffer；下船後先確認 BRB 進站與票務",
+      "Rothorn Kulm 在 Brienz 上方，來回都搭 BRB（同一條線）"
+    ],
+    pendingNotes:["BRB 2027 班表、營運季節與座位保證費為 Pending；湖船班次依 BLS 官方"],
+    officialLinks:[
+      { label:"BRB 時刻表與票價（含營運季節）", url:"https://brienz-rothorn-bahn.ch/en/fahrplan-preise/" },
+      { label:"BRB 常見問題（含碼頭／車站相對位置）", url:"https://brienz-rothorn-bahn.ch/en/fragen-und-antworten/" },
+      { label:"BLS 湖上遊船（Brienzersee）", url:"https://www.bls.ch/en/freizeit/schifffahrt/brienzersee" }
+    ],
+    externalMap:"https://www.google.com/maps/search/?api=1&query=Brienz+Rothorn+Bahn+station",
+    schematic:{
+      layout:"region", viewBox:"0 0 320 340",
+      caption:"去程搭湖船（風景）、回程搭 SBB 火車（快），不走原路。Brienz 的碼頭／SBB 站／BRB 站三者相鄰但各自獨立。",
+      ariaLabel:"布里恩茨湖一帶方位示意圖：自 Grindelwald 經 Interlaken Ost 搭湖船東行至 Brienz 碼頭，往上為 BRB 獨立站體與 Rothorn Kulm，木雕村為選配，回程改由 Brienz SBB 站搭火車返回 Interlaken Ost",
+      zones:[],
+      nodes:[
+        { id:"gw",   label:"Grindelwald", x:58,  y:44,  icon:"🏠", status:"current", note:"起點" },
+        { id:"io",   label:"Interlaken Ost", x:58, y:140, icon:"🚉", status:"current", note:"轉船／回程轉 BOB" },
+        { id:"boat", label:"布里恩茨湖 遊船", x:120, y:236, icon:"⛴️", status:"current", note:"去程・STP 免費・不可劃位" },
+        { id:"pier", label:"Brienz 碼頭", x:252, y:222, icon:"⚓", status:"current" },
+        { id:"brb",  label:"BRB 獨立站體", x:250, y:128, icon:"🚂", status:"current", note:"⚠️ 非 SBB 月台" },
+        { id:"roth", label:"Rothorn Kulm", x:250, y:70,  icon:"🏔️", status:"verify", note:"2027 班表 Pending" },
+        { id:"wood", label:"木雕村", x:132, y:128, icon:"🪵", status:"current", note:"Optional Bonus" },
+        { id:"sbb",  label:"Brienz SBB 站", x:150, y:182, icon:"🚆", status:"current", note:"回程搭這班" }
+      ],
+      links:[
+        { from:"gw", to:"io", style:"transport", label:"BOB", labelDx:-8, labelDy:2, labelAnchor:"end" },
+        { from:"io", to:"boat", style:"transport", label:"去程 · 船", labelDx:-8, labelDy:8, labelAnchor:"end" },
+        { from:"boat", to:"pier", style:"transport", label:"抵 Brienz", labelDx:0, labelDy:18 },
+        { from:"pier", to:"brb", style:"walk", label:"步行極短", labelDx:12, labelDy:2, labelAnchor:"start" },
+        { from:"brb", to:"roth", style:"transport", label:"BRB 蒸汽齒軌", labelDx:12, labelDy:2, labelAnchor:"start" },
+        { from:"brb", to:"wood", style:"walk", label:"下山後 Optional", labelDx:0, labelDy:-12 },
+        { from:"wood", to:"sbb", style:"walk", label:"再搭車", labelDx:-10, labelDy:2, labelAnchor:"end" },
+        { from:"sbb", to:"io", style:"transport", label:"回程 · SBB 約 16 分", labelDx:-30, labelDy:44, labelAnchor:"start" }
+      ],
+      pendingLabels:["BRB 2027 班表／營運季節 Pending；船班依 BLS 官方"]
     }
   },
 
@@ -2700,13 +2984,17 @@ const MAP_GUIDES = {
 
 // Day → map guide id（供 Day 頁「查看轉乘示意」使用）
 const DAY_MAP_LINKS = {
-  3:["luzern_station"],
-  5:["interlaken_ost","grindelwald_station"],
-  6:["day6_flow","lauterbrunnen_transfer","grutschalp_transfer","murren_orientation"],
-  8:["grindelwald_station"],
-  9:["grindelwald_station"],
-  10:["day10_flow","brienz_boat_brb"],
-  11:["grindelwald_station","zurich_airport"]
+  1:["luzern_town","luzern_region"],
+  2:["luzern_region","luzern_town"],
+  3:["luzern_town","luzern_region","luzern_station"],
+  4:["luzern_region","luzern_town"],
+  5:["grindelwald_town","jungfrau_region","interlaken_ost","grindelwald_station"],
+  6:["grindelwald_town","jungfrau_region","day6_flow","lauterbrunnen_transfer","grutschalp_transfer","murren_orientation"],
+  7:["grindelwald_town","jungfrau_region"],
+  8:["grindelwald_town","jungfrau_region","grindelwald_station"],
+  9:["grindelwald_town","jungfrau_region","grindelwald_station"],
+  10:["grindelwald_town","brienz_region","day10_flow","brienz_boat_brb"],
+  11:["grindelwald_town","grindelwald_station","zurich_airport"]
 };
 
 const BOOKINGS = [

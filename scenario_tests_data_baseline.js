@@ -57,7 +57,7 @@ t("TRIP_META.version 為 V21.8c1（行程資料 V21.4g）", () =>
 t("webAppVersion = V21.8c1 且 itineraryVersion = V21.4g（兩條版本線分開）", () =>
   ctx.TRIP_META.webAppVersion === "V21.8c1" && ctx.TRIP_META.itineraryVersion === "V21.4g");
 t("CACHE_NAME 為 v21-7d-final-accsync（current deployment revision）", () =>
-  /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027"\s*;/.test(swSrc));
+  /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c1-v21-4g-maps-expansion-2027"\s*;/.test(swSrc));
 t("current CACHE_NAME const 不再是初次 v21-7d（舊 cache 僅存於註解/遷移）", () =>
   !/const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-7d-2027"\s*;/.test(swSrc));
 t("user-facing 不再出現「基於 V21.3b 行程資料」", () =>
@@ -601,13 +601,13 @@ console.log("\n【V21.7b · 版本（歷史 regression guard）】");
 t("TRIP_META.version 已前進、非停留 V21.7b", () =>
   ctx.TRIP_META.version !== "V21.7b Web · 基於 V21.4a 行程資料" || ctx.TRIP_META.version);
 t("CACHE_NAME 已離開 v21-7b（現為 v21-7d-final）", () =>
-  !swSrc.includes('"swiss-trip-v21-7b-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027"\s*;/.test(swSrc));
+  !swSrc.includes('"swiss-trip-v21-7b-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c1-v21-4g-maps-expansion-2027"\s*;/.test(swSrc));
 
 console.log("\n【V21.7c · 版本（歷史 regression guard）】");
 t("TRIP_META.version 已前進、非停留 V21.7c", () =>
   ctx.TRIP_META.version !== "V21.7c Web · 基於 V21.4a 行程資料" || ctx.TRIP_META.version);
 t("CACHE_NAME 已離開 v21-7c（現為 v21-7d-final）", () =>
-  !swSrc.includes('"swiss-trip-v21-7c-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c1-v21-4g-dark-mode-seal-2027"\s*;/.test(swSrc));
+  !swSrc.includes('"swiss-trip-v21-7c-2027"') && /const\s+CACHE_NAME\s*=\s*"swiss-trip-v21-8c1-v21-4g-maps-expansion-2027"\s*;/.test(swSrc));
 t("無舊 CACHE swiss-trip-v21-7a / -7b / -7c-2027（current 僅 v21-7d-final）", () =>
   !/swiss-trip-v21-7a-2027|swiss-trip-v21-7b-2027|swiss-trip-v21-7c-2027/.test(swSrc + dataSrc + appSrc));
 
